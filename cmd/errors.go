@@ -4,7 +4,9 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"log"
 
 	"github.com/spf13/cobra"
 )
@@ -21,6 +23,14 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("errors called")
+	},
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return errors.New("requires at least one arg")
+		}
+		log.Println("args", args)
+		// TODO look for logfiles ...
+		return nil
 	},
 }
 
