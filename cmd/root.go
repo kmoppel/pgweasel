@@ -30,14 +30,34 @@ func Execute() {
 	}
 }
 
+var Verbose bool
+var Prefix string
+var Users string
+var NoUsers string
+var From string
+var To string
+var Oneline bool
+var Matches string
+var Connstr string
+var Tail bool
+var Db string
+var NoDb string
+
 func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pgweasel.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "More chat")
+	rootCmd.PersistentFlags().StringVarP(&Prefix, "prefix", "p", "", "Postgres log_line_prefix")
+	rootCmd.PersistentFlags().StringVarP(&Users, "users", "u", "", "Only look at entries by certain users (regex)")
+	rootCmd.PersistentFlags().StringVarP(&NoUsers, "no-users", "", "", "Ignore log lines from certain users (regex)")
+	rootCmd.PersistentFlags().StringVarP(&From, "from", "", "", "Log entries from $time")
+	rootCmd.PersistentFlags().StringVarP(&To, "to", "", "", "Log entries up to $time")
+	rootCmd.PersistentFlags().BoolVarP(&Oneline, "oneline", "", false, "Compact multiline entries")
+	rootCmd.PersistentFlags().StringVarP(&Matches, "matches", "", "", "Only look at entries matching certain patterns (regex)")
+	rootCmd.PersistentFlags().StringVarP(&Connstr, "connstr", "", "", "Connect to specified instance and determine log location / settings")
+	rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
+	rootCmd.PersistentFlags().StringVarP(&Db, "db", "", "", "Only look at certain databases (regex)")
+	rootCmd.PersistentFlags().StringVarP(&NoDb, "no-db", "", "", "Ignore certain databases (regex)")
 }
