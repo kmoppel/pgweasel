@@ -60,7 +60,7 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "More chat")
-	rootCmd.PersistentFlags().StringVarP(&Prefix, "prefix", "p", "", "Postgres log_line_prefix")
+	rootCmd.PersistentFlags().StringVarP(&Prefix, "prefix", "p", "%m [%p] %q%u@%d ", "Postgres log_line_prefix")
 	rootCmd.PersistentFlags().StringVarP(&Users, "users", "u", "", "Only look at entries by certain users (regex)")
 	rootCmd.PersistentFlags().StringVarP(&NoUsers, "no-users", "", "", "Ignore log lines from certain users (regex)")
 	rootCmd.PersistentFlags().StringVarP(&From, "from", "", "", "Log entries from $time")
