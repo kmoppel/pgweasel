@@ -36,16 +36,26 @@ func init() {
 func showErrors(cmd *cobra.Command, args []string) {
 	log.Println("showErrors called")
 	log.Println("MinErrLvl", MinErrLvl)
-	lastLog, _ := detector.DetectLatestPostgresLogFile()
+	lastLog, _ := detector.DetectLatestPostgresLogFile() //TODO glob
 	log.Println("lastLog", lastLog)
 	gp, _ := cmd.Flags().GetString("glob")
 	log.Println("GlobPath", gp)
+	// logparser.ParseLogFile(cmd, lastLog, nil, Prefix)
+	logparser.ParseLogFile(cmd, "testdata/sample1.log", nil, Prefix)
 
-	var log1 = `2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`
-	e, err := logparser.ParseEntryFromLogline(log1, Prefix)
-	if err != nil {
-		log.Println("Error in ParseEntryFromLogline:", err)
-		return
-	}
-	log.Printf("e: %+v\n", e)
+	// var log1 = `2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`
+	// e, err := logparser.ParseEntryFromLogline(log1, Prefix)
+	// if err != nil {
+	// 	log.Println("Error in ParseEntryFromLogline:", err)
+	// 	return
+	// }
+	// log.Printf("e: %+v\n", e)
+
+	// var log2 = `2025-05-02 12:26:27.649 EEST [2308351] LOG:  background worker "TimescaleDB Background Worker Scheduler" (PID 2380175) exited with exit code 1`
+	// e, err = logparser.ParseEntryFromLogline(log2, Prefix)
+	// if err != nil {
+	// 	log.Println("Error in ParseEntryFromLogline:", err)
+	// 	return
+	// }
+	// log.Printf("e: %+v\n", e)
 }

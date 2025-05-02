@@ -9,7 +9,6 @@ type LogEntry struct {
 	ProcessID     string    `json:"process_id"`
 	ErrorSeverity string    `json:"error_severity"`
 	Message       string    `json:"message"`
-	FullLogline   string
 }
 
 // type PgLogEntry struct {

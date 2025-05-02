@@ -1,8 +1,10 @@
 package logparser
 
 import (
+	"bufio"
 	"errors"
 	"log"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -18,8 +20,7 @@ func ParseEntryFromLogline(line string, logLinePrefix string) (pglog.LogEntry, e
 	}
 
 	r := CompileRegexForLogLinePrefix(logLinePrefix)
-	log.Printf("Parsing prefix '%s', line: %s", logLinePrefix, line)
-	// log.Println("FindAllString", r.FindAllString(line, -1))
+	// log.Printf("Parsing prefix '%s', line: %s", logLinePrefix, line)
 
 	match := r.FindStringSubmatch(line)
 	if match == nil {
@@ -64,19 +65,20 @@ func TimestringToTime(s string) (time.Time, error) {
 
 // 2025-04-28 00:20:02.274 EEST [2635] LOG:  checkpoint starting: time
 func CompileRegexForLogLinePrefix(logLinePrefix string) *regexp.Regexp {
-	log.Printf("CompileRegexForLogLinePrefix for logLinePrefix: '%s'\n", logLinePrefix)
+	// log.Printf("CompileRegexForLogLinePrefix for logLinePrefix: '%s'\n", logLinePrefix)
 	var r = "^" + logLinePrefix
 	r = strings.Replace(r, "[", "\\[", -1)
 	r = strings.Replace(r, "]", "\\]", -1)
 	r = strings.Replace(r, "%m", `(?P<time>[\d\-:\. ]+ [A-Z]+)`, -1)
 	r = strings.Replace(r, "%p", `(?P<pid>\d+)`, -1)
+	r = strings.Replace(r, "%u@%d", `(?:(?P<user>\w+)@(?P<db>\w+))?`, -1)
+	r = strings.TrimRight(r, " ")
 	r = strings.Replace(r, "%q", "", -1)
 	r = strings.Replace(r, "%u", `(?P<user>\w+)?`, -1)
 	r = strings.Replace(r, "%d", `(?P<db>\w+)?`, -1)
-	r = r + `(?P<level>[A-Z]+):(?P<message>.*)$`
+	r = r + `\s*(?P<level>[A-Z]+):\s*(?P<message>.*)$`
 	// `^(?P<time>[\d\-:\. ]+ [A-Z]+) \[(?P<pid>\d+)\] (?:(?P<session>[\w\.\[\]]+)\s)?(?P<user>\w+)?@(?P<db>\w+)?`
-	// r = `^(?P<time>[\d\-:\. ]+ [A-Z]+) `
-	log.Println("Final regex str:", r)
+	// log.Println("Final regex str:", r)
 	return regexp.MustCompile(r)
 }
 
@@ -84,5 +86,63 @@ func CompileRegexForLogLinePrefix(logLinePrefix string) *regexp.Regexp {
 func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLinePrefix string) error {
 	minLvl, _ := cmd.Flags().GetString("min-lvl")
 	log.Println("Showing all msgs with minLvl >=", minLvl)
+
+	// Open file from filePath and loop line by line
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Println("Error opening file:", err)
+		return err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+
+	var sb strings.Builder
+
+	gathering := false
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// If the line does not have a timestamp, it is a continuation of the previous entry
+		if HasTimestampPrefix(line) {
+			if gathering && sb.Len() > 0 {
+				// Convert the string builder to a string and parse it
+				e, err := ParseEntryFromLogline(strings.TrimRight(sb.String(), "\n"), logLinePrefix)
+				if err != nil {
+					log.Println("Error in ParseEntryFromLogline:", err)
+				} else {
+					log.Printf("Parsed entry: %+v\n", e)
+				}
+			}
+			gathering = true
+			sb = strings.Builder{}
+		} else if !gathering { // Skip over very first non-full lines (is even possible?)
+			continue
+		}
+		sb.WriteString(line)
+		sb.WriteString("\n")
+	}
+
+	// // Loop through all lines in the log file from filePath, or logLines if logLines is not empty
+	// for _, line := range logLines {
+	// 	if strings.Contains(line, minLvl) {
+	// 		log.Println("Found line with minLvl:", line)
+	// 		e, err := ParseEntryFromLogline(line, logLinePrefix)
+	// 		if err != nil {
+	// 			log.Println("Error parsing log line:", err)
+	// 			continue
+	// 		}
+	// 		log.Printf("Parsed entry: %+v\n", e)
+	// 		// Here you can do something with the parsed entry, like storing it in a database or printing it
+	// 		// log.Printf("Parsed entry: %+v\n", e)
+	// 		// For example, print the entry
+	// 	}
+	// }
 	return nil
+}
+
+func HasTimestampPrefix(line string) bool {
+	r := regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+)`)
+	return r.MatchString(line)
 }

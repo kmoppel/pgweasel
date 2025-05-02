@@ -14,3 +14,8 @@ func TestFileLogger(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "2025-05-02 12:27:52.634 EEST", e.LogTime)
 }
+
+func TestHasTimestampPrefix(t *testing.T) {
+	assert.True(t, logparser.HasTimestampPrefix("2025-05-02 12:27:52.634 EEST [2380404]"))
+	assert.False(t, logparser.HasTimestampPrefix("bla 2025-05-02 12:27:52.634 EEST [2380404]"))
+}
