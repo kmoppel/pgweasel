@@ -52,6 +52,7 @@ var Connstr string
 var Tail bool
 var Db string
 var NoDb string
+var GlobPath string
 
 func init() {
 	// Here you will define your flags and configuration settings.
@@ -70,4 +71,5 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
 	rootCmd.PersistentFlags().StringVarP(&Db, "db", "", "", "Only look at certain databases (regex)")
 	rootCmd.PersistentFlags().StringVarP(&NoDb, "no-db", "", "", "Ignore certain databases (regex)")
+	rootCmd.PersistentFlags().StringVarP(&GlobPath, "glob", "", "", "Glob pattern to look for log file locations")
 }

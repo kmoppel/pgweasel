@@ -1,4 +1,4 @@
-package pgdetector
+package detector
 
 import (
 	"os"

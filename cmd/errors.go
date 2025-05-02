@@ -6,7 +6,7 @@ package cmd
 import (
 	"log"
 
-	"github.com/kmoppel/pgweasel/internal/pgdetector"
+	"github.com/kmoppel/pgweasel/internal/detector"
 	"github.com/spf13/cobra"
 )
 
@@ -35,6 +35,8 @@ func init() {
 func showErrors(cmd *cobra.Command, args []string) {
 	log.Println("showErrors called")
 	log.Println("MinErrLvl", MinErrLvl)
-	lastLog, _ := pgdetector.DetectLatestPostgresLogFile()
+	lastLog, _ := detector.DetectLatestPostgresLogFile()
 	log.Println("lastLog", lastLog)
+	gp, _ := cmd.Flags().GetString("glob")
+	log.Println("GlobPath", gp)
 }
