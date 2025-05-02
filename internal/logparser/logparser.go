@@ -76,7 +76,7 @@ func CompileRegexForLogLinePrefix(logLinePrefix string) *regexp.Regexp {
 	r = strings.Replace(r, "%q", "", -1)
 	r = strings.Replace(r, "%u", `(?P<user>\w+)?`, -1)
 	r = strings.Replace(r, "%d", `(?P<db>\w+)?`, -1)
-	r = r + `\s*(?P<level>[A-Z]+):\s*(?P<message>.*)$`
+	r = r + `\s*(?P<level>[A-Z]+):\s*(?P<message>(?s:.*))$`
 	// `^(?P<time>[\d\-:\. ]+ [A-Z]+) \[(?P<pid>\d+)\] (?:(?P<session>[\w\.\[\]]+)\s)?(?P<user>\w+)?@(?P<db>\w+)?`
 	// log.Println("Final regex str:", r)
 	return regexp.MustCompile(r)
@@ -98,7 +98,7 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 
-	var sb strings.Builder
+	var lines = make([]string, 0)
 
 	gathering := false
 	for scanner.Scan() {
@@ -106,9 +106,16 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 
 		// If the line does not have a timestamp, it is a continuation of the previous entry
 		if HasTimestampPrefix(line) {
-			if gathering && sb.Len() > 0 {
+			if gathering && len(lines) > 0 {
+				var final string
+				if len(lines) > 1 {
+					final = strings.Join(lines, "\n")
+					// log.Println("Found multi-line entry:", final)
+				} else {
+					final = lines[0]
+				}
 				// Convert the string builder to a string and parse it
-				e, err := ParseEntryFromLogline(strings.TrimRight(sb.String(), "\n"), logLinePrefix)
+				e, err := ParseEntryFromLogline(final, logLinePrefix)
 				if err != nil {
 					log.Println("Error in ParseEntryFromLogline:", err)
 				} else {
@@ -116,12 +123,11 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 				}
 			}
 			gathering = true
-			sb = strings.Builder{}
+			lines = make([]string, 0)
 		} else if !gathering { // Skip over very first non-full lines (is even possible?)
 			continue
 		}
-		sb.WriteString(line)
-		sb.WriteString("\n")
+		lines = append(lines, line)
 	}
 
 	// // Loop through all lines in the log file from filePath, or logLines if logLines is not empty

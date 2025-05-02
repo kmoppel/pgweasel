@@ -25,3 +25,5 @@
 2025-05-02 18:25:51.151 EEST [2698052] krl@postgres STATEMENT:  select dadasdas
 	dasda
 	adsdas;
+2025-05-02 18:26:27.648 EEST [2380175] FATAL:  terminating background worker "TimescaleDB Background Worker Scheduler" due to administrator command
+2025-05-02 18:26:27.649 EEST [2308351] LOG:  background worker "TimescaleDB Background Worker Scheduler" (PID 2380175) exited with exit code 1
