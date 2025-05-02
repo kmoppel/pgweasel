@@ -12,13 +12,14 @@ import (
 )
 
 func ParseEntryFromLogline(line string, logLinePrefix string) (pglog.LogEntry, error) {
-	e := pglog.LogEntry{FullLogline: line}
+	e := pglog.LogEntry{}
 	if line == "" {
 		return e, errors.New("empty log line")
 	}
 
 	r := CompileRegexForLogLinePrefix(logLinePrefix)
-	log.Println("FindAllString", r.FindAllString(line, -1))
+	log.Printf("Parsing prefix '%s', line: %s", logLinePrefix, line)
+	// log.Println("FindAllString", r.FindAllString(line, -1))
 
 	match := r.FindStringSubmatch(line)
 	if match == nil {
@@ -39,6 +40,14 @@ func ParseEntryFromLogline(line string, logLinePrefix string) (pglog.LogEntry, e
 	e.LogTime = timestamp
 
 	e.ProcessID = result["pid"]
+
+	e.UserName = result["user"]
+
+	e.DatabaseName = result["db"]
+
+	e.ErrorSeverity = result["level"]
+
+	e.Message = result["message"]
 
 	return e, nil
 }
@@ -61,8 +70,13 @@ func CompileRegexForLogLinePrefix(logLinePrefix string) *regexp.Regexp {
 	r = strings.Replace(r, "]", "\\]", -1)
 	r = strings.Replace(r, "%m", `(?P<time>[\d\-:\. ]+ [A-Z]+)`, -1)
 	r = strings.Replace(r, "%p", `(?P<pid>\d+)`, -1)
-	// `^(?P<time>[\d\-:\. ]+ [A-Z]+) \[(?P<pid>\d+)\] (?:(?P<session>[\w\.\[\]]+)\s)?(?P<user>\w+)?@(?P<db>\w+)?\s(?P<level>[A-Z]+):\s+(?P<message>.*)$`
+	r = strings.Replace(r, "%q", "", -1)
+	r = strings.Replace(r, "%u", `(?P<user>\w+)?`, -1)
+	r = strings.Replace(r, "%d", `(?P<db>\w+)?`, -1)
+	r = r + `(?P<level>[A-Z]+):(?P<message>.*)$`
+	// `^(?P<time>[\d\-:\. ]+ [A-Z]+) \[(?P<pid>\d+)\] (?:(?P<session>[\w\.\[\]]+)\s)?(?P<user>\w+)?@(?P<db>\w+)?`
 	// r = `^(?P<time>[\d\-:\. ]+ [A-Z]+) `
+	log.Println("Final regex str:", r)
 	return regexp.MustCompile(r)
 }
 
