@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/kmoppel/pgweasel/internal/detector"
+	"github.com/kmoppel/pgweasel/internal/logparser"
 	"github.com/kmoppel/pgweasel/internal/postgres"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -72,8 +73,12 @@ func showErrors(cmd *cobra.Command, args []string) {
 		return
 	}
 	logger.Sugar().Debugf("logFile: %s, logFolder: %s", logFile, logFolder)
+	if logFile == "" {
+		logger.Error("No log files found")
+		return
+	}
 
-	// logparser.ParseLogFile(cmd, "testdata/debian_default.log", nil, Prefix)
+	logparser.ParseLogFile(cmd, "testdata/debian_default.log", nil, Prefix)
 	// logparser.ParseLogFile(cmd, "testdata/rds_default.log", nil, "%t:%r:%u@%d:[%p]")
 
 	// var log1 = `2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`

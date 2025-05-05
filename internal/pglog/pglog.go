@@ -1,6 +1,9 @@
 package pglog
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 type LogEntry struct {
 	LogTime        time.Time `json:"log_time"`
@@ -65,6 +68,7 @@ func (e *LogEntry) SeverityNum() int {
 }
 
 func SeverityToNum(severity string) int {
+	severity = strings.ToUpper(severity)
 	switch severity {
 	case "DEBUG":
 		return 0
