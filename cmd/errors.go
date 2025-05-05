@@ -61,6 +61,13 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	if Prefix == "" {
+		Prefix = postgres.TryGetLogLinePrefixFromLocalDefaultInstance(logFile)
+		if Prefix != "" {
+			log.Debug().Msgf("Using log_line_prefix from default Postgres instance: %s", Prefix)
+		}
+	}
+
+	if Prefix == "" {
 		Prefix = detector.DEFAULT_LOG_LINE_PREFIX
 		log.Warn().Msgf("Using default log_line_prefix: %s (use -p/--prefix to set)", detector.DEFAULT_LOG_LINE_PREFIX)
 	}
