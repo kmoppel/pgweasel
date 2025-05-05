@@ -33,7 +33,7 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(errorsCmd)
 
-	errorsCmd.Flags().StringVarP(&MinErrLvl, "min-lvl", "", "ERROR", "The minimum Postgres error level to show")
+	errorsCmd.Flags().StringVarP(&MinErrLvl, "min-lvl", "", "WARNING", "The minimum Postgres error level to show")
 }
 
 func showErrors(cmd *cobra.Command, args []string) {
