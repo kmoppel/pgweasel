@@ -7,12 +7,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const DEBIAN_DEFAULT_LOG_LINE_PREFIX = "%m [%p] %q%u@%d "
+
 var log1 = `2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`
 
 func TestFileLogger(t *testing.T) {
-	e, err := logparser.ParseEntryFromLogline(log1, "%m [%p] %q%u@%d ")
+	r := logparser.CompileRegexForLogLinePrefix(DEBIAN_DEFAULT_LOG_LINE_PREFIX)
+	e, err := logparser.ParseEntryFromLogline(log1, r)
 	assert.NoError(t, err)
-	assert.Equal(t, "2025-05-02 12:27:52.634 EEST", e.LogTime)
+	ts, err := logparser.TimestringToTime("2025-05-02 12:27:52.634 EEST")
+	assert.NoError(t, err)
+	assert.Equal(t, ts, e.LogTime)
 }
 
 func TestHasTimestampPrefix(t *testing.T) {
