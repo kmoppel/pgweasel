@@ -27,6 +27,7 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		showErrors(cmd, args)
 	},
+	Args: cobra.MaximumNArgs(1), // empty means outdetect or use hardcoded defaults
 }
 
 func init() {
@@ -43,52 +44,28 @@ func showErrors(cmd *cobra.Command, args []string) {
 	MinErrLvl = strings.ToUpper(MinErrLvl)
 	log.Debug().Msgf("Running in debug mode. MinErrLvl = %s", MinErrLvl)
 
-	defaultLogFolder := "/var/log/postgresql"
-	var logFolder, logFile, logDest string
-	var err error
+	logFile, logFolder, err := detector.GetLatestLogFileAndFolder(args, Connstr)
 
-	if len(args) == 1 {
-		logFile, logFolder, err = detector.DetectLatestPostgresLogFileAndFolder(args[0])
-	} else {
-		if Connstr != "" {
-			log.Debug().Msg("Using --connstr for log location / prefix ...")
-			logDest, logFolder, Prefix, err = postgres.GetLogDestAndDirectoryAndPrefix()
-			if err != nil {
-				log.Error().Msgf("Error getting log directory and prefix from DB: %v", err)
-			}
-			log.Debug().Msgf("logDest: %s, logFolder: %s, Prefix: %s", logDest, logFile, Prefix)
-		}
-		if logFolder == "" {
-			logFolder = defaultLogFolder
-		}
-		logFile, logFolder, err = detector.DetectLatestPostgresLogFileAndFolder(logFolder)
-	}
 	if err != nil {
-		log.Error().Msgf("Error determining log files: %v", err)
-		return
+		log.Fatal().Err(err).Msg("Error determining any log files")
 	}
-	log.Debug().Msgf("logDest: %s, logFolder: %s, logFile: %s, Prefix: %s", logDest, logFolder, logFile, Prefix)
 	if logFile == "" {
 		log.Error().Msg("No log files found")
 		return
 	}
+	if Connstr != "" && Prefix == "" {
+		Prefix, err = postgres.GetLogLinePrefix(Connstr)
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error determining log_line_prefix from Connstr")
+		}
+	}
 
-	logparser.ParseLogFile(cmd, "testdata/debian_default.log", nil, Prefix)
-	// logparser.ParseLogFile(cmd, "testdata/rds_default.log", nil, "%t:%r:%u@%d:[%p]")
+	if Prefix == "" {
+		Prefix = detector.DEFAULT_LOG_LINE_PREFIX
+		log.Warn().Msgf("Using default log_line_prefix: %s (use -p/--prefix to set)", detector.DEFAULT_LOG_LINE_PREFIX)
+	}
 
-	// var log1 = `2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`
-	// e, err := logparser.ParseEntryFromLogline(log1, Prefix)
-	// if err != nil {
-	// 	log.Println("Error in ParseEntryFromLogline:", err)
-	// 	return
-	// }
-	// log.Printf("e: %+v\n", e)
+	log.Debug().Msgf("Detected logFolder: %s, logFile: %s, Prefix: %s", logFolder, logFile, Prefix)
 
-	// var log2 = `2025-05-02 12:26:27.649 EEST [2308351] LOG:  background worker "TimescaleDB Background Worker Scheduler" (PID 2380175) exited with exit code 1`
-	// e, err = logparser.ParseEntryFromLogline(log2, Prefix)
-	// if err != nil {
-	// 	log.Println("Error in ParseEntryFromLogline:", err)
-	// 	return
-	// }
-	// log.Printf("e: %+v\n", e)
+	logparser.ParseLogFile(cmd, logFile, nil, Prefix, MinErrLvl)
 }

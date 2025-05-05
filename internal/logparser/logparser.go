@@ -94,9 +94,7 @@ func CompileRegexForLogLinePrefix(logLinePrefix string) *regexp.Regexp {
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLinePrefix string) error {
-	minLvl, _ := cmd.Flags().GetString("min-lvl")
-
+func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLinePrefix string, minLvl string) error {
 	// Open file from filePath and loop line by line
 	file, err := os.Open(filePath)
 	if err != nil {
