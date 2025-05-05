@@ -4,14 +4,13 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"log"
 	"strings"
 
 	"github.com/kmoppel/pgweasel/internal/detector"
 	"github.com/kmoppel/pgweasel/internal/logparser"
 	"github.com/kmoppel/pgweasel/internal/postgres"
 	"github.com/rs/zerolog"
-	zl "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -42,23 +41,22 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	MinErrLvl = strings.ToUpper(MinErrLvl)
-	zl.Debug().Msgf("Running in debug mode. MinErrLvl = %s", MinErrLvl)
+	log.Debug().Msgf("Running in debug mode. MinErrLvl = %s", MinErrLvl)
 
 	defaultLogFolder := "/var/log/postgresql"
 	var logFolder, logFile, logDest string
 	var err error
 
-	log.Println("len(args)", len(args))
 	if len(args) == 1 {
 		logFile, logFolder, err = detector.DetectLatestPostgresLogFileAndFolder(args[0])
 	} else {
 		if Connstr != "" {
-			zl.Debug().Msg("Using --connstr for log location / prefix ...")
+			log.Debug().Msg("Using --connstr for log location / prefix ...")
 			logDest, logFolder, Prefix, err = postgres.GetLogDestAndDirectoryAndPrefix()
 			if err != nil {
-				zl.Error().Msgf("Error getting log directory and prefix from DB: %v", err)
+				log.Error().Msgf("Error getting log directory and prefix from DB: %v", err)
 			}
-			zl.Debug().Msgf("logDest: %s, logFolder: %s, Prefix: %s", logDest, logFile, Prefix)
+			log.Debug().Msgf("logDest: %s, logFolder: %s, Prefix: %s", logDest, logFile, Prefix)
 		}
 		if logFolder == "" {
 			logFolder = defaultLogFolder
@@ -66,12 +64,12 @@ func showErrors(cmd *cobra.Command, args []string) {
 		logFile, logFolder, err = detector.DetectLatestPostgresLogFileAndFolder(logFolder)
 	}
 	if err != nil {
-		zl.Error().Msgf("Error determining log files: %v", err)
+		log.Error().Msgf("Error determining log files: %v", err)
 		return
 	}
-	zl.Debug().Msgf("logDest: %s, logFolder: %s, Prefix: %s", logDest, logFile, Prefix)
+	log.Debug().Msgf("logDest: %s, logFolder: %s, logFile: %s, Prefix: %s", logDest, logFolder, logFile, Prefix)
 	if logFile == "" {
-		zl.Error().Msg("No log files found")
+		log.Error().Msg("No log files found")
 		return
 	}
 

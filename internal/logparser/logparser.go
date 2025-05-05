@@ -3,14 +3,14 @@ package logparser
 import (
 	"bufio"
 	"errors"
-	"log"
+	stdlog "log"
 	"os"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/kmoppel/pgweasel/internal/pglog"
-	zl "github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -60,12 +60,12 @@ func TimestringToTime(s string) (time.Time, error) {
 	t, err := time.Parse(layout, s)
 	if err != nil {
 		if err != nil {
-			zl.Error().Msgf("Failed to parse time string '%s' with layout: %s", s, layout)
+			log.Error().Msgf("Failed to parse time string '%s' with layout: %s", s, layout)
 		}
 		layout = "2006-01-02 15:04:05 MST"
 		t, err = time.Parse(layout, s)
 		if err != nil {
-			zl.Error().Msgf("Failed to parse time string '%s' with layout: %s", s, layout)
+			log.Error().Msgf("Failed to parse time string '%s' with layout: %s", s, layout)
 		}
 	}
 	return t, err
@@ -100,7 +100,7 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 	// Open file from filePath and loop line by line
 	file, err := os.Open(filePath)
 	if err != nil {
-		zl.Error().Err(err).Msgf("Error opening file %s", filePath)
+		log.Error().Err(err).Msgf("Error opening file %s", filePath)
 		return err
 	}
 	defer file.Close()
@@ -130,10 +130,10 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 
 				e, err := ParseEntryFromLogline(final, r)
 				if err != nil {
-					zl.Fatal().Err(err).Msg("Error in ParseEntryFromLogline")
+					log.Fatal().Err(err).Msg("Error in ParseEntryFromLogline")
 				} else {
 					if e.SeverityNum() >= pglog.SeverityToNum(minLvl) {
-						log.Printf("Parsed entry: %+v\n", e)
+						stdlog.Printf("Parsed entry: %+v\n", e)
 					}
 				}
 			}
