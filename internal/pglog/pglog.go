@@ -15,53 +15,34 @@ type LogEntry struct {
 	Message        string    `json:"message"`
 }
 
-// type PgLogEntry struct {
-// 	LogTime              time.Time `json:"log_time"`
-// 	UserName             string    `json:"user_name"`
-// 	DatabaseName         string    `json:"database_name"`
-// 	ProcessID            int       `json:"process_id"`
-// 	ConnectionFrom       string    `json:"connection_from"`
-// 	SessionID            string    `json:"session_id"`
-// 	SessionLineNum       int64     `json:"session_line_num"`
-// 	CommandTag           string    `json:"command_tag"`
-// 	SessionStartTime     time.Time `json:"session_start_time"`
-// 	VirtualTransactionID string    `json:"virtual_transaction_id"`
-// 	TransactionID        *int64    `json:"transaction_id"`
-// 	ErrorSeverity        string    `json:"error_severity"`
-// 	SQLStateCode         string    `json:"sql_state_code"`
-// 	Message              string    `json:"message"`
-// 	Detail               string    `json:"detail"`
-// 	Hint                 string    `json:"hint"`
-// 	InternalQuery        string    `json:"internal_query"`
-// 	InternalQueryPos     *int      `json:"internal_query_pos"`
-// 	Context              string    `json:"context"`
-// 	Query                string    `json:"query"`
-// 	QueryPos             *int      `json:"query_pos"`
-// 	Location             string    `json:"location"`
-// 	ApplicationName      string    `json:"application_name"`
-// 	BackendType          string    `json:"backend_type"`
-// 	LeaderPID            *int      `json:"leader_pid"`
-// 	QueryID              *int64    `json:"query_id"`
-// }
-
+// Postgres log levels are DEBUG5, DEBUG4, DEBUG3, DEBUG2, DEBUG1, INFO, NOTICE, WARNING, ERROR, LOG, FATAL, and PANIC
+// but move LOG lower as too chatty otherwise
 func (e *LogEntry) SeverityNum() int {
-	switch e.ErrorSeverity {
-	case "DEBUG":
+	switch strings.ToUpper(e.ErrorSeverity) {
+	case "DEBUG5":
 		return 0
-	case "INFO":
+	case "DEBUG4":
 		return 1
-	case "NOTICE":
+	case "DEBUG3":
 		return 2
-	case "WARNING":
+	case "DEBUG2":
 		return 3
-	case "ERROR":
+	case "DEBUG1":
 		return 4
 	case "LOG":
 		return 5
-	case "FATAL":
+	case "INFO":
+		return 5
+	case "NOTICE":
 		return 6
-	case "PANIC":
+	case "WARNING":
 		return 7
+	case "ERROR":
+		return 8
+	case "FATAL":
+		return 9
+	case "PANIC":
+		return 10
 	default:
 		return -1
 	}
@@ -70,22 +51,30 @@ func (e *LogEntry) SeverityNum() int {
 func SeverityToNum(severity string) int {
 	severity = strings.ToUpper(severity)
 	switch severity {
-	case "DEBUG":
+	case "DEBUG5":
 		return 0
-	case "INFO":
+	case "DEBUG4":
 		return 1
-	case "NOTICE":
+	case "DEBUG3":
 		return 2
-	case "WARNING":
+	case "DEBUG2":
 		return 3
-	case "ERROR":
+	case "DEBUG1":
 		return 4
 	case "LOG":
 		return 5
-	case "FATAL":
+	case "INFO":
+		return 5
+	case "NOTICE":
 		return 6
-	case "PANIC":
+	case "WARNING":
 		return 7
+	case "ERROR":
+		return 8
+	case "FATAL":
+		return 9
+	case "PANIC":
+		return 10
 	default:
 		return -1
 	}
