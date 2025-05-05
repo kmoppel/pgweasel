@@ -10,12 +10,12 @@ import (
 	"github.com/kmoppel/pgweasel/internal/detector"
 	"github.com/kmoppel/pgweasel/internal/logparser"
 	"github.com/kmoppel/pgweasel/internal/postgres"
+	"github.com/rs/zerolog"
+	zl "github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 var MinErrLvl string
-var logger *zap.Logger
 var errorsCmd = &cobra.Command{
 	Use:   "errors",
 	Short: "A brief description of your command",
@@ -38,14 +38,11 @@ func init() {
 
 func showErrors(cmd *cobra.Command, args []string) {
 	if Verbose {
-		logger = zap.Must(zap.NewDevelopment())
-		defer logger.Sync() // flushes buffer, if any
-	} else {
-		logger = zap.NewNop()
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
 	MinErrLvl = strings.ToUpper(MinErrLvl)
-	logger.Debug("Running in debug mode", zap.String("MinErrLvl", MinErrLvl))
+	zl.Debug().Msgf("Running in debug mode. MinErrLvl = %s", MinErrLvl)
 
 	defaultLogFolder := "/var/log/postgresql"
 	var logFolder, logFile, logDest string
@@ -56,12 +53,12 @@ func showErrors(cmd *cobra.Command, args []string) {
 		logFile, logFolder, err = detector.DetectLatestPostgresLogFileAndFolder(args[0])
 	} else {
 		if Connstr != "" {
-			logger.Debug("Using --connstr for log location / prefix ...")
+			zl.Debug().Msg("Using --connstr for log location / prefix ...")
 			logDest, logFolder, Prefix, err = postgres.GetLogDestAndDirectoryAndPrefix()
 			if err != nil {
-				logger.Error("Error getting log directory and prefix from DB", zap.Error(err))
+				zl.Error().Msgf("Error getting log directory and prefix from DB: %v", err)
 			}
-			logger.Sugar().Debug("logDest", logDest, "logFolder", logFolder, "Prefix", Prefix)
+			zl.Debug().Msgf("logDest: %s, logFolder: %s, Prefix: %s", logDest, logFile, Prefix)
 		}
 		if logFolder == "" {
 			logFolder = defaultLogFolder
@@ -69,12 +66,12 @@ func showErrors(cmd *cobra.Command, args []string) {
 		logFile, logFolder, err = detector.DetectLatestPostgresLogFileAndFolder(logFolder)
 	}
 	if err != nil {
-		logger.Error("Error determining log files", zap.Error(err))
+		zl.Error().Msgf("Error determining log files: %v", err)
 		return
 	}
-	logger.Sugar().Debugf("logFile: %s, logFolder: %s", logFile, logFolder)
+	zl.Debug().Msgf("logDest: %s, logFolder: %s, Prefix: %s", logDest, logFile, Prefix)
 	if logFile == "" {
-		logger.Error("No log files found")
+		zl.Error().Msg("No log files found")
 		return
 	}
 

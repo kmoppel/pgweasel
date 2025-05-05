@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/kmoppel/pgweasel/internal/pglog"
+	zl "github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -58,10 +59,13 @@ func TimestringToTime(s string) (time.Time, error) {
 
 	t, err := time.Parse(layout, s)
 	if err != nil {
+		if err != nil {
+			zl.Error().Msgf("Failed to parse time string '%s' with layout: %s", s, layout)
+		}
 		layout = "2006-01-02 15:04:05 MST"
 		t, err = time.Parse(layout, s)
 		if err != nil {
-			log.Fatalf("Failed to parse time string '%s': %v", s, err)
+			zl.Error().Msgf("Failed to parse time string '%s' with layout: %s", s, layout)
 		}
 	}
 	return t, err
@@ -96,7 +100,7 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 	// Open file from filePath and loop line by line
 	file, err := os.Open(filePath)
 	if err != nil {
-		log.Println("Error opening file:", err)
+		zl.Error().Err(err).Msgf("Error opening file %s", filePath)
 		return err
 	}
 	defer file.Close()
@@ -117,24 +121,18 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 				var final string
 				if len(lines) > 1 {
 					final = strings.Join(lines, "\n")
-					// log.Println("Found multi-line entry:", final)
 				} else {
 					final = lines[0]
 				}
 				if r == nil {
 					r = CompileRegexForLogLinePrefix(logLinePrefix)
 				}
-				// log.Printf("Parsing prefix '%s', line: %s", logLinePrefix, line)
-				// Convert the string builder to a string and parse it
+
 				e, err := ParseEntryFromLogline(final, r)
 				if err != nil {
-					log.Println("Error in ParseEntryFromLogline:", err)
+					zl.Fatal().Err(err).Msg("Error in ParseEntryFromLogline")
 				} else {
 					if e.SeverityNum() >= pglog.SeverityToNum(minLvl) {
-						log.Println("Found line with minLvl:", e.ErrorSeverity, final)
-						// log.Println("Found line with minLvl:", e.ErrorSeverity, final)
-						// Here you can do something with the parsed entry, like storing it in a database or printing it
-						// log.Printf("Parsed entry: %+v\n", e)
 						log.Printf("Parsed entry: %+v\n", e)
 					}
 				}
@@ -147,21 +145,6 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 		lines = append(lines, line)
 	}
 
-	// // Loop through all lines in the log file from filePath, or logLines if logLines is not empty
-	// for _, line := range logLines {
-	// 	if strings.Contains(line, minLvl) {
-	// 		log.Println("Found line with minLvl:", line)
-	// 		e, err := ParseEntryFromLogline(line, logLinePrefix)
-	// 		if err != nil {
-	// 			log.Println("Error parsing log line:", err)
-	// 			continue
-	// 		}
-	// 		log.Printf("Parsed entry: %+v\n", e)
-	// 		// Here you can do something with the parsed entry, like storing it in a database or printing it
-	// 		// log.Printf("Parsed entry: %+v\n", e)
-	// 		// For example, print the entry
-	// 	}
-	// }
 	return nil
 }
 
