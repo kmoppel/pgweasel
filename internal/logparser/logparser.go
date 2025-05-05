@@ -13,14 +13,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func ParseEntryFromLogline(line string, logLinePrefix string) (pglog.LogEntry, error) {
+func ParseEntryFromLogline(line string, r *regexp.Regexp) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
 	if line == "" {
 		return e, errors.New("empty log line")
 	}
-
-	r := CompileRegexForLogLinePrefix(logLinePrefix)
-	// log.Printf("Parsing prefix '%s', line: %s", logLinePrefix, line)
 
 	match := r.FindStringSubmatch(line)
 	if match == nil {
@@ -109,6 +106,7 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 	scanner.Split(bufio.ScanLines)
 
 	var lines = make([]string, 0)
+	var r *regexp.Regexp
 
 	gathering := false
 	for scanner.Scan() {
@@ -124,8 +122,12 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 				} else {
 					final = lines[0]
 				}
+				if r == nil {
+					r = CompileRegexForLogLinePrefix(logLinePrefix)
+				}
+				// log.Printf("Parsing prefix '%s', line: %s", logLinePrefix, line)
 				// Convert the string builder to a string and parse it
-				e, err := ParseEntryFromLogline(final, logLinePrefix)
+				e, err := ParseEntryFromLogline(final, r)
 				if err != nil {
 					log.Println("Error in ParseEntryFromLogline:", err)
 				} else {
