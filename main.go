@@ -1,7 +1,12 @@
 package main
 
-import "github.com/kmoppel/pgweasel/cmd"
+import (
+	"log"
+
+	"github.com/kmoppel/pgweasel/cmd"
+)
 
 func main() {
+	log.SetFlags(0)
 	cmd.Execute()
 }

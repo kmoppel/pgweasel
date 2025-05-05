@@ -9,10 +9,11 @@ import (
 	"github.com/kmoppel/pgweasel/internal/detector"
 	"github.com/kmoppel/pgweasel/internal/logparser"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 var MinErrLvl string
-
+var logger *zap.Logger
 var errorsCmd = &cobra.Command{
 	Use:   "errors",
 	Short: "A brief description of your command",
@@ -34,6 +35,14 @@ func init() {
 }
 
 func showErrors(cmd *cobra.Command, args []string) {
+	if Verbose {
+		logger = zap.Must(zap.NewDevelopment())
+		defer logger.Sync() // flushes buffer, if any
+	} else {
+		logger = zap.NewNop()
+	}
+	logger.Debug("DEV Hello from Zap!")
+	logger.Sugar().Debugf("DEV Hello from Zap! %s", "Hello from Zap!")
 	log.Println("showErrors called")
 	log.Println("MinErrLvl", MinErrLvl)
 	lastLog, _ := detector.DetectLatestPostgresLogFile() //TODO glob
@@ -42,7 +51,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 	log.Println("GlobPath", gp)
 	// logparser.ParseLogFile(cmd, lastLog, nil, Prefix)
 	logparser.ParseLogFile(cmd, "testdata/debian_default.log", nil, Prefix)
-	logparser.ParseLogFile(cmd, "testdata/rds_default.log", nil, "%t:%r:%u@%d:[%p]")
+	// logparser.ParseLogFile(cmd, "testdata/rds_default.log", nil, "%t:%r:%u@%d:[%p]")
 
 	// var log1 = `2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`
 	// e, err := logparser.ParseEntryFromLogline(log1, Prefix)
