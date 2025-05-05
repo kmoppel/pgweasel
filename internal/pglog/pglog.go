@@ -3,12 +3,13 @@ package pglog
 import "time"
 
 type LogEntry struct {
-	LogTime       time.Time `json:"log_time"`
-	UserName      string    `json:"user_name"`
-	DatabaseName  string    `json:"database_name"`
-	ProcessID     string    `json:"process_id"`
-	ErrorSeverity string    `json:"error_severity"`
-	Message       string    `json:"message"`
+	LogTime        time.Time `json:"log_time"`
+	ConnectionFrom string    `json:"connection_from"`
+	UserName       string    `json:"user_name"`
+	DatabaseName   string    `json:"database_name"`
+	ProcessID      string    `json:"process_id"`
+	ErrorSeverity  string    `json:"error_severity"`
+	Message        string    `json:"message"`
 }
 
 // type PgLogEntry struct {

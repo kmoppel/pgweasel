@@ -50,15 +50,22 @@ func ParseEntryFromLogline(line string, logLinePrefix string) (pglog.LogEntry, e
 
 	e.Message = result["message"]
 
+	e.ConnectionFrom = result["remote"]
+
 	return e, nil
 }
 
 // Convert a time string like "2025-04-28 00:20:02.274 EEST" to a time.Time object
 func TimestringToTime(s string) (time.Time, error) {
 	layout := "2006-01-02 15:04:05.000 MST"
+
 	t, err := time.Parse(layout, s)
 	if err != nil {
-		log.Fatalf("Failed to parse time string '%s': %v", s, err)
+		layout = "2006-01-02 15:04:05 MST"
+		t, err = time.Parse(layout, s)
+		if err != nil {
+			log.Fatalf("Failed to parse time string '%s': %v", s, err)
+		}
 	}
 	return t, err
 }
@@ -69,16 +76,19 @@ func CompileRegexForLogLinePrefix(logLinePrefix string) *regexp.Regexp {
 	var r = "^" + logLinePrefix
 	r = strings.Replace(r, "[", "\\[", -1)
 	r = strings.Replace(r, "]", "\\]", -1)
-	r = strings.Replace(r, "%m", `(?P<time>[\d\-:\. ]+ [A-Z]+)`, -1)
+	r = strings.Replace(r, "%m", `(?P<time>[\d\-:\. ]+ [A-Z]+)`, -1) // 2025-05-02 18:25:05.617 EEST
+	r = strings.Replace(r, "%t", `(?P<time>[\d\-:\. ]+ [A-Z]+)`, -1) // 2025-05-05 06:00:51 UTC
+	r = strings.Replace(r, "%r", `(?P<remote>[\w\-\.]+\(\d+\))`, -1) // 127.0.0.1(32890)
 	r = strings.Replace(r, "%p", `(?P<pid>\d+)`, -1)
-	r = strings.Replace(r, "%u@%d", `(?:(?P<user>\w+)@(?P<db>\w+))?`, -1)
+	r = strings.Replace(r, "%q%u@%d", `(?:(?P<user>\w+)@(?P<db>\w+))?`, -1)
 	r = strings.TrimRight(r, " ")
 	r = strings.Replace(r, "%q", "", -1)
-	r = strings.Replace(r, "%u", `(?P<user>\w+)?`, -1)
-	r = strings.Replace(r, "%d", `(?P<db>\w+)?`, -1)
-	r = r + `\s*(?P<level>[A-Z]+):\s*(?P<message>(?s:.*))$`
+	r = strings.Replace(r, "%u", `(?P<user>\w+)`, -1)
+	r = strings.Replace(r, "%d", `(?P<db>\w+)`, -1)
+	r = r + `:?\s*(?P<level>[A-Z]+):\s*(?P<message>(?s:.*))$`
 	// `^(?P<time>[\d\-:\. ]+ [A-Z]+) \[(?P<pid>\d+)\] (?:(?P<session>[\w\.\[\]]+)\s)?(?P<user>\w+)?@(?P<db>\w+)?`
 	// log.Println("Final regex str:", r)
+	// os.Exit(0)
 	return regexp.MustCompile(r)
 }
 

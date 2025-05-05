@@ -41,7 +41,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 	gp, _ := cmd.Flags().GetString("glob")
 	log.Println("GlobPath", gp)
 	// logparser.ParseLogFile(cmd, lastLog, nil, Prefix)
-	logparser.ParseLogFile(cmd, "testdata/sample1.log", nil, Prefix)
+	logparser.ParseLogFile(cmd, "testdata/debian_default.log", nil, Prefix)
+	logparser.ParseLogFile(cmd, "testdata/rds_default.log", nil, "%t:%r:%u@%d:[%p]")
 
 	// var log1 = `2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`
 	// e, err := logparser.ParseEntryFromLogline(log1, Prefix)

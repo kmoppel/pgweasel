@@ -1,0 +1,22 @@
+2025-05-05 06:00:15 UTC:90.190.32.92(39116):postgres@postgres:[1282]:FATAL:  no pg_hba.conf entry for host "90.190.32.92", user "postgres", database "postgres", no encryption
+2025-05-05 06:00:51 UTC:90.190.32.92(32882):postgres@postgres:[1314]:LOG:  statement: select count(*) from pgbench_branches
+2025-05-05 06:00:51 UTC:90.190.32.92(32882):postgres@postgres:[1314]:LOG:  statement: select o.n, p.partstrat, pg_catalog.count(i.inhparent) from pg_catalog.pg_class as c join pg_catalog.pg_namespace as n on (n.oid = c.relnamespace) cross join lateral (select pg_catalog.array_position(pg_catalog.current_schemas(true), n.nspname)) as o(n) left join pg_catalog.pg_partitioned_table as p on (p.partrelid = c.oid) left join pg_catalog.pg_inherits as i on (c.oid = i.inhparent) where c.relname = 'pgbench_accounts' and o.n is not null group by 1, 2 order by 1 asc limit 1
+2025-05-05 06:00:51 UTC:90.190.32.92(32882):postgres@postgres:[1314]:LOG:  statement: vacuum pgbench_branches
+2025-05-05 06:00:51 UTC:90.190.32.92(32882):postgres@postgres:[1314]:LOG:  statement: vacuum pgbench_tellers
+2025-05-05 06:00:51 UTC:90.190.32.92(32882):postgres@postgres:[1314]:LOG:  statement: truncate pgbench_history
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: BEGIN;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: UPDATE pgbench_accounts SET abalance = abalance + -3744 WHERE aid = 12385;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: SELECT abalance FROM pgbench_accounts WHERE aid = 12385;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: UPDATE pgbench_tellers SET tbalance = tbalance + -3744 WHERE tid = 4;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: UPDATE pgbench_branches SET bbalance = bbalance + -3744 WHERE bid = 1;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (4, 1, 12385, -3744, CURRENT_TIMESTAMP);
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: END;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: BEGIN;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: UPDATE pgbench_accounts SET abalance = abalance + -4626 WHERE aid = 97422;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: SELECT abalance FROM pgbench_accounts WHERE aid = 97422;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: UPDATE pgbench_tellers SET tbalance = tbalance + -4626 WHERE tid = 4;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: UPDATE pgbench_branches SET bbalance = bbalance + -4626 WHERE bid = 1;
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (4, 1, 97422, -4626, CURRENT_TIMESTAMP);
+2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: END;
+2025-05-05 06:01:05 UTC:90.190.32.92(53880):postgres@postgres:[1332]:ERROR:  column "asdas" does not exist at character 8
+2025-05-05 06:01:05 UTC:90.190.32.92(53880):postgres@postgres:[1332]:STATEMENT:  select asdas
