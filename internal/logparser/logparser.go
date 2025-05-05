@@ -92,7 +92,6 @@ func CompileRegexForLogLinePrefix(logLinePrefix string) *regexp.Regexp {
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
 func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLinePrefix string) error {
 	minLvl, _ := cmd.Flags().GetString("min-lvl")
-	log.Println("Showing all msgs with minLvl >=", minLvl)
 
 	// Open file from filePath and loop line by line
 	file, err := os.Open(filePath)
@@ -131,7 +130,13 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 				if err != nil {
 					log.Println("Error in ParseEntryFromLogline:", err)
 				} else {
-					log.Printf("Parsed entry: %+v\n", e)
+					if e.SeverityNum() >= pglog.SeverityToNum(minLvl) {
+						log.Println("Found line with minLvl:", e.ErrorSeverity, final)
+						// log.Println("Found line with minLvl:", e.ErrorSeverity, final)
+						// Here you can do something with the parsed entry, like storing it in a database or printing it
+						// log.Printf("Parsed entry: %+v\n", e)
+						log.Printf("Parsed entry: %+v\n", e)
+					}
 				}
 			}
 			gathering = true

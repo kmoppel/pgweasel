@@ -5,9 +5,10 @@ package cmd
 
 import (
 	"log"
+	"strings"
 
 	"github.com/kmoppel/pgweasel/internal/detector"
-	"github.com/kmoppel/pgweasel/internal/logparser"
+	"github.com/kmoppel/pgweasel/internal/postgres"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 )
@@ -41,16 +42,38 @@ func showErrors(cmd *cobra.Command, args []string) {
 	} else {
 		logger = zap.NewNop()
 	}
-	logger.Debug("DEV Hello from Zap!")
-	logger.Sugar().Debugf("DEV Hello from Zap! %s", "Hello from Zap!")
-	log.Println("showErrors called")
-	log.Println("MinErrLvl", MinErrLvl)
-	lastLog, _ := detector.DetectLatestPostgresLogFile() //TODO glob
-	log.Println("lastLog", lastLog)
-	gp, _ := cmd.Flags().GetString("glob")
-	log.Println("GlobPath", gp)
-	// logparser.ParseLogFile(cmd, lastLog, nil, Prefix)
-	logparser.ParseLogFile(cmd, "testdata/debian_default.log", nil, Prefix)
+
+	MinErrLvl = strings.ToUpper(MinErrLvl)
+	logger.Debug("Running in debug mode", zap.String("MinErrLvl", MinErrLvl))
+
+	defaultLogFolder := "/var/log/postgresql"
+	var logFolder, logFile, logDest string
+	var err error
+
+	log.Println("len(args)", len(args))
+	if len(args) == 1 {
+		logFile, logFolder, err = detector.DetectLatestPostgresLogFileAndFolder(args[0])
+	} else {
+		if Connstr != "" {
+			logger.Debug("Using --connstr for log location / prefix ...")
+			logDest, logFolder, Prefix, err = postgres.GetLogDestAndDirectoryAndPrefix()
+			if err != nil {
+				logger.Error("Error getting log directory and prefix from DB", zap.Error(err))
+			}
+			logger.Sugar().Debug("logDest", logDest, "logFolder", logFolder, "Prefix", Prefix)
+		}
+		if logFolder == "" {
+			logFolder = defaultLogFolder
+		}
+		logFile, logFolder, err = detector.DetectLatestPostgresLogFileAndFolder(logFolder)
+	}
+	if err != nil {
+		logger.Error("Error determining log files", zap.Error(err))
+		return
+	}
+	logger.Sugar().Debugf("logFile: %s, logFolder: %s", logFile, logFolder)
+
+	// logparser.ParseLogFile(cmd, "testdata/debian_default.log", nil, Prefix)
 	// logparser.ParseLogFile(cmd, "testdata/rds_default.log", nil, "%t:%r:%u@%d:[%p]")
 
 	// var log1 = `2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`

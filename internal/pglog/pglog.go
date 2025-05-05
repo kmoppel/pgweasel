@@ -40,3 +40,49 @@ type LogEntry struct {
 // 	LeaderPID            *int      `json:"leader_pid"`
 // 	QueryID              *int64    `json:"query_id"`
 // }
+
+func (e *LogEntry) SeverityNum() int {
+	switch e.ErrorSeverity {
+	case "DEBUG":
+		return 0
+	case "INFO":
+		return 1
+	case "NOTICE":
+		return 2
+	case "WARNING":
+		return 3
+	case "ERROR":
+		return 4
+	case "LOG":
+		return 5
+	case "FATAL":
+		return 6
+	case "PANIC":
+		return 7
+	default:
+		return -1
+	}
+}
+
+func SeverityToNum(severity string) int {
+	switch severity {
+	case "DEBUG":
+		return 0
+	case "INFO":
+		return 1
+	case "NOTICE":
+		return 2
+	case "WARNING":
+		return 3
+	case "ERROR":
+		return 4
+	case "LOG":
+		return 5
+	case "FATAL":
+		return 6
+	case "PANIC":
+		return 7
+	default:
+		return -1
+	}
+}

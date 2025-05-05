@@ -13,7 +13,7 @@ import (
 
 const DEFAULT_LOG_DIR = "/var/log/postgresql"
 
-func DetectLatestPostgresLogFile() (string, error) {
+func DetectLatestPostgresLogFileAndFolder(fileOrFolder string) (string, string, error) {
 	var latestFile string
 	var latestModTime time.Time
 
@@ -28,12 +28,12 @@ func DetectLatestPostgresLogFile() (string, error) {
 		return nil
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	if latestFile == "" {
-		return "", os.ErrNotExist
+		return "", "", os.ErrNotExist
 	}
 
-	return latestFile, nil
+	return "", latestFile, nil
 }
