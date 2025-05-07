@@ -8,7 +8,6 @@ import (
 
 	"github.com/kmoppel/pgweasel/internal/detector"
 	"github.com/kmoppel/pgweasel/internal/logparser"
-	"github.com/kmoppel/pgweasel/internal/postgres"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -33,7 +32,7 @@ to quickly create a Cobra application.`,
 func init() {
 	rootCmd.AddCommand(errorsCmd)
 
-	errorsCmd.Flags().StringVarP(&MinErrLvl, "min-lvl", "", "WARNING", "The minimum Postgres error level to show")
+	errorsCmd.Flags().StringVarP(&MinErrLvl, "min-level", "l", "WARNING", "The minimum Postgres error level to show")
 }
 
 func showErrors(cmd *cobra.Command, args []string) {
@@ -53,26 +52,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 		log.Error().Msg("No log files found")
 		return
 	}
-	if Connstr != "" && Prefix == "" {
-		Prefix, err = postgres.GetLogLinePrefix(Connstr)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Error determining log_line_prefix from Connstr")
-		}
-	}
 
-	if Prefix == "" {
-		Prefix = postgres.TryGetLogLinePrefixFromLocalDefaultInstance(logFile)
-		if Prefix != "" {
-			log.Debug().Msgf("Using log_line_prefix from default Postgres instance: %s", Prefix)
-		}
-	}
+	log.Debug().Msgf("Detected logFolder: %s, logFile: %s, MinErrLvl: %s, Filters: %v", logFolder, logFile, MinErrLvl, Filters)
 
-	if Prefix == "" {
-		Prefix = detector.DEFAULT_LOG_LINE_PREFIX
-		log.Warn().Msgf("Using default log_line_prefix: %s (use -p/--prefix to set)", detector.DEFAULT_LOG_LINE_PREFIX)
-	}
-
-	log.Debug().Msgf("Detected logFolder: %s, logFile: %s, Prefix: %s", logFolder, logFile, Prefix)
-
-	logparser.ParseLogFile(cmd, logFile, Prefix, MinErrLvl)
+	logparser.ShowErrors(logFile, MinErrLvl, Filters)
 }

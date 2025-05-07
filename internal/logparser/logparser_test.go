@@ -14,7 +14,7 @@ var log1 = `2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  
 
 func TestFileLogger(t *testing.T) {
 	r := logparser.CompileRegexForLogLinePrefix(DEBIAN_DEFAULT_LOG_LINE_PREFIX)
-	e, err := logparser.ParseEntryFromLogline(log1, r)
+	e, err := logparser.EventLinesToPgLogEntry(log1, r)
 	assert.NoError(t, err)
 	ts, err := logparser.TimestringToTime("2025-05-02 12:27:52.634 EEST")
 	assert.NoError(t, err)
@@ -28,7 +28,7 @@ func TestHasTimestampPrefix(t *testing.T) {
 }
 
 func TestFallbackRegex(t *testing.T) {
-	regex := logparser.FALLBACK_REGEX
+	regex := logparser.DEFAULT_REGEX
 	expectedGroups := []string{"time", "level", "message"}
 
 	testLines := []string{

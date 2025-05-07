@@ -11,12 +11,11 @@ import (
 
 	"github.com/kmoppel/pgweasel/internal/pglog"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
 )
 
-var FALLBACK_REGEX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+).*(?P<level>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC|STATEMENT):\s*(?P<message>(?s:.*))$`)
+var DEFAULT_REGEX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+).*(?P<level>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC|STATEMENT):\s*(?P<message>(?s:.*))$`)
 
-func ParseEntryFromLogline(line string, r *regexp.Regexp) (pglog.LogEntry, error) {
+func EventLinesToPgLogEntry(line string, r *regexp.Regexp) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
 	if line == "" {
 		return e, errors.New("empty log line")
@@ -100,7 +99,7 @@ func GetFallbackSeverityMatchingRegex() *regexp.Regexp {
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func ParseLogFile(cmd *cobra.Command, filePath string, logLinePrefix string, minLvl string) error {
+func ShowErrors(filePath string, minLvl string, extraFilters []string) error {
 	// Open file from filePath and loop line by line
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -113,42 +112,46 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLinePrefix string, min
 	scanner.Split(bufio.ScanLines)
 
 	var lines = make([]string, 0)
-	var r *regexp.Regexp
-	var usingFallbackRegex bool = false
 
 	gathering := false
+	parseErrors := 0
 	for scanner.Scan() {
 		line := scanner.Text()
 
 		// If the line does not have a timestamp, it is a continuation of the previous entry
 		if HasTimestampPrefix(line) {
 			if gathering && len(lines) > 0 {
-				var final string
-				if len(lines) > 1 {
-					final = strings.Join(lines, "\n")
-				} else {
-					final = lines[0]
+				eventLines := strings.Join(lines, "\n")
+				userFiltersSatisfied := 0
+
+				e, err := EventLinesToPgLogEntry(eventLines, DEFAULT_REGEX)
+				if err != nil {
+					parseErrors += 1
+					if parseErrors > 10 {
+						log.Fatal().Err(err).Msg("10 parse errors reached, bailing")
+					} else {
+						log.Error().Err(err).Msgf("Default regex failure for line: %s", line)
+					}
+					continue
 				}
-				if r == nil {
-					// r = CompileRegexForLogLinePrefix(logLinePrefix)
-					r = FALLBACK_REGEX
-					if r == nil {
-						log.Warn().Msgf("No regex for logLinePrefix='%s', looking for plain severities only", logLinePrefix)
-						r = FALLBACK_REGEX
-						usingFallbackRegex = true
+
+				if len(extraFilters) > 0 {
+					for _, userFilter := range extraFilters {
+						m, err := regexp.MatchString(userFilter, eventLines) // compile and cache the regex
+						if err != nil {
+							log.Fatal().Err(err).Msgf("Error matching user provided filter %s on line: %s", userFilter, eventLines)
+							continue
+						}
+						// log.Debug().Msgf("Filter %s %s on line: %s", userFilter, gox.If(m, "OK", "NOK"), eventLines)
+						if m {
+							userFiltersSatisfied += 1
+							break
+						}
 					}
 				}
 
-				e, err := ParseEntryFromLogline(final, r)
-				if err != nil {
-					if usingFallbackRegex {
-						log.Fatal().Err(err).Msg("Fallback regex failure")
-					}
-					log.Fatal().Err(err).Msg("Error in ParseEntryFromLogline")
-				} else {
-					if e.SeverityNum() >= pglog.SeverityToNum(minLvl) {
-						stdlog.Println(e.Line)
-					}
+				if e.SeverityNum() >= pglog.SeverityToNum(minLvl) && userFiltersSatisfied == len(extraFilters) {
+					stdlog.Println(e.Line)
 				}
 			}
 			gathering = true
