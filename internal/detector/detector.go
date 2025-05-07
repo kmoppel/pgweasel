@@ -43,7 +43,7 @@ func FindMostRecentFileInFolder(folder string) (latestFile string, latestFilePar
 	return latestFile, filepath.Dir(latestFile), nil
 }
 
-func GetLatestLogFileAndFolder(fileOrFolder []string, pgConnstr string) (string, string, error) {
+func DiscoverLatestLogFileAndFolder(fileOrFolder []string, pgConnstr string) (string, string, error) {
 	var logFolder, logFile string
 
 	if len(fileOrFolder) == 0 && pgConnstr == "" {

@@ -4,10 +4,13 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/kmoppel/pgweasel/internal/detector"
 	"github.com/kmoppel/pgweasel/internal/logparser"
+	"github.com/kmoppel/pgweasel/internal/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -43,17 +46,44 @@ func showErrors(cmd *cobra.Command, args []string) {
 	MinErrLvl = strings.ToUpper(MinErrLvl)
 	log.Debug().Msgf("Running in debug mode. MinErrLvl = %s", MinErrLvl)
 
-	logFile, logFolder, err := detector.GetLatestLogFileAndFolder(args, Connstr)
+	var logFiles = make([]string, 0)
+	var logFile string
+	var logFolder string
+	var err error
+
+	if len(args) == 0 {
+		log.Debug().Msg("No files / folders provided, looking for latest file from default locations ...")
+		logFile, logFolder, err = detector.DiscoverLatestLogFileAndFolder(args, Connstr)
+		logFiles = append(logFiles, logFile)
+	} else {
+		_, err := os.Stat(args[0])
+		if err != nil {
+			log.Fatal().Err(err).Msgf("Error accessing path: %s", args[0])
+		}
+
+		if util.IsPathExistsAndFile(args[0]) {
+			logFile = args[0]
+			logFolder = filepath.Base(args[0])
+			logFiles = append(logFiles, logFile)
+		} else {
+			log.Debug().Msgf("Looking for log files from folder: %s ..", args[0])
+			logFiles, err = util.GetPostgresLogFilesTimeSorted(args[0])
+			log.Debug().Msgf("Found: %d", len(logFiles))
+		}
+	}
 
 	if err != nil {
 		log.Fatal().Err(err).Msg("Error determining any log files")
 	}
-	if logFile == "" {
+	if len(logFiles) == 0 {
 		log.Error().Msg("No log files found")
 		return
 	}
 
 	log.Debug().Msgf("Detected logFolder: %s, logFile: %s, MinErrLvl: %s, Filters: %v", logFolder, logFile, MinErrLvl, Filters)
 
-	logparser.ShowErrors(logFile, MinErrLvl, Filters)
+	for _, logFile := range logFiles {
+		log.Debug().Msgf("Processing log file: %s", logFile)
+		logparser.ShowErrors(logFile, MinErrLvl, Filters)
+	}
 }
