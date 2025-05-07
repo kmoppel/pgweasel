@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var DEFAULT_REGEX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+).*(?P<level>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC|STATEMENT):\s*(?P<message>(?s:.*))$`)
+var DEFAULT_REGEX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+).*(?P<level>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC|STATEMENT|DETAIL):\s*(?P<message>(?s:.*))$`)
 
 func EventLinesToPgLogEntry(line string, r *regexp.Regexp) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
