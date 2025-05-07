@@ -50,6 +50,8 @@ func ParseEntryFromLogline(line string, r *regexp.Regexp) (pglog.LogEntry, error
 
 	e.ConnectionFrom = result["remote"]
 
+	e.Line = line
+
 	return e, nil
 }
 
@@ -94,7 +96,7 @@ func CompileRegexForLogLinePrefix(logLinePrefix string) *regexp.Regexp {
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLinePrefix string, minLvl string) error {
+func ParseLogFile(cmd *cobra.Command, filePath string, logLinePrefix string, minLvl string) error {
 	// Open file from filePath and loop line by line
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -131,7 +133,7 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLines []string, logLin
 					log.Fatal().Err(err).Msg("Error in ParseEntryFromLogline")
 				} else {
 					if e.SeverityNum() >= pglog.SeverityToNum(minLvl) {
-						stdlog.Printf("Parsed entry: %+v\n", e)
+						stdlog.Println(e.Line)
 					}
 				}
 			}

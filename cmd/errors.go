@@ -74,5 +74,5 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	log.Debug().Msgf("Detected logFolder: %s, logFile: %s, Prefix: %s", logFolder, logFile, Prefix)
 
-	logparser.ParseLogFile(cmd, logFile, nil, Prefix, MinErrLvl)
+	logparser.ParseLogFile(cmd, logFile, Prefix, MinErrLvl)
 }

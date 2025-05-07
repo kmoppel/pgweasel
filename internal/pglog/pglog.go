@@ -13,6 +13,7 @@ type LogEntry struct {
 	ProcessID      string    `json:"process_id"`
 	ErrorSeverity  string    `json:"error_severity"`
 	Message        string    `json:"message"`
+	Line           string    `json:"lines"`
 }
 
 // Postgres log levels are DEBUG5, DEBUG4, DEBUG3, DEBUG2, DEBUG1, INFO, NOTICE, WARNING, ERROR, LOG, FATAL, and PANIC
