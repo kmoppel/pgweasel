@@ -61,10 +61,7 @@ func TimestringToTime(s string) (time.Time, error) {
 
 	t, err := time.Parse(layout, s)
 	if err != nil {
-		if err != nil {
-			log.Error().Msgf("Failed to parse time string '%s' with layout: %s", s, layout)
-		}
-		layout = "2006-01-02 15:04:05 MST"
+		layout = "2006-01-02 15:04:05 MST" // Try without milliseconds (RDS)
 		t, err = time.Parse(layout, s)
 		if err != nil {
 			log.Error().Msgf("Failed to parse time string '%s' with layout: %s", s, layout)
