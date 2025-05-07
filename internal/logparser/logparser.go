@@ -14,6 +14,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var FALLBACK_REGEX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+).*(?P<level>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC|STATEMENT):\s*(?P<message>(?s:.*))$`)
+
 func ParseEntryFromLogline(line string, r *regexp.Regexp) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
 	if line == "" {
@@ -92,6 +94,11 @@ func CompileRegexForLogLinePrefix(logLinePrefix string) *regexp.Regexp {
 	return regexp.MustCompile(r)
 }
 
+// GetFallbackSeverityMatchingRegex returns a regex that matches the severity level in the log line
+func GetFallbackSeverityMatchingRegex() *regexp.Regexp {
+	return regexp.MustCompile(`(?P<level>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC):\s*(?P<message>(?s:.*))$`)
+}
+
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
 func ParseLogFile(cmd *cobra.Command, filePath string, logLinePrefix string, minLvl string) error {
 	// Open file from filePath and loop line by line
@@ -107,6 +114,7 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLinePrefix string, min
 
 	var lines = make([]string, 0)
 	var r *regexp.Regexp
+	var usingFallbackRegex bool = false
 
 	gathering := false
 	for scanner.Scan() {
@@ -122,11 +130,20 @@ func ParseLogFile(cmd *cobra.Command, filePath string, logLinePrefix string, min
 					final = lines[0]
 				}
 				if r == nil {
-					r = CompileRegexForLogLinePrefix(logLinePrefix)
+					// r = CompileRegexForLogLinePrefix(logLinePrefix)
+					r = FALLBACK_REGEX
+					if r == nil {
+						log.Warn().Msgf("No regex for logLinePrefix='%s', looking for plain severities only", logLinePrefix)
+						r = FALLBACK_REGEX
+						usingFallbackRegex = true
+					}
 				}
 
 				e, err := ParseEntryFromLogline(final, r)
 				if err != nil {
+					if usingFallbackRegex {
+						log.Fatal().Err(err).Msg("Fallback regex failure")
+					}
 					log.Fatal().Err(err).Msg("Error in ParseEntryFromLogline")
 				} else {
 					if e.SeverityNum() >= pglog.SeverityToNum(minLvl) {

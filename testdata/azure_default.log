@@ -1,0 +1,10 @@
+2024-05-07 10:22:13 UTC [12345]: [1-1] user=admin,db=exampledb,app=psql LOG:  connection received: host=203.0.113.45 port=52344
+2024-05-07 10:22:13 UTC [12345]: [2-1] user=admin,db=exampledb,app=psql LOG:  connection authorized: user=admin database=exampledb
+2024-05-07 10:22:15 UTC [12346]: [1-1] user=admin,db=exampledb ERROR:  syntax error at or near "SELEC" at character 1
+2024-05-07 10:22:15 UTC [12346]: [2-1] user=admin,db=exampledb STATEMENT:  SELEC * FROM users;
+2024-05-07 10:22:17 UTC [12347]: [1-1] user=admin,db=exampledb LOG:  disconnection: session time: 0:00:04.321 user=admin database=exampledb host=203.0.113.45 port=52344
+2024-05-07 10:23:01 UTC [12348]: [1-1] user=replication,db=,app=walreceiver LOG:  replication connection authorized: user=replication
+2024-05-07 10:23:02 UTC [12348]: [2-1] user=replication,db=,app=walreceiver LOG:  started streaming WAL from primary at 0/4000000 on timeline 1
+2024-05-07 10:24:10 UTC [12350]: [1-1] user=admin,db=exampledb WARNING:  there is already a transaction in progress
+2024-05-07 10:24:11 UTC [12350]: [2-1] user=admin,db=exampledb STATEMENT:  BEGIN;
+2024-05-07 10:24:12 UTC [12350]: [3-1] user=admin,db=exampledb STATEMENT:  BEGIN;
