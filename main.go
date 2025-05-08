@@ -10,7 +10,8 @@ import (
 )
 
 func main() {
-	log.SetFlags(0)
+	log.SetFlags(0) // Disable default output of: 2025/05/08 12:34:56 hello
+	log.SetOutput(os.Stdout)
 	zl.Logger = zl.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	cmd.Execute()
