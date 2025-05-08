@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+
+	"github.com/rs/zerolog/log"
 )
 
 func IsPathExistsAndFile(filePath string) bool {
@@ -20,15 +22,21 @@ func IsPathExistsAndFile(filePath string) bool {
 
 // Returns all text files recursively in the given folder, sorted by modification time
 func GetPostgresLogFilesTimeSorted(filePath string) ([]string, error) {
-	var files []os.FileInfo
-	var logFiles []string
+	var fileData []struct {
+		info os.FileInfo
+		path string
+	}
 
 	err := filepath.Walk(filePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
+		log.Debug().Msgf("Found file: %s", path)
 		if !info.IsDir() {
-			files = append(files, info)
+			fileData = append(fileData, struct {
+				info os.FileInfo
+				path string
+			}{info: info, path: path})
 		}
 		return nil
 	})
@@ -36,12 +44,13 @@ func GetPostgresLogFilesTimeSorted(filePath string) ([]string, error) {
 		return nil, err
 	}
 
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].ModTime().After(files[j].ModTime())
+	sort.Slice(fileData, func(i, j int) bool {
+		return fileData[i].info.ModTime().After(fileData[j].info.ModTime())
 	})
 
-	for _, file := range files {
-		logFiles = append(logFiles, filepath.Join(filePath, file.Name()))
+	var logFiles []string
+	for _, data := range fileData {
+		logFiles = append(logFiles, data.path)
 	}
 
 	return logFiles, nil
