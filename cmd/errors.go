@@ -55,13 +55,13 @@ func showErrors(cmd *cobra.Command, args []string) {
 	var toTime time.Time
 
 	if From != "" {
-		fromTime, err = util.HumanTimeOrDeltaStringToTime(From)
+		fromTime, err = util.HumanTimeOrDeltaStringToTime(From, time.Time{})
 		if err != nil {
 			log.Warn().Msg("Error parsing --from timedelta input, supported units are 's', 'm', 'h'. Ignoring --from")
 		}
 	}
 	if To != "" {
-		toTime, err = util.HumanTimeOrDeltaStringToTime(To)
+		toTime, err = util.HumanTimeOrDeltaStringToTime(To, time.Time{})
 		if err != nil {
 			log.Warn().Msg("Error parsing --to timedelta input, supported units are 's', 'm', 'h'. Ignoring --to")
 		}

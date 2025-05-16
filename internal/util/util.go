@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -58,11 +59,27 @@ func GetPostgresLogFilesTimeSorted(filePath string) ([]string, error) {
 	return logFiles, nil
 }
 
-func HumanTimeOrDeltaStringToTime(hti string) (time.Time, error) {
-	// Try parsing simple deltas first
+func HumanTimeOrDeltaStringToTime(hti string, referenceTime time.Time) (time.Time, error) {
+	if hti == "" {
+		return time.Time{}, nil
+	}
+
+	if referenceTime.IsZero() {
+		referenceTime = time.Now()
+	}
+
+	// Try parsing simple deltas first as probably the most common case
+	// ParseDuration valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 	dur, err := time.ParseDuration(hti)
 	if err == nil {
-		return time.Now().Add(dur), nil
+		if strings.HasPrefix(hti, "-") {
+			return referenceTime.Add(dur), nil
+		}
+		// Add leading '-' for positive durations, parse again
+		dur, err = time.ParseDuration("-" + hti)
+		if err == nil {
+			return referenceTime.Add(dur), nil
+		}
 	}
 
 	// Fallback to parsing short dates and full timestamps
@@ -79,10 +96,9 @@ func HumanTimeOrDeltaStringToTime(hti string) (time.Time, error) {
 
 	// Handle the "2006-01-02" format separately to use the local time zone
 	if len(hti) == len("2006-01-02") {
-		current_time := time.Now()
-		currentTimeZone, _ := current_time.Zone()
+		currentTimeZone, _ := referenceTime.Zone()
 		if t, err := time.Parse("2006-01-02 MST", hti+" "+currentTimeZone); err == nil {
-			return t.In(time.Now().Location()), nil
+			return t.In(referenceTime.Location()), nil
 		}
 	}
 

@@ -15,14 +15,15 @@ func TestHumanTimedeltaToTime(t *testing.T) {
 		expected time.Time
 	}{
 		{"-2h", now.Add(time.Duration(-2) * time.Hour)},
+		{"2h", now.Add(time.Duration(-2) * time.Hour)},
 		{"-10m", now.Add(time.Duration(-10) * time.Minute)},
-		{"5m", now.Add(time.Duration(5) * time.Minute)},
+		{"5m", now.Add(time.Duration(-5) * time.Minute)},
 		{"-48h", now.Add(time.Duration(-48) * time.Hour)},
 		{"-30s", now.Add(time.Duration(-30) * time.Second)},
 	}
 
 	for _, tt := range tests {
-		got, err := HumanTimeOrDeltaStringToTime(tt.input)
+		got, err := HumanTimeOrDeltaStringToTime(tt.input, now)
 		assert.NoError(t, err, "should not error for input %s", tt.input)
 		// Allow a small delta for roundings
 		assert.InDelta(t, tt.expected.UnixMilli(), got.UnixMilli(), 100, "unexpected time delta for input %s", tt.input)
@@ -30,12 +31,14 @@ func TestHumanTimedeltaToTime(t *testing.T) {
 }
 
 func TestHumanTimedeltaToTime_InvalidInput(t *testing.T) {
-	t1, err := HumanTimeOrDeltaStringToTime("1d")
+	t1, err := HumanTimeOrDeltaStringToTime("1d", time.Time{})
 	assert.Error(t, err, "days not supported")
 	assert.True(t, t1.IsZero(), "should return zero time for invalid input")
 }
 
 func TestHumanTimedeltaToTime_TimestampInput(t *testing.T) {
+	now := time.Now()
+
 	tests := []struct {
 		input    string
 		expected time.Time
@@ -48,7 +51,7 @@ func TestHumanTimedeltaToTime_TimestampInput(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got, err := HumanTimeOrDeltaStringToTime(tt.input)
+		got, err := HumanTimeOrDeltaStringToTime(tt.input, now)
 		assert.NoError(t, err, "should not error for input %s", tt.input)
 		// Allow a small delta for roundings
 		assert.InDelta(t, tt.expected.UnixMilli(), got.UnixMilli(), 100, "unexpected time delta for input %s", tt.input)
