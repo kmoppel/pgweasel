@@ -3,7 +3,7 @@ package logparser
 import (
 	"bufio"
 	"errors"
-	stdlog "log"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -152,7 +152,7 @@ func ShowErrors(filePath string, minLvl string, extraFilters []string) error {
 				}
 
 				if e.SeverityNum() >= pglog.SeverityToNum(minLvl) && userFiltersSatisfied == len(extraFilters) {
-					stdlog.Println(e.Line)
+					fmt.Println(e.Line)
 				}
 			}
 			gathering = true
