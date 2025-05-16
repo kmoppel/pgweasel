@@ -2,7 +2,9 @@ package detector
 
 import (
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/kmoppel/pgweasel/internal/postgres"
@@ -14,26 +16,30 @@ import (
 // func ScanForPostgresInstances() ([]string, error) {
 // }
 
-const DEFAULT_LOG_DIR = "/var/log/postgresql"
+var DEFAULT_LOG_LOCATIONS = []string{"/var/log/postgresql", "/var/lib/pgsql"}
+
+const DEFAULT_LOGFILE_SUFFIX = ".log"
 const DEFAULT_LOG_LINE_PREFIX = "%m [%p] %q%u@%d "
 
 // Returns the most recent file in the specified folder, plus it's parent folder
-func FindMostRecentFileInFolder(folder string) (latestFile string, latestFileParentFolder string, err error) {
+func FindMostRecentFileInFolders(foldersToScan []string) (latestFile string, latestFileParentFolder string, err error) {
 	// var latestFile string
 	var latestModTime time.Time
 
-	err = filepath.Walk(DEFAULT_LOG_DIR, func(path string, info os.FileInfo, err error) error {
+	for _, folder := range foldersToScan {
+		err := filepath.Walk(folder, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() && info.ModTime().After(latestModTime) && strings.HasSuffix(path, DEFAULT_LOGFILE_SUFFIX) && strings.Contains(path, "postgresql") {
+				latestFile = path
+				latestModTime = info.ModTime()
+			}
+			return nil
+		})
 		if err != nil {
-			return err
+			continue
 		}
-		if !info.IsDir() && info.ModTime().After(latestModTime) {
-			latestFile = path
-			latestModTime = info.ModTime()
-		}
-		return nil
-	})
-	if err != nil {
-		return "", "", err
 	}
 
 	if latestFile == "" {
@@ -44,11 +50,11 @@ func FindMostRecentFileInFolder(folder string) (latestFile string, latestFilePar
 }
 
 func DiscoverLatestLogFileAndFolder(fileOrFolder []string, pgConnstr string) (string, string, error) {
-	var logFolder, logFile string
+	var logFile string
 
 	if len(fileOrFolder) == 0 && pgConnstr == "" {
-		log.Debug().Msgf("No log file or folder specified, using default log directory %s ...", DEFAULT_LOG_DIR)
-		return FindMostRecentFileInFolder(DEFAULT_LOG_DIR)
+		log.Debug().Msgf("No log file or folder specified, using default log directory %s ...", DEFAULT_LOG_LOCATIONS)
+		return FindMostRecentFileInFolders(DEFAULT_LOG_LOCATIONS)
 	}
 
 	if len(fileOrFolder) > 0 {
@@ -56,8 +62,7 @@ func DiscoverLatestLogFileAndFolder(fileOrFolder []string, pgConnstr string) (st
 		if !os.IsNotExist(err) {
 			logFile = fileOrFolder[0]
 		}
-		logFolder = filepath.Dir(logFile)
-		return logFile, logFolder, nil
+		return logFile, filepath.Dir(logFile), nil
 	}
 
 	if pgConnstr != "" {
@@ -67,11 +72,9 @@ func DiscoverLatestLogFileAndFolder(fileOrFolder []string, pgConnstr string) (st
 			log.Fatal().Err(err).Msg("Error getting log directory and prefix from DB")
 		}
 		log.Debug().Msgf("Postgres logSettings: %v", logSettings)
-		if logSettings.LogDestination == "stderr" {
-			logFolder = DEFAULT_LOG_DIR // TODO a list of few other common standard locations
+		if logSettings.LogDestination != "stderr" {
+			return FindMostRecentFileInFolders([]string{path.Join(logSettings.DataDirectory, logSettings.LogDirectory)})
 		}
-	} else {
-		logFolder = DEFAULT_LOG_DIR
 	}
-	return FindMostRecentFileInFolder(logFolder)
+	return FindMostRecentFileInFolders(DEFAULT_LOG_LOCATIONS)
 }
