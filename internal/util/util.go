@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	dps "github.com/markusmobius/go-dateparser"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -59,8 +60,8 @@ func GetPostgresLogFilesTimeSorted(filePath string) ([]string, error) {
 	return logFiles, nil
 }
 
-func HumanTimeOrDeltaStringToTime(hti string, referenceTime time.Time) (time.Time, error) {
-	if hti == "" {
+func HumanTimeOrDeltaStringToTime(humanInput string, referenceTime time.Time) (time.Time, error) {
+	if humanInput == "" {
 		return time.Time{}, nil
 	}
 
@@ -70,13 +71,13 @@ func HumanTimeOrDeltaStringToTime(hti string, referenceTime time.Time) (time.Tim
 
 	// Try parsing simple deltas first as probably the most common case
 	// ParseDuration valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
-	dur, err := time.ParseDuration(hti)
+	dur, err := time.ParseDuration(humanInput)
 	if err == nil {
-		if strings.HasPrefix(hti, "-") {
+		if strings.HasPrefix(humanInput, "-") {
 			return referenceTime.Add(dur), nil
 		}
 		// Add leading '-' for positive durations, parse again
-		dur, err = time.ParseDuration("-" + hti)
+		dur, err = time.ParseDuration("-" + humanInput)
 		if err == nil {
 			return referenceTime.Add(dur), nil
 		}
@@ -89,17 +90,29 @@ func HumanTimeOrDeltaStringToTime(hti string, referenceTime time.Time) (time.Tim
 		"2006-01-02 15:04:05 MST",
 	}
 	for _, format := range timestampFormats {
-		if t, err := time.Parse(format, hti); err == nil {
+		if t, err := time.Parse(format, humanInput); err == nil {
 			return t, nil
 		}
 	}
 
 	// Handle the "2006-01-02" format separately to use the local time zone
-	if len(hti) == len("2006-01-02") {
+	if len(humanInput) == len("2006-01-02") {
 		currentTimeZone, _ := referenceTime.Zone()
-		if t, err := time.Parse("2006-01-02 MST", hti+" "+currentTimeZone); err == nil {
+		if t, err := time.Parse("2006-01-02 MST", humanInput+" "+currentTimeZone); err == nil {
 			return t.In(referenceTime.Location()), nil
 		}
+	}
+
+	// Try a human-friendly date parser library for "1 hour ago" support plus non-standard dates
+	// https://github.com/markusmobius/go-dateparser?tab=readme-ov-file#62-relative-date
+	cfg := &dps.Configuration{
+		CurrentTime:     time.Now(),
+		DefaultTimezone: time.Local,
+	}
+
+	dt, err := dps.Parse(cfg, humanInput)
+	if err == nil {
+		return dt.Time, nil
 	}
 
 	return time.Time{}, errors.New("unsupported time delta / timestamp format")

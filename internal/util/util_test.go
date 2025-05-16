@@ -20,6 +20,8 @@ func TestHumanTimedeltaToTime(t *testing.T) {
 		{"5m", now.Add(time.Duration(-5) * time.Minute)},
 		{"-48h", now.Add(time.Duration(-48) * time.Hour)},
 		{"-30s", now.Add(time.Duration(-30) * time.Second)},
+		{"1 hour ago", now.Add(time.Duration(-1) * time.Hour)},
+		{"1d", now.Add(time.Duration(-24) * time.Hour)},
 	}
 
 	for _, tt := range tests {
@@ -30,12 +32,6 @@ func TestHumanTimedeltaToTime(t *testing.T) {
 	}
 }
 
-func TestHumanTimedeltaToTime_InvalidInput(t *testing.T) {
-	t1, err := HumanTimeOrDeltaStringToTime("1d", time.Time{})
-	assert.Error(t, err, "days not supported")
-	assert.True(t, t1.IsZero(), "should return zero time for invalid input")
-}
-
 func TestHumanTimedeltaToTime_TimestampInput(t *testing.T) {
 	now := time.Now()
 
@@ -44,6 +40,7 @@ func TestHumanTimedeltaToTime_TimestampInput(t *testing.T) {
 		expected time.Time
 	}{
 		// Added a test case for date-only input "2025-05-08"
+		{"6 July 2025", time.Date(2025, 07, 06, 0, 0, 0, 0, time.Local)},
 		{"2025-05-08", time.Date(2025, 5, 8, 0, 0, 0, 0, time.Local)},
 		{"2025-05-08 12:25:47.010 UTC", time.Date(2025, 5, 8, 12, 25, 47, 10*1e6, time.FixedZone("UTC", 0))},
 		{"2019-10-21 12:03:42.567 EEST", time.Date(2019, 10, 21, 12, 3, 42, 567*1e6, time.FixedZone("EEST", 3*3600))},
