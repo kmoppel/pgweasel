@@ -4,6 +4,7 @@ go 1.24.1
 
 require (
 	github.com/lib/pq v1.10.9
+	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0

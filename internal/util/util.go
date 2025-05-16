@@ -6,6 +6,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -58,9 +59,22 @@ func GetPostgresLogFilesTimeSorted(filePath string) ([]string, error) {
 }
 
 func HumanTimedeltaToTime(htd string) (time.Time, error) {
+	// Try parsing simple deltas first
 	dur, err := time.ParseDuration(htd)
-	if err != nil {
-		return time.Time{}, err
+	if err == nil {
+		return time.Now().Add(dur), nil
 	}
-	return time.Now().Add(dur), nil
+
+	// Fallback to parsing short dates and full timestamps
+	timestampFormats := []string{
+		"2006-01-02 15:04:05.000 MST",
+		"2006-01-02 15:04:05 MST",
+	}
+	for _, format := range timestampFormats {
+		if t, err := time.Parse(format, htd); err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, errors.New("unsupported time delta / timestamp format")
 }
