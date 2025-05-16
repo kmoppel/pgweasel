@@ -15,8 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var DEFAULT_REGEX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+).*(?P<level>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC|STATEMENT|DETAIL):\s*(?P<message>(?s:.*))$`)
-var DEFAULT_REGEX_CSV = regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+).*(?P<level>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC|STATEMENT|DETAIL):\s*(?P<message>(?s:.*))$`)
+var DEFAULT_REGEX = regexp.MustCompile(`^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*(?P<error_severity>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC|STATEMENT|DETAIL):\s*(?P<message>(?s:.*))$`)
 
 func EventLinesToPgLogEntry(line string, r *regexp.Regexp) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
@@ -36,23 +35,15 @@ func EventLinesToPgLogEntry(line string, r *regexp.Regexp) (pglog.LogEntry, erro
 		}
 	}
 
-	timestamp, err := TimestringToTime(result["time"])
+	logTime, err := TimestringToTime(result["log_time"])
 	if err != nil {
 		return e, err
 	}
-	e.LogTime = timestamp
+	e.LogTime = logTime
 
-	e.ProcessID = result["pid"]
-
-	e.UserName = result["user"]
-
-	e.DatabaseName = result["db"]
-
-	e.ErrorSeverity = result["level"]
+	e.ErrorSeverity = result["error_severity"]
 
 	e.Message = result["message"]
-
-	e.ConnectionFrom = result["remote"]
 
 	e.Line = line
 
@@ -72,33 +63,6 @@ func TimestringToTime(s string) (time.Time, error) {
 		}
 	}
 	return t, err
-}
-
-// 2025-04-28 00:20:02.274 EEST [2635] LOG:  checkpoint starting: time
-func CompileRegexForLogLinePrefix(logLinePrefix string) *regexp.Regexp {
-	// log.Printf("CompileRegexForLogLinePrefix for logLinePrefix: '%s'\n", logLinePrefix)
-	var r = "^" + logLinePrefix
-	r = strings.Replace(r, "[", "\\[", -1)
-	r = strings.Replace(r, "]", "\\]", -1)
-	r = strings.Replace(r, "%m", `(?P<time>[\d\-:\. ]+ [A-Z]+)`, -1) // 2025-05-02 18:25:05.617 EEST
-	r = strings.Replace(r, "%t", `(?P<time>[\d\-:\. ]+ [A-Z]+)`, -1) // 2025-05-05 06:00:51 UTC
-	r = strings.Replace(r, "%r", `(?P<remote>[\w\-\.]+\(\d+\))`, -1) // 127.0.0.1(32890)
-	r = strings.Replace(r, "%p", `(?P<pid>\d+)`, -1)
-	r = strings.Replace(r, "%q%u@%d", `(?:(?P<user>\w+)@(?P<db>\w+))?`, -1)
-	r = strings.TrimRight(r, " ")
-	r = strings.Replace(r, "%q", "", -1)
-	r = strings.Replace(r, "%u", `(?P<user>\w+)`, -1)
-	r = strings.Replace(r, "%d", `(?P<db>\w+)`, -1)
-	r = r + `:?\s*(?P<level>[A-Z]+):\s*(?P<message>(?s:.*))$`
-	// `^(?P<time>[\d\-:\. ]+ [A-Z]+) \[(?P<pid>\d+)\] (?:(?P<session>[\w\.\[\]]+)\s)?(?P<user>\w+)?@(?P<db>\w+)?`
-	// log.Println("Final regex str:", r)
-	// os.Exit(0)
-	return regexp.MustCompile(r)
-}
-
-// GetFallbackSeverityMatchingRegex returns a regex that matches the severity level in the log line
-func GetFallbackSeverityMatchingRegex() *regexp.Regexp {
-	return regexp.MustCompile(`(?P<level>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC):\s*(?P<message>(?s:.*))$`)
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse

@@ -6,14 +6,10 @@ import (
 )
 
 type LogEntry struct {
-	LogTime        time.Time `json:"log_time"`
-	ConnectionFrom string    `json:"connection_from"`
-	UserName       string    `json:"user_name"`
-	DatabaseName   string    `json:"database_name"`
-	ProcessID      string    `json:"process_id"`
-	ErrorSeverity  string    `json:"error_severity"`
-	Message        string    `json:"message"`
-	Line           string    `json:"lines"`
+	LogTime       time.Time
+	ErrorSeverity string
+	Message       string
+	Line          string
 }
 
 // Postgres log levels are DEBUG5, DEBUG4, DEBUG3, DEBUG2, DEBUG1, INFO, NOTICE, WARNING, ERROR, LOG, FATAL, and PANIC
