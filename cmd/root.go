@@ -32,17 +32,12 @@ func Execute() {
 }
 
 var Verbose bool
-var Prefix string
-var Users string
-var NoUsers string
 var From string
 var To string
 var Oneline bool
 var Filters []string
 var Connstr string
 var Tail bool
-var Db string
-var NoDb string
 
 func init() {
 	// Here you will define your flags and configuration settings.
