@@ -6,6 +6,7 @@ package cmd
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -46,6 +47,15 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	MinErrLvl = strings.ToUpper(MinErrLvl)
 	log.Debug().Msgf("Running in debug mode. MinErrLvl = %s", MinErrLvl)
+
+	logLineRegex := logparser.DEFAULT_REGEX
+	if CustomLogLineRegex != "" {
+		log.Debug().Msgf("CustomLogLineRegex %s", CustomLogLineRegex)
+		if !strings.Contains(CustomLogLineRegex, "<log_time>") || !strings.Contains(CustomLogLineRegex, "<error_severity>") || !strings.Contains(CustomLogLineRegex, "<message>") {
+			log.Fatal().Msgf("Custom regex needs to have groups: log_time, error_severity, message. Default regex: %s", logparser.DEFAULT_REGEX_STR)
+		}
+		logLineRegex = regexp.MustCompile(CustomLogLineRegex)
+	}
 
 	var logFiles = make([]string, 0)
 	var logFile string
@@ -103,7 +113,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 		if strings.Contains(logFile, ".csv") {
 			logparser.ShowErrorsCsv(logFile, MinErrLvl, Filters, fromTime, toTime)
 		} else {
-			logparser.ShowErrors(logFile, MinErrLvl, Filters, fromTime, toTime)
+			logparser.ShowErrors(logFile, MinErrLvl, Filters, fromTime, toTime, logLineRegex)
 		}
 	}
 }

@@ -15,7 +15,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var DEFAULT_REGEX = regexp.MustCompile(`^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*(?P<error_severity>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC|STATEMENT|DETAIL):\s*(?P<message>(?s:.*))$`)
+const DEFAULT_REGEX_STR = `^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*(?P<error_severity>DEBUG5|DEBUG4|DEBUG3|DEBUG2|DEBUG1|LOG|INFO|NOTICE|WARNING|ERROR|FATAL|PANIC|STATEMENT|DETAIL):\s*(?P<message>(?s:.*))$`
+
+var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
 
 func EventLinesToPgLogEntry(line string, r *regexp.Regexp) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
@@ -66,7 +68,7 @@ func TimestringToTime(s string) (time.Time, error) {
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime time.Time, toTime time.Time) error {
+func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime time.Time, toTime time.Time, logLineParsingRegex *regexp.Regexp) error {
 	// Open file from filePath and loop line by line
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -102,7 +104,7 @@ func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime 
 				eventLines := strings.Join(lines, "\n")
 				userFiltersSatisfied := 0
 
-				e, err := EventLinesToPgLogEntry(eventLines, DEFAULT_REGEX)
+				e, err := EventLinesToPgLogEntry(eventLines, logLineParsingRegex)
 				if err != nil {
 					parseErrors += 1
 					if parseErrors > 10 {
