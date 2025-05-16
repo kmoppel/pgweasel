@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/kmoppel/pgweasel/internal/pglog"
 	"github.com/rs/zerolog/log"
@@ -40,7 +41,7 @@ type PgLogCsvEntry struct {
 	// (Columns beyond this are optional or reserved)
 }
 
-func ShowErrorsCsv(filePath string, minLvl string, extraFilters []string) error {
+func ShowErrorsCsv(filePath string, minLvl string, extraFilters []string, fromTime time.Time, toTime time.Time) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
@@ -111,6 +112,12 @@ func ShowErrorsCsv(filePath string, minLvl string, extraFilters []string) error 
 		}
 
 		if pglog.SeverityToNum(e.ErrorSeverity) >= pglog.SeverityToNum(minLvl) && userFiltersSatisfied == len(extraFilters) {
+			if !fromTime.IsZero() || !toTime.IsZero() { // need to parse the time string into a time.Time
+				timestamp, err := TimestringToTime(e.LogTime)
+				if err == nil && !TimestampFitsFromTo(timestamp, fromTime, toTime) {
+					continue
+				}
+			}
 			fmt.Println(fullLine)
 		}
 	}

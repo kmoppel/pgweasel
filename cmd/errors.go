@@ -101,7 +101,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 		if strings.HasSuffix(logFile, ".csv") {
-			logparser.ShowErrorsCsv(logFile, MinErrLvl, Filters)
+			logparser.ShowErrorsCsv(logFile, MinErrLvl, Filters, fromTime, toTime)
 		} else {
 			logparser.ShowErrors(logFile, MinErrLvl, Filters, fromTime, toTime)
 		}
