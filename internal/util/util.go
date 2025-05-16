@@ -9,7 +9,6 @@ import (
 
 	dps "github.com/markusmobius/go-dateparser"
 	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 )
 
 func IsPathExistsAndFile(filePath string) bool {
@@ -35,7 +34,7 @@ func GetPostgresLogFilesTimeSorted(filePath string) ([]string, error) {
 		if err != nil {
 			return err
 		}
-		log.Debug().Msgf("Found file: %s", path)
+		// log.Debug().Msgf("Found file: %s", path)
 		if !info.IsDir() {
 			fileData = append(fileData, struct {
 				info os.FileInfo

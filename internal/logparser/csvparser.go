@@ -105,7 +105,7 @@ func ShowErrorsCsv(filePath string, minLvl string, extraFilters []string, fromTi
 		}
 
 		fullLine := strings.Join(record, ",")
-		log.Debug().Msgf("Parsed CSV entry: %+v", e)
+		// log.Debug().Msgf("Parsed CSV entry: %+v", e)
 
 		userFiltersSatisfied := 0
 		if len(extraFilters) > 0 {
