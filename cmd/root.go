@@ -50,7 +50,7 @@ func init() {
 	// will be global for your application.
 
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "More chat")
-	rootCmd.PersistentFlags().StringVarP(&From, "from", "", "-1h", "Log entries from $time")
+	rootCmd.PersistentFlags().StringVarP(&From, "from", "", "", "Log entries from $time")
 	rootCmd.PersistentFlags().StringVarP(&To, "to", "", "", "Log entries up to $time")
 	rootCmd.PersistentFlags().BoolVarP(&Oneline, "oneline", "1", false, "Compact multiline entries")
 	rootCmd.PersistentFlags().StringArrayVarP(&Filters, "filter", "f", nil, "Add extra line match conditions (regex)")
