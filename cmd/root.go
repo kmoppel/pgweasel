@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"errors"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -20,15 +18,8 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("requires at least one arg")
-		}
-		log.Println("args", args)
-		// TODO look for logfiles ...
-		return nil
-	},
+	Run:  showErrors,
+	Args: cobra.MaximumNArgs(1), // empty means outdetect or use hardcoded defaults
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
