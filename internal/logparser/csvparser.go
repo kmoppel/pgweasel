@@ -1,6 +1,7 @@
 package logparser
 
 import (
+	"compress/gzip"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -48,7 +49,17 @@ func ShowErrorsCsv(filePath string, minLvl string, extraFilters []string, fromTi
 	}
 	defer file.Close()
 
-	r := csv.NewReader(file)
+	var reader io.Reader = file
+	if strings.HasSuffix(filePath, ".gz") {
+		gzReader, err := gzip.NewReader(file)
+		if err != nil {
+			panic(err)
+		}
+		defer gzReader.Close()
+		reader = gzReader
+	}
+
+	r := csv.NewReader(reader)
 	r.FieldsPerRecord = -1 // Allow variable fields
 
 	for {
