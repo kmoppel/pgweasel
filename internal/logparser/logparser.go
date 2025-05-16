@@ -2,8 +2,10 @@ package logparser
 
 import (
 	"bufio"
+	"compress/gzip"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -109,7 +111,18 @@ func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime 
 	}
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
+	var reader io.Reader = file
+	if strings.HasSuffix(filePath, ".gz") {
+		gzReader, err := gzip.NewReader(file)
+		if err != nil {
+			log.Error().Err(err).Msgf("Error creating gzip reader for file %s", filePath)
+			return err
+		}
+		defer gzReader.Close()
+		reader = gzReader
+	}
+
+	scanner := bufio.NewScanner(reader)
 	scanner.Split(bufio.ScanLines)
 
 	var lines = make([]string, 0)
@@ -136,6 +149,8 @@ func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime 
 					continue
 				}
 
+				// log.Debug().Msgf("Processing entry with severity %s: %v", e.ErrorSeverity, strings.Join(lines, " "))
+
 				if len(extraFilters) > 0 {
 					for _, userFilter := range extraFilters {
 						m, err := regexp.MatchString(userFilter, eventLines) // compile and cache the regex
@@ -143,14 +158,13 @@ func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime 
 							log.Fatal().Err(err).Msgf("Error matching user provided filter %s on line: %s", userFilter, eventLines)
 							continue
 						}
-						// log.Debug().Msgf("Filter %s %s on line: %s", userFilter, gox.If(m, "OK", "NOK"), eventLines)
 						if m {
 							userFiltersSatisfied += 1
 							break
 						}
 					}
 				}
-				// HumanTimedeltaToTime
+
 				if e.SeverityNum() >= pglog.SeverityToNum(minLvl) && userFiltersSatisfied == len(extraFilters) && TimestampFitsFromTo(e.LogTime, fromTime, toTime) {
 					fmt.Println(e.Line)
 				}
