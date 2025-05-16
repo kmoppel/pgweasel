@@ -100,7 +100,7 @@ func GetFallbackSeverityMatchingRegex() *regexp.Regexp {
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func ShowErrors(filePath string, minLvl string, extraFilters []string) error {
+func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime time.Time, toTime time.Time) error {
 	// Open file from filePath and loop line by line
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -150,8 +150,8 @@ func ShowErrors(filePath string, minLvl string, extraFilters []string) error {
 						}
 					}
 				}
-
-				if e.SeverityNum() >= pglog.SeverityToNum(minLvl) && userFiltersSatisfied == len(extraFilters) {
+				// HumanTimedeltaToTime
+				if e.SeverityNum() >= pglog.SeverityToNum(minLvl) && userFiltersSatisfied == len(extraFilters) && TimestampFitsFromTo(e.LogTime, fromTime, toTime) {
 					fmt.Println(e.Line)
 				}
 			}
@@ -164,6 +164,16 @@ func ShowErrors(filePath string, minLvl string, extraFilters []string) error {
 	}
 
 	return nil
+}
+
+func TimestampFitsFromTo(time, fromTime, toTime time.Time) bool {
+	if !fromTime.IsZero() && time.Before(fromTime) {
+		return false
+	}
+	if !toTime.IsZero() && time.After(toTime) {
+		return false
+	}
+	return true
 }
 
 func HasTimestampPrefix(line string) bool {

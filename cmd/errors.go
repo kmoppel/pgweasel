@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/kmoppel/pgweasel/internal/detector"
 	"github.com/kmoppel/pgweasel/internal/logparser"
@@ -50,6 +51,21 @@ func showErrors(cmd *cobra.Command, args []string) {
 	var logFile string
 	var logFolder string
 	var err error
+	var fromTime time.Time
+	var toTime time.Time
+
+	if From != "" {
+		fromTime, err = util.HumanTimedeltaToTime(From)
+		if err != nil {
+			log.Warn().Msg("Error parsing --from timedelta input, supported units are 's', 'm', 'h'. Ignoring --from")
+		}
+	}
+	if To != "" {
+		toTime, err = util.HumanTimedeltaToTime(To)
+		if err != nil {
+			log.Warn().Msg("Error parsing --to timedelta input, supported units are 's', 'm', 'h'. Ignoring --to")
+		}
+	}
 
 	if len(args) == 0 {
 		log.Debug().Msg("No files / folders provided, looking for latest file from default locations ...")
@@ -87,7 +103,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 		if strings.HasSuffix(logFile, ".csv") {
 			logparser.ShowErrorsCsv(logFile, MinErrLvl, Filters)
 		} else {
-			logparser.ShowErrors(logFile, MinErrLvl, Filters)
+			logparser.ShowErrors(logFile, MinErrLvl, Filters, fromTime, toTime)
 		}
 	}
 }

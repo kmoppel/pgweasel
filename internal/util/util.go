@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -54,4 +55,12 @@ func GetPostgresLogFilesTimeSorted(filePath string) ([]string, error) {
 	}
 
 	return logFiles, nil
+}
+
+func HumanTimedeltaToTime(htd string) (time.Time, error) {
+	dur, err := time.ParseDuration(htd)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.Now().Add(dur), nil
 }
