@@ -22,7 +22,7 @@ func TestHumanTimedeltaToTime(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got, err := HumanTimedeltaToTime(tt.input)
+		got, err := HumanTimeOrDeltaStringToTime(tt.input)
 		assert.NoError(t, err, "should not error for input %s", tt.input)
 		// Allow a small delta for roundings
 		assert.InDelta(t, tt.expected.UnixMilli(), got.UnixMilli(), 100, "unexpected time delta for input %s", tt.input)
@@ -30,7 +30,7 @@ func TestHumanTimedeltaToTime(t *testing.T) {
 }
 
 func TestHumanTimedeltaToTime_InvalidInput(t *testing.T) {
-	t1, err := HumanTimedeltaToTime("1d")
+	t1, err := HumanTimeOrDeltaStringToTime("1d")
 	assert.Error(t, err, "days not supported")
 	assert.True(t, t1.IsZero(), "should return zero time for invalid input")
 }
@@ -40,13 +40,15 @@ func TestHumanTimedeltaToTime_TimestampInput(t *testing.T) {
 		input    string
 		expected time.Time
 	}{
+		// Added a test case for date-only input "2025-05-08"
+		{"2025-05-08", time.Date(2025, 5, 8, 0, 0, 0, 0, time.Local)},
 		{"2025-05-08 12:25:47.010 UTC", time.Date(2025, 5, 8, 12, 25, 47, 10*1e6, time.FixedZone("UTC", 0))},
 		{"2019-10-21 12:03:42.567 EEST", time.Date(2019, 10, 21, 12, 3, 42, 567*1e6, time.FixedZone("EEST", 3*3600))},
 		{"2019-10-21 12:03:42 EEST", time.Date(2019, 10, 21, 12, 3, 42, 0, time.FixedZone("EEST", 3*3600))},
 	}
 
 	for _, tt := range tests {
-		got, err := HumanTimedeltaToTime(tt.input)
+		got, err := HumanTimeOrDeltaStringToTime(tt.input)
 		assert.NoError(t, err, "should not error for input %s", tt.input)
 		// Allow a small delta for roundings
 		assert.InDelta(t, tt.expected.UnixMilli(), got.UnixMilli(), 100, "unexpected time delta for input %s", tt.input)

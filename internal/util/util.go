@@ -58,21 +58,31 @@ func GetPostgresLogFilesTimeSorted(filePath string) ([]string, error) {
 	return logFiles, nil
 }
 
-func HumanTimedeltaToTime(htd string) (time.Time, error) {
+func HumanTimeOrDeltaStringToTime(hti string) (time.Time, error) {
 	// Try parsing simple deltas first
-	dur, err := time.ParseDuration(htd)
+	dur, err := time.ParseDuration(hti)
 	if err == nil {
 		return time.Now().Add(dur), nil
 	}
 
 	// Fallback to parsing short dates and full timestamps
+	// Add support for parsing date-only timestamps in the format "2006-01-02"
 	timestampFormats := []string{
 		"2006-01-02 15:04:05.000 MST",
 		"2006-01-02 15:04:05 MST",
 	}
 	for _, format := range timestampFormats {
-		if t, err := time.Parse(format, htd); err == nil {
+		if t, err := time.Parse(format, hti); err == nil {
 			return t, nil
+		}
+	}
+
+	// Handle the "2006-01-02" format separately to use the local time zone
+	if len(hti) == len("2006-01-02") {
+		current_time := time.Now()
+		currentTimeZone, _ := current_time.Zone()
+		if t, err := time.Parse("2006-01-02 MST", hti+" "+currentTimeZone); err == nil {
+			return t.In(time.Now().Location()), nil
 		}
 	}
 
