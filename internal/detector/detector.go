@@ -19,7 +19,6 @@ import (
 var DEFAULT_LOG_LOCATIONS = []string{"/var/log/postgresql", "/var/lib/pgsql"}
 
 const DEFAULT_LOGFILE_SUFFIX = ".log"
-const DEFAULT_LOG_LINE_PREFIX = "%m [%p] %q%u@%d "
 
 // Returns the most recent file in the specified folder, plus it's parent folder
 func FindMostRecentFileInFolders(foldersToScan []string) (latestFile string, latestFileParentFolder string, err error) {
