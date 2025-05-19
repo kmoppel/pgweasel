@@ -42,7 +42,7 @@ type PgLogCsvEntry struct {
 	// (Columns beyond this are optional or reserved)
 }
 
-func ShowErrorsCsv(filePath string, minLvl string, extraFilters []string, fromTime time.Time, toTime time.Time) error {
+func ShowErrorsCsv(filePath string, minLvl string, extraFilters []string, fromTime time.Time, toTime time.Time, minSlowDurationMs int) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		panic(err)

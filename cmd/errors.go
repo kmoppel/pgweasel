@@ -46,7 +46,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	MinErrLvl = strings.ToUpper(MinErrLvl)
-	log.Debug().Msgf("Running in debug mode. MinErrLvl = %s", MinErrLvl)
+	log.Debug().Msgf("Running in debug mode. MinErrLvl = %s, MinSlowDurationMs= %d", MinErrLvl, MinSlowDurationMs)
 
 	logLineRegex := logparser.DEFAULT_REGEX
 	if CustomLogLineRegex != "" {
@@ -107,14 +107,13 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	log.Debug().Msgf("Detected logFolder: %s, logFile: %s, MinErrLvl: %s, Filters: %v", logFolder, logFile, MinErrLvl, Filters)
-	return
 
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 		if strings.Contains(logFile, ".csv") {
-			logparser.ShowErrorsCsv(logFile, MinErrLvl, Filters, fromTime, toTime)
+			logparser.ShowErrorsCsv(logFile, MinErrLvl, Filters, fromTime, toTime, MinSlowDurationMs)
 		} else {
-			logparser.ShowErrors(logFile, MinErrLvl, Filters, fromTime, toTime, logLineRegex)
+			logparser.ShowErrors(logFile, MinErrLvl, Filters, fromTime, toTime, logLineRegex, MinSlowDurationMs)
 		}
 	}
 }

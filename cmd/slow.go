@@ -20,6 +20,7 @@ var slowCmd = &cobra.Command{
 			log.Fatal("Failed to convert $MIN_DURATION input to milliseconds")
 		}
 		args = args[1:]
+		MinErrLvl = "DEBUG5"
 		showErrors(cmd, args)
 	},
 	Args: cobra.MinimumNArgs(1),

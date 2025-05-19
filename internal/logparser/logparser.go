@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 const DEFAULT_REGEX_STR = `^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*[\s:]+(?P<error_severity>[A-Z0-9]+):\s*(?P<message>(?s:.*))$`
 
 var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
+var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
 
 func EventLinesToPgLogEntry(line string, r *regexp.Regexp) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
@@ -67,8 +69,24 @@ func TimestringToTime(s string) (time.Time, error) {
 	return t, err
 }
 
+// Returns 0 if no match or error
+func ExtractDurationMillisFromLogMessage(message string) float64 {
+	// Example message: "duration: 0.211 ms"
+	match := REGEX_DURATION_MILLIS.FindStringSubmatch(message)
+	if match == nil {
+		return 0.0
+	}
+
+	durationStr := match[1]
+	duration, err := strconv.ParseFloat(durationStr, 64)
+	if err != nil {
+		return 0.0
+	}
+	return duration
+}
+
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime time.Time, toTime time.Time, logLineParsingRegex *regexp.Regexp) error {
+func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime time.Time, toTime time.Time, logLineParsingRegex *regexp.Regexp, minSlowDurationMs int) error {
 	// Open file from filePath and loop line by line
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -131,10 +149,23 @@ func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime 
 					}
 				}
 
-				if e.SeverityNum() >= pglog.SeverityToNum(minLvl) && userFiltersSatisfied == len(extraFilters) && TimestampFitsFromTo(e.LogTime, fromTime, toTime) {
+				if !TimestampFitsFromTo(e.LogTime, fromTime, toTime) {
+					// log.Debug().Msgf("Skipping entry outside of time range: %s", e.LogTime)
+					goto next_entry
+				}
+
+				if minSlowDurationMs > 0 {
+					duration := ExtractDurationMillisFromLogMessage(e.Message)
+					log.Debug().Msgf("Extracted duration: %f, message: %s", duration, e.Message)
+					if duration < float64(minSlowDurationMs) {
+						goto next_entry
+					}
+					fmt.Println(e.Line)
+				} else if e.SeverityNum() >= pglog.SeverityToNum(minLvl) && userFiltersSatisfied == len(extraFilters) {
 					fmt.Println(e.Line)
 				}
 			}
+		next_entry:
 			gathering = true
 			lines = make([]string, 0)
 		} else if !gathering { // Skip over very first non-full lines (is even possible?)
