@@ -1,14 +1,15 @@
 package logparser_test
 
 import (
-	"log"
 	"testing"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/kmoppel/pgweasel/internal/logparser"
 	"github.com/stretchr/testify/assert"
 )
 
-var log1 = `2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`
+var log1 = []string{`2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`}
 
 func TestFileLogger(t *testing.T) {
 	e, err := logparser.EventLinesToPgLogEntry(log1, logparser.DEFAULT_REGEX)

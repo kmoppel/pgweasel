@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/kmoppel/pgweasel/internal/detector"
 	"github.com/kmoppel/pgweasel/internal/logparser"
+	"github.com/kmoppel/pgweasel/internal/pglog"
 	"github.com/kmoppel/pgweasel/internal/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -46,7 +48,6 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	MinErrLvl = strings.ToUpper(MinErrLvl)
-	log.Debug().Msgf("Running in debug mode. MinErrLvl = %s, MinSlowDurationMs= %d", MinErrLvl, MinSlowDurationMs)
 
 	logLineRegex := logparser.DEFAULT_REGEX
 	if CustomLogLineRegex != "" {
@@ -63,6 +64,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 	var err error
 	var fromTime time.Time
 	var toTime time.Time
+	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s", MinErrLvl, MinSlowDurationMs, From, To)
+	fmt.Println(logLineRegex, fromTime, toTime)
 
 	if From != "" {
 		fromTime, err = util.HumanTimeOrDeltaStringToTime(From, time.Time{})
@@ -110,10 +113,12 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
-		if strings.Contains(logFile, ".csv") {
-			logparser.ShowErrorsCsv(logFile, MinErrLvl, Filters, fromTime, toTime, MinSlowDurationMs)
-		} else {
-			logparser.ShowErrors(logFile, MinErrLvl, Filters, fromTime, toTime, logLineRegex, MinSlowDurationMs)
+
+		for record := range logparser.GetRecordsFromFileGeneric(logFile, CustomLogLineRegex) {
+			if record.SeverityNum() >= pglog.SeverityToNum(MinErrLvl) {
+				fmt.Println(record.Lines)
+			}
 		}
+		// logparser.ShowErrors(logFile, MinErrLvl, Filters, fromTime, toTime, logLineRegex, MinSlowDurationMs)
 	}
 }
