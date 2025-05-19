@@ -1,40 +1,30 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
-*/
 package cmd
 
 import (
-	"fmt"
+	"log"
 
+	"github.com/kmoppel/pgweasel/internal/util"
 	"github.com/spf13/cobra"
 )
 
-// slowCmd represents the slow command
-var slowCmd = &cobra.Command{
-	Use:   "slow",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+var MinSlowDurationMs int
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+var slowCmd = &cobra.Command{
+	Use:   "slow $MIN_DURATION [$LOG_FILE_OR_FOLDER]",
+	Short: "Show slow queries only",
+	Long:  "Show queries taking longer than input $MIN_DURATION",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("slow called")
+		var err error
+		MinSlowDurationMs, err = util.IntervalToMillis(args[0])
+		if err != nil {
+			log.Fatal("Failed to convert $MIN_DURATION input to milliseconds")
+		}
+		args = args[1:]
+		showErrors(cmd, args)
 	},
+	Args: cobra.MinimumNArgs(1),
 }
 
 func init() {
 	rootCmd.AddCommand(slowCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// slowCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// slowCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

@@ -107,6 +107,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	log.Debug().Msgf("Detected logFolder: %s, logFile: %s, MinErrLvl: %s, Filters: %v", logFolder, logFile, MinErrLvl, Filters)
+	return
 
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)

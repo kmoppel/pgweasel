@@ -116,3 +116,7 @@ func HumanTimeOrDeltaStringToTime(humanInput string, referenceTime time.Time) (t
 
 	return time.Time{}, errors.New("unsupported time delta / timestamp format")
 }
+
+func IntervalToMillis(interval string) (int, error) {
+	return 0, nil
+}
