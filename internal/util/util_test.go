@@ -54,3 +54,35 @@ func TestHumanTimedeltaToTime_TimestampInput(t *testing.T) {
 		assert.InDelta(t, tt.expected.UnixMilli(), got.UnixMilli(), 100, "unexpected time delta for input %s", tt.input)
 	}
 }
+func TestIntervalToMillis(t *testing.T) {
+	tests := []struct {
+		input       string
+		expected    int
+		expectError bool
+	}{
+		{"1s", 1000, false},
+		{"2m", 2 * 60 * 1000, false},
+		{"3h", 3 * 60 * 60 * 1000, false},
+		{"500ms", 500, false},
+		{"1min", 1 * 60 * 1000, false},
+		{"2mins", 2 * 60 * 1000, false},
+		{"10sec", 10000, false},
+		{"5secs", 5000, false},
+		{"1hr", 3600000, false},
+		{"2hrs", 7200000, false},
+		{"100", 100, false},
+		{"abc", 0, true},
+		{"1d", 0, true}, // "d" is not supported by time.ParseDuration
+		{"", 0, true},
+	}
+
+	for _, tt := range tests {
+		got, err := IntervalToMillis(tt.input)
+		if tt.expectError {
+			assert.Error(t, err, "expected error for input %s", tt.input)
+		} else {
+			assert.NoError(t, err, "unexpected error for input %s", tt.input)
+			assert.Equal(t, tt.expected, got, "unexpected millis for input %s", tt.input)
+		}
+	}
+}

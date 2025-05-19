@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -117,6 +118,42 @@ func HumanTimeOrDeltaStringToTime(humanInput string, referenceTime time.Time) (t
 	return time.Time{}, errors.New("unsupported time delta / timestamp format")
 }
 
+// IntervalToMillis converts an interval string to milliseconds.
+// If no unit is specified, assumes the value is in milliseconds.
 func IntervalToMillis(interval string) (int, error) {
-	return 0, nil
+	// Remove spaces to handle formats like "5 min"
+	interval = strings.TrimSpace(strings.ReplaceAll(interval, " ", ""))
+
+	// Check if it's just a number (no units)
+	if val, err := strconv.Atoi(interval); err == nil {
+		return val, nil // Return as is, assuming milliseconds
+	}
+
+	// Try standard ParseDuration
+	dur, err := time.ParseDuration(interval)
+	if err != nil {
+		// Try to handle common aliases like "min" for "m"
+		replacer := strings.NewReplacer(
+			"mins", "m",
+			"min", "m",
+			"minutes", "m",
+			"minute", "m",
+			"secs", "s",
+			"sec", "s",
+			"seconds", "s",
+			"second", "s",
+			"hrs", "h",
+			"hr", "h",
+			"hours", "h",
+			"hour", "h",
+			"days", "24h",
+			"day", "24h",
+		)
+		normalized := replacer.Replace(interval)
+		dur, err = time.ParseDuration(normalized)
+		if err != nil {
+			return 0, errors.Wrap(err, "invalid interval format")
+		}
+	}
+	return int(dur.Milliseconds()), nil
 }
