@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"compress/gzip"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -39,11 +38,11 @@ func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp) (pglog.LogEntry, e
 		}
 	}
 
-	logTime, err := TimestringToTime(result["log_time"])
-	if err != nil {
-		return e, err
-	}
-	e.LogTime = logTime
+	// logTime, err := TimestringToTime(result["log_time"])
+	// if err != nil {
+	// 	return e, err
+	// }
+	// e.LogTime = logTime
 
 	e.ErrorSeverity = result["error_severity"]
 
@@ -52,21 +51,6 @@ func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp) (pglog.LogEntry, e
 	e.Lines = lines
 
 	return e, nil
-}
-
-// Convert a time string like "2025-04-28 00:20:02.274 EEST" to a time.Time object
-func TimestringToTime(s string) (time.Time, error) {
-	layout := "2006-01-02 15:04:05.000 MST"
-
-	t, err := time.Parse(layout, s)
-	if err != nil {
-		layout = "2006-01-02 15:04:05 MST" // Try without milliseconds (RDS)
-		t, err = time.Parse(layout, s)
-		if err != nil {
-			log.Error().Msgf("Failed to parse time string '%s' with layout: %s", s, layout)
-		}
-	}
-	return t, err
 }
 
 // Returns 0 if no match or error
@@ -86,8 +70,8 @@ func ExtractDurationMillisFromLogMessage(message string) float64 {
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func GetRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regexp) <-chan pglog.CsvEntry {
-	ch := make(chan pglog.CsvEntry)
+func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regexp) <-chan pglog.LogEntry {
+	ch := make(chan pglog.LogEntry)
 	go func() {
 		defer close(ch)
 		// Open file from filePath and loop line by line
@@ -118,7 +102,6 @@ func GetRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regexp) 
 		}
 
 		gathering := false
-		parseErrors := 0
 		for scanner.Scan() {
 			line := scanner.Text()
 
@@ -128,23 +111,12 @@ func GetRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regexp) 
 				if gathering && len(lines) > 0 {
 					e, err = EventLinesToPgLogEntry(lines, logLineParsingRegex)
 					if err != nil {
-						parseErrors += 1
-						if parseErrors > 10 {
-							log.Fatal().Err(err).Msg("10 parse errors reached, bailing")
-						} else {
-							log.Error().Err(err).Msgf("Regex parse failure for line: %s", line)
-						}
-						lines = make([]string, 0)
-						continue
+						log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
 					}
-
+					lines = make([]string, 0)
+					continue
 				}
-				ch <- pglog.CsvEntry{
-					LogTime:       e.LogTime.String(),
-					ErrorSeverity: e.ErrorSeverity,
-					Message:       e.Message,
-					Lines:         lines,
-				}
+				ch <- e
 				gathering = true
 				lines = make([]string, 0)
 			} else if !gathering { // Skip over very first non-full lines (is even possible?)
@@ -157,95 +129,39 @@ func GetRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regexp) 
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func ShowErrors(filePath string, minLvl string, extraFilters []string, fromTime time.Time, toTime time.Time, logLineParsingRegex *regexp.Regexp, minSlowDurationMs int) error {
-	// Open file from filePath and loop line by line
-	file, err := os.Open(filePath)
-	if err != nil {
-		log.Error().Err(err).Msgf("Error opening file %s", filePath)
-		return err
-	}
-	defer file.Close()
-
-	var reader io.Reader = file
-	if strings.HasSuffix(filePath, ".gz") {
-		gzReader, err := gzip.NewReader(file)
-		if err != nil {
-			log.Error().Err(err).Msgf("Error creating gzip reader for file %s", filePath)
-			return err
-		}
-		defer gzReader.Close()
-		reader = gzReader
+func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvl string, extraRegexFilters []string, fromTime time.Time, toTime time.Time, logLineParsingRegex *regexp.Regexp, minSlowDurationMs int) bool {
+	if rec.SeverityNum() < pglog.SeverityToNum(minLvl) {
+		return false
 	}
 
-	scanner := bufio.NewScanner(reader)
-	scanner.Split(bufio.ScanLines)
-
-	var lines = make([]string, 0)
-
-	gathering := false
-	parseErrors := 0
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		// If the line does not have a timestamp, it is a continuation of the previous entry
-		if HasTimestampPrefix(line) {
-			if gathering && len(lines) > 0 {
-				eventLines := strings.Join(lines, "\n")
-				userFiltersSatisfied := 0
-
-				e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex)
-				if err != nil {
-					parseErrors += 1
-					if parseErrors > 10 {
-						log.Fatal().Err(err).Msg("10 parse errors reached, bailing")
-					} else {
-						log.Error().Err(err).Msgf("Default regex failure for line: %s", line)
-					}
-					continue
-				}
-
-				// log.Debug().Msgf("Processing entry with severity %s: %v", e.ErrorSeverity, strings.Join(lines, " "))
-
-				if len(extraFilters) > 0 {
-					for _, userFilter := range extraFilters {
-						m, err := regexp.MatchString(userFilter, eventLines) // compile and cache the regex
-						if err != nil {
-							log.Fatal().Err(err).Msgf("Error matching user provided filter %s on line: %s", userFilter, eventLines)
-							continue
-						}
-						if m {
-							userFiltersSatisfied += 1
-							break
-						}
-					}
-				}
-
-				if !TimestampFitsFromTo(e.LogTime, fromTime, toTime) {
-					// log.Debug().Msgf("Skipping entry outside of time range: %s", e.LogTime)
-					goto next_entry
-				}
-
-				if minSlowDurationMs > 0 {
-					duration := ExtractDurationMillisFromLogMessage(e.Message)
-					log.Debug().Msgf("Extracted duration: %f, message: %s", duration, e.Message)
-					if duration < float64(minSlowDurationMs) {
-						goto next_entry
-					}
-					fmt.Println(e.Lines)
-				} else if e.SeverityNum() >= pglog.SeverityToNum(minLvl) && userFiltersSatisfied == len(extraFilters) {
-					fmt.Println(e.Lines)
-				}
+	if len(extraRegexFilters) > 0 {
+		eventLines := strings.Join(rec.Lines, "\n")
+		for _, userFilter := range extraRegexFilters {
+			m, err := regexp.MatchString(userFilter, eventLines) // TODO compile and cache the regex
+			if err != nil {
+				log.Fatal().Err(err).Msgf("Error matching user provided filter %s on line: %s", userFilter, eventLines) // Fail early for beta period at least
 			}
-		next_entry:
-			gathering = true
-			lines = make([]string, 0)
-		} else if !gathering { // Skip over very first non-full lines (is even possible?)
-			continue
+			if !m {
+				return false
+			}
 		}
-		lines = append(lines, line)
 	}
 
-	return nil
+	if !TimestampFitsFromTo(rec.GetTime(), fromTime, toTime) {
+		// log.Debug().Msgf("Skipping entry outside of time range: %s", e.LogTime)
+		return false
+	}
+
+	if minSlowDurationMs > 0 {
+		duration := ExtractDurationMillisFromLogMessage(rec.Message)
+		log.Debug().Msgf("Extracted duration: %f, message: %s", duration, rec.Message)
+		if duration < float64(minSlowDurationMs) {
+			return false
+		}
+
+	}
+
+	return true
 }
 
 func TimestampFitsFromTo(time, fromTime, toTime time.Time) bool {
@@ -263,12 +179,12 @@ func HasTimestampPrefix(line string) bool {
 	return r.MatchString(line)
 }
 
-func GetRecordsFromFileGeneric(filePath string, regex string) <-chan pglog.CsvEntry {
-	ch := make(chan pglog.CsvEntry)
+func GetLogRecordsFromFile(filePath string, regex string) <-chan pglog.LogEntry {
+	ch := make(chan pglog.LogEntry)
 	go func() {
 		defer close(ch)
 		if strings.Contains(filePath, ".csv") {
-			for rec := range GetRecordsFromCsvFile(filePath) {
+			for rec := range GetLogRecordsFromCsvFile(filePath) {
 				ch <- rec
 			}
 		} else {
@@ -281,7 +197,7 @@ func GetRecordsFromFileGeneric(filePath string, regex string) <-chan pglog.CsvEn
 					log.Fatal().Err(err).Msgf("Error compiling regex: %s", regex)
 				}
 			}
-			for rec := range GetRecordsFromLogFile(filePath, r) {
+			for rec := range GetLogRecordsFromLogFile(filePath, r) {
 				ch <- rec
 			}
 		}

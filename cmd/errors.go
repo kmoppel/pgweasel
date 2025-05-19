@@ -13,7 +13,6 @@ import (
 
 	"github.com/kmoppel/pgweasel/internal/detector"
 	"github.com/kmoppel/pgweasel/internal/logparser"
-	"github.com/kmoppel/pgweasel/internal/pglog"
 	"github.com/kmoppel/pgweasel/internal/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -43,29 +42,27 @@ func init() {
 }
 
 func showErrors(cmd *cobra.Command, args []string) {
-	if Verbose {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
-
-	MinErrLvl = strings.ToUpper(MinErrLvl)
-
-	logLineRegex := logparser.DEFAULT_REGEX
-	if CustomLogLineRegex != "" {
-		log.Debug().Msgf("CustomLogLineRegex %s", CustomLogLineRegex)
-		if !strings.Contains(CustomLogLineRegex, "<log_time>") || !strings.Contains(CustomLogLineRegex, "<error_severity>") || !strings.Contains(CustomLogLineRegex, "<message>") {
-			log.Fatal().Msgf("Custom regex needs to have groups: log_time, error_severity, message. Default regex: %s", logparser.DEFAULT_REGEX_STR)
-		}
-		logLineRegex = regexp.MustCompile(CustomLogLineRegex)
-	}
-
 	var logFiles = make([]string, 0)
 	var logFile string
 	var logFolder string
 	var err error
 	var fromTime time.Time
 	var toTime time.Time
-	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s", MinErrLvl, MinSlowDurationMs, From, To)
-	fmt.Println(logLineRegex, fromTime, toTime)
+	var logLineRegex *regexp.Regexp
+
+	if Verbose {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
+	MinErrLvl = strings.ToUpper(MinErrLvl)
+
+	if CustomLogLineRegex != "" {
+		log.Debug().Msgf("Using regex to parse plain text entries: %s", CustomLogLineRegex)
+		if !strings.Contains(CustomLogLineRegex, "<log_time>") || !strings.Contains(CustomLogLineRegex, "<error_severity>") || !strings.Contains(CustomLogLineRegex, "<message>") {
+			log.Fatal().Msgf("Custom regex needs to have groups: log_time, error_severity, message. Default regex: %s", logparser.DEFAULT_REGEX_STR)
+		}
+		logLineRegex = regexp.MustCompile(CustomLogLineRegex)
+	}
 
 	if From != "" {
 		fromTime, err = util.HumanTimeOrDeltaStringToTime(From, time.Time{})
@@ -79,6 +76,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 			log.Warn().Msg("Error parsing --to timedelta input, supported units are 's', 'm', 'h'. Ignoring --to")
 		}
 	}
+
+	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s", MinErrLvl, MinSlowDurationMs, fromTime, toTime)
 
 	if len(args) == 0 {
 		log.Debug().Msg("No files / folders provided, looking for latest file from default locations ...")
@@ -114,11 +113,14 @@ func showErrors(cmd *cobra.Command, args []string) {
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 
-		for record := range logparser.GetRecordsFromFileGeneric(logFile, CustomLogLineRegex) {
-			if record.SeverityNum() >= pglog.SeverityToNum(MinErrLvl) {
-				fmt.Println(record.Lines)
+		for rec := range logparser.GetLogRecordsFromFile(logFile, CustomLogLineRegex) {
+			log.Debug().Msgf("Processing log entry: %v", rec)
+			if rec.ErrorSeverity != "" {
+				if logparser.DoesLogRecordSatisfyUserFilters(rec, MinErrLvl, Filters, fromTime, toTime, logLineRegex, MinSlowDurationMs) {
+					fmt.Println(strings.Join(rec.Lines, "\n"))
+				}
 			}
 		}
-		// logparser.ShowErrors(logFile, MinErrLvl, Filters, fromTime, toTime, logLineRegex, MinSlowDurationMs)
+		log.Debug().Msgf("Finished processing log file: %s", logFile)
 	}
 }

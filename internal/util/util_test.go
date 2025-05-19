@@ -1,9 +1,10 @@
-package util
+package util_test
 
 import (
 	"testing"
 	"time"
 
+	"github.com/kmoppel/pgweasel/internal/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +26,7 @@ func TestHumanTimedeltaToTime(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got, err := HumanTimeOrDeltaStringToTime(tt.input, now)
+		got, err := util.HumanTimeOrDeltaStringToTime(tt.input, now)
 		assert.NoError(t, err, "should not error for input %s", tt.input)
 		// Allow a small delta for roundings
 		assert.InDelta(t, tt.expected.UnixMilli(), got.UnixMilli(), 100, "unexpected time delta for input %s", tt.input)
@@ -48,7 +49,7 @@ func TestHumanTimedeltaToTime_TimestampInput(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got, err := HumanTimeOrDeltaStringToTime(tt.input, now)
+		got, err := util.HumanTimeOrDeltaStringToTime(tt.input, now)
 		assert.NoError(t, err, "should not error for input %s", tt.input)
 		// Allow a small delta for roundings
 		assert.InDelta(t, tt.expected.UnixMilli(), got.UnixMilli(), 100, "unexpected time delta for input %s", tt.input)
@@ -77,7 +78,7 @@ func TestIntervalToMillis(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		got, err := IntervalToMillis(tt.input)
+		got, err := util.IntervalToMillis(tt.input)
 		if tt.expectError {
 			assert.Error(t, err, "expected error for input %s", tt.input)
 		} else {
@@ -85,4 +86,10 @@ func TestIntervalToMillis(t *testing.T) {
 			assert.Equal(t, tt.expected, got, "unexpected millis for input %s", tt.input)
 		}
 	}
+}
+
+func TestTimestringToTime(t *testing.T) {
+	ts := util.TimestringToTime("2025-05-02 12:27:52.634 EEST")
+	assert.Equal(t, ts.Year(), 2025)
+	assert.Equal(t, ts.Month(), time.Month(5))
 }

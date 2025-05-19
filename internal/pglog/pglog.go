@@ -3,10 +3,12 @@ package pglog
 import (
 	"strings"
 	"time"
+
+	"github.com/kmoppel/pgweasel/internal/util"
 )
 
 type LogEntry struct {
-	LogTime       time.Time
+	LogTime       string
 	ErrorSeverity string
 	Message       string
 	Lines         []string
@@ -14,7 +16,7 @@ type LogEntry struct {
 
 // Postgres log levels are DEBUG5, DEBUG4, DEBUG3, DEBUG2, DEBUG1, INFO, NOTICE, WARNING, ERROR, LOG, FATAL, and PANIC
 // but move LOG lower as too chatty otherwise
-func (e *LogEntry) SeverityNum() int {
+func (e LogEntry) SeverityNum() int {
 	switch strings.ToUpper(e.ErrorSeverity) {
 	case "DEBUG5":
 		return 0
@@ -75,6 +77,12 @@ func SeverityToNum(severity string) int {
 	default:
 		return -1
 	}
+}
+
+// Idea here is to delay time parsing as might not be needed
+// for example if we are only looking for errors and have no time range set by the user
+func (e LogEntry) GetTime() time.Time {
+	return util.TimestringToTime(e.LogTime)
 }
 
 type CsvEntry struct {

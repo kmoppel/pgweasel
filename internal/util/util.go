@@ -10,6 +10,7 @@ import (
 
 	dps "github.com/markusmobius/go-dateparser"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
 func IsPathExistsAndFile(filePath string) bool {
@@ -156,4 +157,20 @@ func IntervalToMillis(interval string) (int, error) {
 		}
 	}
 	return int(dur.Milliseconds()), nil
+}
+
+// Convert a time string like "2025-04-28 00:20:02.274 EEST" to a time.Time object
+func TimestringToTime(s string) time.Time {
+	layout := "2006-01-02 15:04:05.000 MST"
+
+	t, err := time.Parse(layout, s)
+	if err != nil {
+		layout = "2006-01-02 15:04:05 MST" // Try without milliseconds (RDS)
+		t, err = time.Parse(layout, s)
+		if err != nil {
+			log.Error().Msgf("Failed to parse time string '%s' with layout: %s", s, layout)
+			return time.Time{}
+		}
+	}
+	return t
 }
