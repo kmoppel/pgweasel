@@ -71,7 +71,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s", MinErrLvl, MinSlowDurationMs, fromTime, toTime)
+	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s, SystemOnly=%v", MinErrLvl, MinSlowDurationMs, fromTime, toTime, SystemOnly)
 
 	if len(args) == 0 {
 		log.Debug().Msg("No files / folders provided, looking for latest file from default locations ...")
@@ -110,7 +110,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 		for rec := range logparser.GetLogRecordsFromFile(logFile, logLineRegex) {
 			log.Debug().Msgf("Processing log entry: %+v", rec)
 			if rec.ErrorSeverity != "" {
-				if logparser.DoesLogRecordSatisfyUserFilters(rec, MinErrLvl, Filters, fromTime, toTime, MinSlowDurationMs) {
+				if logparser.DoesLogRecordSatisfyUserFilters(rec, MinErrLvl, Filters, fromTime, toTime, MinSlowDurationMs, SystemOnly) {
 					fmt.Println(strings.Join(rec.Lines, "\n"))
 				}
 			}

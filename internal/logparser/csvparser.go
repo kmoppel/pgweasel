@@ -86,6 +86,7 @@ func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
 				ErrorSeverity: record[11],
 				Message:       strings.Join([]string{record[13], record[14], record[15], record[18]}, ","),
 				Lines:         []string{fullLine},
+				CsvRecords:    record,
 			}
 
 			ch <- e

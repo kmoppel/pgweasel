@@ -1,3 +1,10 @@
+2025-05-02 18:18:26.523 EEST [2240722] LOG:  starting PostgreSQL 16.9 (Ubuntu 16.9-1.pgdg24.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, 64-bit
+2025-05-02 18:18:26.523 EEST [2240722] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2025-05-02 18:18:26.523 EEST [2240722] LOG:  listening on IPv6 address "::", port 5432
+2025-05-02 18:18:26.525 EEST [2240722] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-05-02 18:18:26.533 EEST [2240726] LOG:  database system was shut down at 2025-05-01 18:18:26 EEST
+2025-05-02 18:18:26.544 EEST [2240722] LOG:  database system is ready to accept connections
+2025-05-02 18:18:26.545 EEST [2240733] LOG:  TimescaleDB background worker launcher connected to shared catalogs
 2025-05-02 18:18:26.555 EEST [2698052] krl@postgres ERROR:  column "xxxx" does not exist at character 8
 2025-05-02 18:18:26.555 EEST [2698052] krl@postgres STATEMENT:  select xxxx ;
 2025-05-02 18:25:03.959 EEST [2702612] krl@postgres LOG:  statement: vacuum pgbench_branches

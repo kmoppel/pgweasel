@@ -1,6 +1,7 @@
 package pglog
 
 import (
+	"regexp"
 	"strings"
 	"time"
 
@@ -12,7 +13,10 @@ type LogEntry struct {
 	ErrorSeverity string
 	Message       string
 	Lines         []string
+	CsvRecords    []string
 }
+
+var REGEX_USER_AT_DB = regexp.MustCompile(`^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*?[:\s]+(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s]+.*?(?P<error_severity>[A-Z0-9]+)[:\s]+.*$`)
 
 // Postgres log levels are DEBUG5, DEBUG4, DEBUG3, DEBUG2, DEBUG1, INFO, NOTICE, WARNING, ERROR, LOG, FATAL, and PANIC
 // but move LOG lower as too chatty otherwise
@@ -83,4 +87,16 @@ func SeverityToNum(severity string) int {
 // for example if we are only looking for errors and have no time range set by the user
 func (e LogEntry) GetTime() time.Time {
 	return util.TimestringToTime(e.LogTime)
+}
+
+func (e LogEntry) IsSystemEntry() bool {
+	if e.CsvRecords != nil {
+		return e.CsvRecords[1] == ""
+	} else { // TODO With plain text logs very hard to detect actually without log_line_prefix so need to use that as well
+		// let's assume for now user@db
+		if REGEX_USER_AT_DB.MatchString(strings.Join(e.Lines, "\n")) {
+			return false
+		}
+	}
+	return true
 }

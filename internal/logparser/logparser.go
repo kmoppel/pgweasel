@@ -15,7 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const DEFAULT_REGEX_STR = `^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*[\s:]+(?P<error_severity>[A-Z0-9]+):\s*(?P<message>(?s:.*))$`
+const DEFAULT_REGEX_STR = `^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*[\s:]+(?P<error_severity>[A-Z0-9]+):\s*(?P<message>(?s:.*))$` // (?s:.*) is a non-capturing group
 
 var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
 var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
@@ -127,9 +127,13 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvl string, extraRegexFilters []string, fromTime time.Time, toTime time.Time, minSlowDurationMs int) bool {
+func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvl string, extraRegexFilters []string, fromTime time.Time, toTime time.Time, minSlowDurationMs int, systemOnly bool) bool {
 	if rec.SeverityNum() < pglog.SeverityToNum(minLvl) {
 		return false
+	}
+
+	if systemOnly {
+		return rec.IsSystemEntry()
 	}
 
 	if len(extraRegexFilters) > 0 {
