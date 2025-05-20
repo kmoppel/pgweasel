@@ -4,7 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
+	"bufio"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -105,6 +105,10 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	log.Debug().Msgf("Detected logFolder: %s, logFile: %s, MinErrLvl: %s, Filters: %v", logFolder, logFile, MinErrLvl, Filters)
 
+	// Create a buffered writer for better performance
+	w := bufio.NewWriter(os.Stdout)
+	defer w.Flush()
+
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 
@@ -112,10 +116,12 @@ func showErrors(cmd *cobra.Command, args []string) {
 			log.Debug().Msgf("Processing log entry: %+v", rec)
 			if rec.ErrorSeverity != "" {
 				if logparser.DoesLogRecordSatisfyUserFilters(rec, MinErrLvl, Filters, fromTime, toTime, MinSlowDurationMs, SystemOnly) {
-					fmt.Println(strings.Join(rec.Lines, "\n"))
+					w.WriteString(strings.Join(rec.Lines, "\n"))
+					w.WriteByte('\n')
 				}
 			}
 		}
 		log.Debug().Msgf("Finished processing log file: %s", logFile)
 	}
+	w.Flush()
 }
