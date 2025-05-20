@@ -11,8 +11,7 @@ var MinSlowDurationMs int
 
 var slowCmd = &cobra.Command{
 	Use:   "slow $MIN_DURATION [$LOG_FILE_OR_FOLDER]",
-	Short: "Show slow queries only",
-	Long:  "Show queries taking longer than input $MIN_DURATION",
+	Short: "Show queries above user set threshold, e.g.: pgweasel slow 1s mylogfile.log",
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 		MinSlowDurationMs, err = util.IntervalToMillis(args[0])
@@ -20,7 +19,7 @@ var slowCmd = &cobra.Command{
 			log.Fatal("Failed to convert $MIN_DURATION input to milliseconds")
 		}
 		args = args[1:]
-		MinErrLvl = "DEBUG5"
+		MinErrLvl = "DEBUG5" // Override default WARNING+ output level
 		showErrors(cmd, args)
 	},
 	Args: cobra.MinimumNArgs(1),
