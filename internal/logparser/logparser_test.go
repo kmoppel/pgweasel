@@ -14,6 +14,8 @@ func TestFileLogger(t *testing.T) {
 	e, err := logparser.EventLinesToPgLogEntry(log1, logparser.DEFAULT_REGEX)
 	assert.NoError(t, err)
 	assert.Equal(t, e.ErrorSeverity, "ERROR")
+	assert.Equal(t, e.LogTime, "2025-05-02 12:27:52.634 EEST")
+	assert.Equal(t, e.Message, `column "asdasd" does not exist at character 8`)
 }
 
 func TestHasTimestampPrefix(t *testing.T) {

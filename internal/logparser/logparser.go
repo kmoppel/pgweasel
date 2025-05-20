@@ -38,11 +38,7 @@ func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp) (pglog.LogEntry, e
 		}
 	}
 
-	// logTime, err := TimestringToTime(result["log_time"])
-	// if err != nil {
-	// 	return e, err
-	// }
-	// e.LogTime = logTime
+	e.LogTime = result["log_time"]
 
 	e.ErrorSeverity = result["error_severity"]
 
