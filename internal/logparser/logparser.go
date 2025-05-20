@@ -19,6 +19,7 @@ const DEFAULT_REGEX_STR = `^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*[\s:]+(?P<error_se
 
 var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
 var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
+var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+)`)
 
 func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
@@ -172,8 +173,7 @@ func TimestampFitsFromTo(time, fromTime, toTime time.Time) bool {
 }
 
 func HasTimestampPrefix(line string) bool {
-	r := regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+)`)
-	return r.MatchString(line)
+	return REGEX_HAS_TIMESTAMP_PREFIX.MatchString(line)
 }
 
 func GetLogRecordsFromFile(filePath string, regex string) <-chan pglog.LogEntry {
