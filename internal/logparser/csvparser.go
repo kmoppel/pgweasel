@@ -48,12 +48,11 @@ func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
 				continue
 			}
 
-			if len(record) < 24 {
+			if len(record) < 23 {
 				fmt.Println("Skipping incomplete record")
 				continue
 			}
 
-			// e := pglog.CsvEntry{
 			// 	LogTime:              record[0],
 			// 	UserName:             record[1],
 			// 	DatabaseName:         record[2],
@@ -77,17 +76,18 @@ func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
 			// 	QueryPos:             record[20],
 			// 	Location:             record[21],
 			// 	ApplicationName:      record[22],
-			// 	BackendType:          record[23],
-			// }
+			// 	BackendType:          record[23],  // Added in PG13+
+			// 	LeaderPid:            record[24],
+			// 	QueryId:              record[25],
+
+			fullLine := strings.Join(record, ",")
 			e := pglog.LogEntry{
 				LogTime:       record[0],
 				ErrorSeverity: record[11],
-				Message:       record[13],
-				Lines:         record,
+				Message:       strings.Join([]string{record[13], record[14], record[15], record[18]}, ","),
+				Lines:         []string{fullLine},
 			}
 
-			e.Lines = record
-			// log.Debug().Msgf("Parsed CSV entry: %+v", e)
 			ch <- e
 
 		}
