@@ -84,7 +84,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 		logFile, logFolder, err = detector.DiscoverLatestLogFileAndFolder(args, Connstr)
 		logFiles = append(logFiles, logFile)
 	} else {
-		_, err := os.Stat(args[0])
+		_, err = os.Stat(args[0])
 		if err != nil {
 			log.Fatal().Err(err).Msgf("Error accessing path: %s", args[0])
 		}
@@ -113,10 +113,10 @@ func showErrors(cmd *cobra.Command, args []string) {
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 
-		for rec := range logparser.GetLogRecordsFromFile(logFile, LogLineRegex) {
+		for rec := range logparser.GetLogRecordsFromFile(logFile, logLineRegex) {
 			log.Debug().Msgf("Processing log entry: %+v", rec)
 			if rec.ErrorSeverity != "" {
-				if logparser.DoesLogRecordSatisfyUserFilters(rec, MinErrLvl, Filters, fromTime, toTime, logLineRegex, MinSlowDurationMs) {
+				if logparser.DoesLogRecordSatisfyUserFilters(rec, MinErrLvl, Filters, fromTime, toTime, MinSlowDurationMs) {
 					fmt.Println(strings.Join(rec.Lines, "\n"))
 				}
 			}

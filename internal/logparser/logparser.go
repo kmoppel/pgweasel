@@ -127,7 +127,7 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvl string, extraRegexFilters []string, fromTime time.Time, toTime time.Time, logLineParsingRegex *regexp.Regexp, minSlowDurationMs int) bool {
+func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvl string, extraRegexFilters []string, fromTime time.Time, toTime time.Time, minSlowDurationMs int) bool {
 	if rec.SeverityNum() < pglog.SeverityToNum(minLvl) {
 		return false
 	}
@@ -176,7 +176,7 @@ func HasTimestampPrefix(line string) bool {
 	return REGEX_HAS_TIMESTAMP_PREFIX.MatchString(line)
 }
 
-func GetLogRecordsFromFile(filePath string, regex string) <-chan pglog.LogEntry {
+func GetLogRecordsFromFile(filePath string, r *regexp.Regexp) <-chan pglog.LogEntry {
 	ch := make(chan pglog.LogEntry)
 	go func() {
 		defer close(ch)
@@ -185,15 +185,6 @@ func GetLogRecordsFromFile(filePath string, regex string) <-chan pglog.LogEntry 
 				ch <- rec
 			}
 		} else {
-			var r *regexp.Regexp
-			var err error
-
-			if regex != "" {
-				r, err = regexp.Compile(regex)
-				if err != nil {
-					log.Fatal().Err(err).Msgf("Error compiling regex: %s", regex)
-				}
-			}
 			for rec := range GetLogRecordsFromLogFile(filePath, r) {
 				ch <- rec
 			}
