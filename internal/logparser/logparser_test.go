@@ -9,13 +9,35 @@ import (
 )
 
 var log1 = []string{`2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`}
+var log2 = []string{`2025-05-02 18:25:51.151 EEST [2698052] krl@postgres STATEMENT:  select dadasdas
+	dasda
+	adsdas;`}
+var log3 = []string{`2025-05-02 18:18:26.523 EEST [2240722] LOG:  listening on IPv4 address "0.0.0.0", port 5432`}
 
 func TestFileLogger(t *testing.T) {
 	e, err := logparser.EventLinesToPgLogEntry(log1, logparser.DEFAULT_REGEX)
 	assert.NoError(t, err)
-	assert.Equal(t, e.ErrorSeverity, "ERROR")
 	assert.Equal(t, e.LogTime, "2025-05-02 12:27:52.634 EEST")
+	assert.Equal(t, e.ErrorSeverity, "ERROR")
 	assert.Equal(t, e.Message, `column "asdasd" does not exist at character 8`)
+}
+
+func TestFileLogger2(t *testing.T) {
+	e, err := logparser.EventLinesToPgLogEntry(log2, logparser.DEFAULT_REGEX)
+	assert.NoError(t, err)
+	assert.Equal(t, e.LogTime, "2025-05-02 18:25:51.151 EEST")
+	assert.Equal(t, e.ErrorSeverity, "STATEMENT")
+	assert.Equal(t, e.Message, `select dadasdas
+	dasda
+	adsdas;`)
+}
+
+func TestFileLogger3(t *testing.T) {
+	e, err := logparser.EventLinesToPgLogEntry(log3, logparser.DEFAULT_REGEX)
+	assert.NoError(t, err)
+	assert.Equal(t, e.LogTime, "2025-05-02 18:18:26.523 EEST")
+	assert.Equal(t, e.ErrorSeverity, "LOG")
+	assert.Equal(t, e.Message, `listening on IPv4 address "0.0.0.0", port 5432`)
 }
 
 func TestHasTimestampPrefix(t *testing.T) {

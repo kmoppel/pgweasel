@@ -15,7 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const DEFAULT_REGEX_STR = `^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*[\s:]+(?P<error_severity>[A-Z0-9]+):\s*(?P<message>(?s:.*))$` // (?s:.*) is a non-capturing group
+const DEFAULT_REGEX_STR = `(?s)^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*[\s:]+(?P<error_severity>[A-Z0-9]+):\s*(?P<message>(?s:.*))$` // (?s:.*) is a non-capturing group
 
 var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
 var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
@@ -99,28 +99,38 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 			logLineParsingRegex = DEFAULT_REGEX
 		}
 
-		gathering := false
+		firstCompleteEntryFound := false
 		for scanner.Scan() {
 			line := scanner.Text()
-			// log.Debug().Msgf("Got line: %s", line)
+			log.Debug().Msgf("Inspecting line: %s", line)
 
 			// If the line does not have a timestamp, it is a continuation of the previous entry
 			if HasTimestampPrefix(line) {
-				if gathering && len(lines) > 0 {
+				if firstCompleteEntryFound {
 					e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex)
 					if err != nil {
 						log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
+					} else {
+						log.Debug().Msgf("Capture OK. severity=%s len(lines): %d", e.ErrorSeverity, len(lines))
 					}
 					lines = make([]string, 0)
+					lines = append(lines, line)
 					ch <- e
 					continue
 				}
-				gathering = true
-				lines = make([]string, 0)
-			} else if !gathering { // Skip over very first non-full lines (is even possible?)
-				continue
+				firstCompleteEntryFound = true
 			}
 			lines = append(lines, line)
+		}
+		// Special handling for the last line
+		if firstCompleteEntryFound && len(lines) > 0 {
+			e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex)
+			if err != nil {
+				log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
+			} else {
+				log.Debug().Msgf("Capture OK. severity=%s len(lines): %d", e.ErrorSeverity, len(lines))
+			}
+			ch <- e
 		}
 	}()
 	return ch

@@ -16,7 +16,7 @@ type LogEntry struct {
 	CsvRecords    []string
 }
 
-var REGEX_USER_AT_DB = regexp.MustCompile(`^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*?[:\s]+(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s]+.*?(?P<error_severity>[A-Z0-9]+)[:\s]+.*$`)
+var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*?[:\s]+(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s]+.*?(?P<error_severity>[A-Z0-9]+)[:\s]+.*$`)
 
 // Postgres log levels are DEBUG5, DEBUG4, DEBUG3, DEBUG2, DEBUG1, INFO, NOTICE, WARNING, ERROR, LOG, FATAL, and PANIC
 // but move LOG lower as too chatty otherwise
@@ -47,7 +47,7 @@ func (e LogEntry) SeverityNum() int {
 	case "PANIC":
 		return 10
 	default:
-		return -1
+		return 5
 	}
 }
 
@@ -79,7 +79,7 @@ func SeverityToNum(severity string) int {
 	case "PANIC":
 		return 10
 	default:
-		return -1
+		return 5
 	}
 }
 
