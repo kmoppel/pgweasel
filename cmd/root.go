@@ -38,7 +38,7 @@ var Oneline bool
 var Filters []string
 var Connstr string
 var Tail bool
-var CustomLogLineRegex string
+var LogLineRegex string
 
 func init() {
 	// Here you will define your flags and configuration settings.
@@ -52,5 +52,5 @@ func init() {
 	rootCmd.PersistentFlags().StringArrayVarP(&Filters, "filter", "f", nil, "Add extra line match conditions (regex)")
 	rootCmd.PersistentFlags().StringVarP(&Connstr, "connstr", "", "", "Connect to specified instance and determine log location / settings")
 	// rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
-	rootCmd.PersistentFlags().StringVarP(&CustomLogLineRegex, "regex", "", `^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*[\s:]+(?P<error_severity>[A-Z0-9]+):\s*(?P<message>(?s:.*))$`, "Use a custom regex instead of:")
+	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", `^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*[\s:]+(?P<error_severity>[A-Z0-9]+):\s*(?P<message>(?s:.*))$`, "Use a custom regex instead of:")
 }

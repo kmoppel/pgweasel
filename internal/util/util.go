@@ -161,6 +161,9 @@ func IntervalToMillis(interval string) (int, error) {
 
 // Convert a time string like "2025-04-28 00:20:02.274 EEST" to a time.Time object
 func TimestringToTime(s string) time.Time {
+	if s == "" {
+		return time.Time{}
+	}
 	layout := "2006-01-02 15:04:05.000 MST"
 
 	t, err := time.Parse(layout, s)

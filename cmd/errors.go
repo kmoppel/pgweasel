@@ -56,12 +56,12 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	MinErrLvl = strings.ToUpper(MinErrLvl)
 
-	if CustomLogLineRegex != "" {
-		log.Debug().Msgf("Using regex to parse plain text entries: %s", CustomLogLineRegex)
-		if !strings.Contains(CustomLogLineRegex, "<log_time>") || !strings.Contains(CustomLogLineRegex, "<error_severity>") || !strings.Contains(CustomLogLineRegex, "<message>") {
+	if LogLineRegex != "" {
+		log.Debug().Msgf("Using regex to parse plain text entries: %s", LogLineRegex)
+		if !strings.Contains(LogLineRegex, "<log_time>") || !strings.Contains(LogLineRegex, "<error_severity>") || !strings.Contains(LogLineRegex, "<message>") {
 			log.Fatal().Msgf("Custom regex needs to have groups: log_time, error_severity, message. Default regex: %s", logparser.DEFAULT_REGEX_STR)
 		}
-		logLineRegex = regexp.MustCompile(CustomLogLineRegex)
+		logLineRegex = regexp.MustCompile(LogLineRegex)
 	}
 
 	if From != "" {
@@ -113,8 +113,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 
-		for rec := range logparser.GetLogRecordsFromFile(logFile, CustomLogLineRegex) {
-			log.Debug().Msgf("Processing log entry: %v", rec)
+		for rec := range logparser.GetLogRecordsFromFile(logFile, LogLineRegex) {
+			log.Debug().Msgf("Processing log entry: %+v", rec)
 			if rec.ErrorSeverity != "" {
 				if logparser.DoesLogRecordSatisfyUserFilters(rec, MinErrLvl, Filters, fromTime, toTime, logLineRegex, MinSlowDurationMs) {
 					fmt.Println(strings.Join(rec.Lines, "\n"))

@@ -71,6 +71,7 @@ func ExtractDurationMillisFromLogMessage(message string) float64 {
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
 func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regexp) <-chan pglog.LogEntry {
+	log.Debug().Msgf("Looking for log entries from plain text log file: %s", filePath)
 	ch := make(chan pglog.LogEntry)
 	go func() {
 		defer close(ch)
@@ -104,19 +105,19 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 		gathering := false
 		for scanner.Scan() {
 			line := scanner.Text()
+			// log.Debug().Msgf("Got line: %s", line)
 
 			// If the line does not have a timestamp, it is a continuation of the previous entry
-			var e pglog.LogEntry
 			if HasTimestampPrefix(line) {
 				if gathering && len(lines) > 0 {
-					e, err = EventLinesToPgLogEntry(lines, logLineParsingRegex)
+					e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex)
 					if err != nil {
 						log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
 					}
 					lines = make([]string, 0)
+					ch <- e
 					continue
 				}
-				ch <- e
 				gathering = true
 				lines = make([]string, 0)
 			} else if !gathering { // Skip over very first non-full lines (is even possible?)
