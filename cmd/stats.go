@@ -13,6 +13,7 @@ var statsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("stats called")
 	},
+	Aliases: []string{"st", "stat", "sta", "statistics"},
 }
 
 func init() {

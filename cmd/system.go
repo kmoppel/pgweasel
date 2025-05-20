@@ -13,6 +13,7 @@ var systemCmd = &cobra.Command{
 		SystemOnly = true
 		showErrors(cmd, args)
 	},
+	Aliases: []string{"sys", "pg", "postgre", "postgres", "postmaster"},
 }
 
 func init() {

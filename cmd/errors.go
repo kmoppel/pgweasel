@@ -26,7 +26,8 @@ var errorsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		showErrors(cmd, args)
 	},
-	Args: cobra.MaximumNArgs(1), // empty means outdetect or use hardcoded defaults
+	Args:    cobra.MaximumNArgs(1), // empty means outdetect or use hardcoded defaults
+	Aliases: []string{"err", "errs", "error"},
 }
 
 func init() {

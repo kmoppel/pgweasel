@@ -22,7 +22,8 @@ var slowCmd = &cobra.Command{
 		MinErrLvl = "DEBUG5" // Override default WARNING+ output level
 		showErrors(cmd, args)
 	},
-	Args: cobra.MinimumNArgs(1),
+	Args:    cobra.MinimumNArgs(1),
+	Aliases: []string{"slo"},
 }
 
 func init() {
