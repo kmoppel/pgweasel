@@ -70,6 +70,12 @@ func HumanTimeOrDeltaStringToTime(humanInput string, referenceTime time.Time) (t
 		referenceTime = time.Now()
 	}
 
+	// Special case for "today"
+	if strings.ToLower(humanInput) == "today" {
+		year, month, day := referenceTime.Date()
+		return time.Date(year, month, day, 0, 0, 0, 0, referenceTime.Location()), nil
+	}
+
 	// Try parsing simple deltas first as probably the most common case
 	// ParseDuration valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 	dur, err := time.ParseDuration(humanInput)

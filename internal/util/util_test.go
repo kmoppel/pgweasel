@@ -10,6 +10,7 @@ import (
 
 func TestHumanTimedeltaToTime(t *testing.T) {
 	now := time.Now()
+	year, month, day := now.Date()
 
 	tests := []struct {
 		input    string
@@ -23,6 +24,7 @@ func TestHumanTimedeltaToTime(t *testing.T) {
 		{"-30s", now.Add(time.Duration(-30) * time.Second)},
 		{"1 hour ago", now.Add(time.Duration(-1) * time.Hour)},
 		{"1d", now.Add(time.Duration(-24) * time.Hour)},
+		{"today", time.Date(year, month, day, 0, 0, 0, 0, now.Location())},
 	}
 
 	for _, tt := range tests {
