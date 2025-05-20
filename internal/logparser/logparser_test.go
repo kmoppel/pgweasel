@@ -13,6 +13,7 @@ var log2 = []string{`2025-05-02 18:25:51.151 EEST [2698052] krl@postgres STATEME
 	dasda
 	adsdas;`}
 var log3 = []string{`2025-05-02 18:18:26.523 EEST [2240722] LOG:  listening on IPv4 address "0.0.0.0", port 5432`}
+var log4 = []string{`2025-05-02 18:18:26.533 EEST [2240726] LOG:  database system was shut down at 2025-05-01 18:18:26 EEST`}
 
 func TestFileLogger(t *testing.T) {
 	e, err := logparser.EventLinesToPgLogEntry(log1, logparser.DEFAULT_REGEX)
@@ -38,6 +39,14 @@ func TestFileLogger3(t *testing.T) {
 	assert.Equal(t, e.LogTime, "2025-05-02 18:18:26.523 EEST")
 	assert.Equal(t, e.ErrorSeverity, "LOG")
 	assert.Equal(t, e.Message, `listening on IPv4 address "0.0.0.0", port 5432`)
+}
+
+func TestFileLogger4(t *testing.T) {
+	e, err := logparser.EventLinesToPgLogEntry(log4, logparser.DEFAULT_REGEX)
+	assert.NoError(t, err)
+	assert.Equal(t, e.LogTime, "2025-05-02 18:18:26.533 EEST")
+	assert.Equal(t, e.ErrorSeverity, "LOG")
+	assert.Equal(t, e.Message, `database system was shut down at 2025-05-01 18:18:26 EEST`)
 }
 
 func TestHasTimestampPrefix(t *testing.T) {
