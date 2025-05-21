@@ -52,7 +52,7 @@ func DiscoverLatestLogFileAndFolder(fileOrFolder []string, pgConnstr string) (st
 	var logFile string
 
 	if len(fileOrFolder) == 0 && pgConnstr == "" {
-		log.Debug().Msgf("No log file or folder specified, using default log directory %s ...", DEFAULT_LOG_LOCATIONS)
+		log.Debug().Msgf("No log file or folder specified, using default log locations: %v", DEFAULT_LOG_LOCATIONS)
 		return FindMostRecentFileInFolders(DEFAULT_LOG_LOCATIONS)
 	}
 

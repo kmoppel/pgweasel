@@ -26,7 +26,6 @@ var errorsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		showErrors(cmd, args)
 	},
-	Args:    cobra.MaximumNArgs(1), // empty means outdetect or use hardcoded defaults
 	Aliases: []string{"err", "errs", "error"},
 }
 
@@ -76,28 +75,36 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	if len(args) == 0 {
 		log.Debug().Msg("No files / folders provided, looking for latest file from default locations ...")
-		logFile, logFolder, err = detector.DiscoverLatestLogFileAndFolder(args, Connstr)
+		logFile, logFolder, err = detector.DiscoverLatestLogFileAndFolder(nil, Connstr)
+		if err != nil {
+			log.Fatal().Msgf("Failed to detect any log files from default locations")
+		}
 		logFiles = append(logFiles, logFile)
 	} else {
-		_, err = os.Stat(args[0])
-		if err != nil {
-			log.Fatal().Err(err).Msgf("Error accessing path: %s", args[0])
-		}
+		for _, arg := range args {
+			log.Debug().Msgf("Checking input path: %s ...", arg)
+			_, err = os.Stat(arg)
+			if err != nil {
+				log.Error().Err(err).Msgf("Error accessing path: %s", arg)
+				continue
+			}
 
-		if util.IsPathExistsAndFile(args[0]) {
-			logFile = args[0]
-			logFolder = filepath.Base(args[0])
-			logFiles = append(logFiles, logFile)
-		} else {
-			log.Debug().Msgf("Looking for log files from folder: %s ..", args[0])
-			logFiles, err = util.GetPostgresLogFilesTimeSorted(args[0])
-			log.Debug().Msgf("Found: %d", len(logFiles))
+			if util.IsPathExistsAndFile(arg) {
+				logFile = arg
+				logFolder = filepath.Base(arg)
+				logFiles = append(logFiles, logFile)
+			} else {
+				log.Debug().Msgf("Looking for log files from folder: %s ..", arg)
+				logFiles, err = util.GetPostgresLogFilesTimeSorted(arg)
+				if err != nil {
+					log.Error().Err(err).Msgf("Error determining any log files from folder: %s", arg)
+					continue
+				}
+				log.Debug().Msgf("Found %d log files", len(logFiles))
+			}
 		}
 	}
 
-	if err != nil {
-		log.Fatal().Err(err).Msg("Error determining any log files")
-	}
 	if len(logFiles) == 0 {
 		log.Error().Msg("No log files found")
 		return
@@ -111,6 +118,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
+		continue
 
 		for rec := range logparser.GetLogRecordsFromFile(logFile, logLineRegex) {
 			log.Debug().Msgf("Processing log entry: %+v", rec)
