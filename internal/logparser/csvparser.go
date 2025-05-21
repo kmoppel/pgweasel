@@ -40,6 +40,7 @@ func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
 
 		for {
 			record, err := r.Read()
+
 			if err == io.EOF {
 				break
 			}
@@ -48,7 +49,7 @@ func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
 				continue
 			}
 
-			if len(record) < 23 {
+			if len(record) < 26 {
 				fmt.Println("Skipping incomplete record")
 				continue
 			}
@@ -87,6 +88,34 @@ func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
 				Message:       strings.Join([]string{record[13], record[14], record[15], record[18]}, ","),
 				Lines:         []string{fullLine},
 				CsvRecords:    record,
+				CsvColumns: pglog.CsvEntry{
+					LogTime:              record[0],
+					UserName:             record[1],
+					DatabaseName:         record[2],
+					ProcessID:            record[3],
+					ConnectionFrom:       record[4],
+					SessionID:            record[5],
+					SessionLineNum:       record[6],
+					CommandTag:           record[7],
+					SessionStartTime:     record[8],
+					VirtualTransactionID: record[9],
+					TransactionID:        record[10],
+					ErrorSeverity:        record[11],
+					SQLStateCode:         record[12],
+					Message:              record[13],
+					Detail:               record[14],
+					Hint:                 record[15],
+					InternalQuery:        record[16],
+					InternalQueryPos:     record[17],
+					Context:              record[18],
+					Query:                record[19],
+					QueryPos:             record[20],
+					Location:             record[21],
+					ApplicationName:      record[22],
+					BackendType:          record[23], // Added in PG13+
+					LeaderPid:            record[24],
+					QueryId:              record[25],
+				},
 			}
 
 			ch <- e

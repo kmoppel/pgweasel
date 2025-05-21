@@ -116,7 +116,11 @@ func showErrors(cmd *cobra.Command, args []string) {
 			log.Debug().Msgf("Processing log entry: %+v", rec)
 			if rec.ErrorSeverity != "" {
 				if logparser.DoesLogRecordSatisfyUserFilters(rec, MinErrLvl, Filters, fromTime, toTime, MinSlowDurationMs, SystemOnly) {
-					w.WriteString(strings.Join(rec.Lines, "\n"))
+					if rec.CsvRecords != nil {
+						w.WriteString(rec.CsvColumns.String())
+					} else {
+						w.WriteString(strings.Join(rec.Lines, "\n"))
+					}
 					w.WriteByte('\n')
 				}
 			}
