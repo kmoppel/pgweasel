@@ -15,11 +15,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const DEFAULT_REGEX_STR = `(?s)^(?P<log_time>[\d\-:\. ]+ [A-Z]+){1,28}[\s:\-].*[\s:\-](?P<error_severity>[A-Z12345]+):\s*(?P<message>(?s:.*))$` // (?s:.*) is a non-capturing group
+const DEFAULT_REGEX_STR = `(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[\s:\-].*[\s:\-](?P<error_severity>[A-Z12345]+):\s*(?P<message>(?s:.*))$` // (?s:.*) is a non-capturing group
 
 var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
 var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
-var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]+ [A-Z]+)`)
+var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]{19,23} [A-Z]{2,5})`)
 
 func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
