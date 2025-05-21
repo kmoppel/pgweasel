@@ -49,46 +49,17 @@ func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
 				continue
 			}
 
-			if len(record) < 26 {
+			if len(record) < 23 {
 				fmt.Println("Skipping incomplete record")
 				continue
 			}
 
-			// 	LogTime:              record[0],
-			// 	UserName:             record[1],
-			// 	DatabaseName:         record[2],
-			// 	ProcessID:            record[3],
-			// 	ConnectionFrom:       record[4],
-			// 	SessionID:            record[5],
-			// 	SessionLineNum:       record[6],
-			// 	CommandTag:           record[7],
-			// 	SessionStartTime:     record[8],
-			// 	VirtualTransactionID: record[9],
-			// 	TransactionID:        record[10],
-			// 	ErrorSeverity:        record[11],
-			// 	SQLStateCode:         record[12],
-			// 	Message:              record[13],
-			// 	Detail:               record[14],
-			// 	Hint:                 record[15],
-			// 	InternalQuery:        record[16],
-			// 	InternalQueryPos:     record[17],
-			// 	Context:              record[18],
-			// 	Query:                record[19],
-			// 	QueryPos:             record[20],
-			// 	Location:             record[21],
-			// 	ApplicationName:      record[22],
-			// 	BackendType:          record[23],  // Added in PG13+
-			// 	LeaderPid:            record[24],
-			// 	QueryId:              record[25],
-
-			fullLine := strings.Join(record, ",")
 			e := pglog.LogEntry{
 				LogTime:       record[0],
 				ErrorSeverity: record[11],
-				Message:       strings.Join([]string{record[13], record[14], record[15], record[18]}, ","),
-				Lines:         []string{fullLine},
-				CsvRecords:    record,
-				CsvColumns: pglog.CsvEntry{
+				Message:       record[13],
+				CsvColumns: &pglog.CsvEntry{ // Field order from https://www.postgresql.org/docs/current/file-fdw.html
+					CsvColumnCount:       len(record),
 					LogTime:              record[0],
 					UserName:             record[1],
 					DatabaseName:         record[2],
@@ -112,12 +83,17 @@ func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
 					QueryPos:             record[20],
 					Location:             record[21],
 					ApplicationName:      record[22],
-					BackendType:          record[23], // Added in PG13+
-					LeaderPid:            record[24],
-					QueryId:              record[25],
 				},
 			}
-
+			//   v13 added backend_type
+			//   v14 added leader_pid and query_id
+			if len(record) >= 24 {
+				e.CsvColumns.BackendType = record[23]
+			}
+			if len(record) >= 26 {
+				e.CsvColumns.LeaderPid = record[24]
+				e.CsvColumns.QueryId = record[25]
+			}
 			ch <- e
 
 		}

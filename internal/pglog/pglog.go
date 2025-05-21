@@ -10,6 +10,7 @@ import (
 )
 
 type CsvEntry struct {
+	CsvColumnCount       int    // <v13=23, v14=24,v15+=26
 	LogTime              string // Column 1
 	UserName             string // Column 2
 	DatabaseName         string // Column 3
@@ -43,13 +44,67 @@ type LogEntry struct {
 	ErrorSeverity string
 	Message       string
 	Lines         []string // For plain text logs
-	CsvRecords    []string // For CSV logs
-	CsvColumns    CsvEntry
+	CsvColumns    *CsvEntry
 }
 
 var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*?[:\s]+(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s]+.*?(?P<error_severity>[A-Z0-9]+)[:\s]+.*$`)
 
 func (e CsvEntry) String() string {
+	if e.CsvColumnCount == 23 {
+		return strings.Join([]string{
+			e.LogTime,
+			gox.If(e.UserName != "", `"`+strings.ReplaceAll(e.UserName, `"`, `""`)+`"`, ""),
+			gox.If(e.DatabaseName != "", `"`+strings.ReplaceAll(e.DatabaseName, `"`, `""`)+`"`, ""),
+			e.ProcessID,
+			gox.If(e.ConnectionFrom != "", `"`+strings.ReplaceAll(e.ConnectionFrom, `"`, `""`)+`"`, ""),
+			e.SessionID,
+			e.SessionLineNum,
+			gox.If(e.CommandTag != "", `"`+strings.ReplaceAll(e.CommandTag, `"`, `""`)+`"`, ""),
+			e.SessionStartTime,
+			e.VirtualTransactionID,
+			e.TransactionID,
+			e.ErrorSeverity,
+			e.SQLStateCode,
+			gox.If(e.Message != "", `"`+strings.ReplaceAll(e.Message, `"`, `""`)+`"`, ""),
+			gox.If(e.Detail != "", `"`+strings.ReplaceAll(e.Detail, `"`, `""`)+`"`, ""),
+			gox.If(e.Hint != "", `"`+strings.ReplaceAll(e.Hint, `"`, `""`)+`"`, ""),
+			e.InternalQuery,
+			e.InternalQueryPos,
+			gox.If(e.Context != "", `"`+strings.ReplaceAll(e.Context, `"`, `""`)+`"`, ""),
+			gox.If(e.Query != "", `"`+strings.ReplaceAll(e.Query, `"`, `""`)+`"`, ""),
+			e.QueryPos,
+			e.Location,
+			gox.If(e.ApplicationName != "" || (e.SQLStateCode == "00000" && e.UserName == ""), `"`+strings.ReplaceAll(e.ApplicationName, `"`, `""`)+`"`, ""),
+		}, ",")
+	}
+	if e.CsvColumnCount == 24 {
+		return strings.Join([]string{
+			e.LogTime,
+			gox.If(e.UserName != "", `"`+strings.ReplaceAll(e.UserName, `"`, `""`)+`"`, ""),
+			gox.If(e.DatabaseName != "", `"`+strings.ReplaceAll(e.DatabaseName, `"`, `""`)+`"`, ""),
+			e.ProcessID,
+			gox.If(e.ConnectionFrom != "", `"`+strings.ReplaceAll(e.ConnectionFrom, `"`, `""`)+`"`, ""),
+			e.SessionID,
+			e.SessionLineNum,
+			gox.If(e.CommandTag != "", `"`+strings.ReplaceAll(e.CommandTag, `"`, `""`)+`"`, ""),
+			e.SessionStartTime,
+			e.VirtualTransactionID,
+			e.TransactionID,
+			e.ErrorSeverity,
+			e.SQLStateCode,
+			gox.If(e.Message != "", `"`+strings.ReplaceAll(e.Message, `"`, `""`)+`"`, ""),
+			gox.If(e.Detail != "", `"`+strings.ReplaceAll(e.Detail, `"`, `""`)+`"`, ""),
+			gox.If(e.Hint != "", `"`+strings.ReplaceAll(e.Hint, `"`, `""`)+`"`, ""),
+			e.InternalQuery,
+			e.InternalQueryPos,
+			gox.If(e.Context != "", `"`+strings.ReplaceAll(e.Context, `"`, `""`)+`"`, ""),
+			gox.If(e.Query != "", `"`+strings.ReplaceAll(e.Query, `"`, `""`)+`"`, ""),
+			e.QueryPos,
+			e.Location,
+			gox.If(e.ApplicationName != "" || (e.SQLStateCode == "00000" && e.UserName == ""), `"`+strings.ReplaceAll(e.ApplicationName, `"`, `""`)+`"`, ""),
+			gox.If(e.BackendType != "", `"`+strings.ReplaceAll(e.BackendType, `"`, `""`)+`"`, ""),
+		}, ",")
+	}
 	return strings.Join([]string{
 		e.LogTime,
 		gox.If(e.UserName != "", `"`+strings.ReplaceAll(e.UserName, `"`, `""`)+`"`, ""),
@@ -73,7 +128,7 @@ func (e CsvEntry) String() string {
 		gox.If(e.Query != "", `"`+strings.ReplaceAll(e.Query, `"`, `""`)+`"`, ""),
 		e.QueryPos,
 		e.Location,
-		gox.If(e.ApplicationName != "" || e.SQLStateCode == "00000", `"`+strings.ReplaceAll(e.ApplicationName, `"`, `""`)+`"`, ""),
+		gox.If(e.ApplicationName != "" || (e.SQLStateCode == "00000" && e.UserName == ""), `"`+strings.ReplaceAll(e.ApplicationName, `"`, `""`)+`"`, ""),
 		gox.If(e.BackendType != "", `"`+strings.ReplaceAll(e.BackendType, `"`, `""`)+`"`, ""),
 		e.LeaderPid,
 		e.QueryId,
@@ -152,8 +207,8 @@ func (e LogEntry) GetTime() time.Time {
 }
 
 func (e LogEntry) IsSystemEntry() bool {
-	if e.CsvRecords != nil {
-		return e.CsvRecords[1] == ""
+	if e.CsvColumns != nil {
+		return e.CsvColumns.UserName == ""
 	} else { // TODO With plain text logs very hard to detect actually without log_line_prefix so need to use that as well
 		// let's assume for now user@db
 		if REGEX_USER_AT_DB.MatchString(strings.Join(e.Lines, "\n")) {

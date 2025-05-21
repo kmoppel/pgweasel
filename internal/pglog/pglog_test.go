@@ -21,14 +21,14 @@ func TestIsSystemEntry(t *testing.T) {
 		{
 			name: "CSV system entry",
 			entry: pglog.LogEntry{
-				CsvRecords: []string{"2025-05-02 18:18:26.523 EEST", ""},
+				CsvColumns: &pglog.CsvEntry{LogTime: "2025-05-02 18:18:26.523 EEST", UserName: ""},
 			},
 			expected: true,
 		},
 		{
 			name: "CSV user entry",
 			entry: pglog.LogEntry{
-				CsvRecords: []string{"2025-05-02 18:18:26.523 EEST", "postgres"},
+				CsvColumns: &pglog.CsvEntry{LogTime: "2025-05-02 18:18:26.523 EEST", UserName: "postgres"},
 			},
 			expected: false,
 		},
