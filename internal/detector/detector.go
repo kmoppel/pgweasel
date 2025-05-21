@@ -11,11 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Functions to detect the location of Postgres log files automatically
-
-// func ScanForPostgresInstances() ([]string, error) {
-// }
-
 var DEFAULT_LOG_LOCATIONS = []string{"/var/log/postgresql", "/var/lib/pgsql"}
 
 const DEFAULT_LOGFILE_SUFFIX = ".log"
