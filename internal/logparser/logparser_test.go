@@ -55,13 +55,13 @@ func TestHasTimestampPrefix(t *testing.T) {
 	assert.True(t, logparser.HasTimestampPrefix("2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: BEGIN;"))
 }
 
-func TestFallbackRegex(t *testing.T) {
+func TestDefaultRegex(t *testing.T) {
 	regex := logparser.DEFAULT_REGEX
 	expectedGroups := []string{"log_time", "error_severity", "message"}
 
 	testLines := []string{
 		"2024-05-07 10:22:13 UTC [12345]: [1-1] user=admin,db=exampledb,app=psql LOG:  connection received: host=203.0.113.45 port=52344",
-		"2025-05-07 12:34:56.789 UTC ERROR: some error message",
+		"2025-05-21 15:09:59.648 EEST [3284734] STATEMENT:  asdasd",
 		"2025-05-02 18:25:03.976 EEST [2702613] krl@postgres LOG:  statement: BEGIN;",
 	}
 

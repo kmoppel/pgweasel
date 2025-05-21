@@ -35,5 +35,5 @@ func init() {
 	rootCmd.PersistentFlags().StringArrayVarP(&Filters, "filter", "f", nil, "Add extra line match conditions (regex)")
 	rootCmd.PersistentFlags().StringVarP(&Connstr, "connstr", "", "", "Connect to specified instance and determine log location / settings")
 	// rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
-	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", `(?s)^(?P<log_time>[\d\-:\. ]+ [A-Z]+){1,28}.*[\s:]+(?P<error_severity>[A-Z12345]+):\s*(?P<message>(?s:.*))$`, "Use a custom regex instead of:")
+	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", `(?s)^(?P<log_time>[\d\-:\. ]+ [A-Z]+){1,28}[\s:\-].*[\s:\-](?P<error_severity>[A-Z12345]+):\s*(?P<message>(?s:.*))$`, "Use a custom regex instead of:")
 }
