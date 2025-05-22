@@ -194,12 +194,12 @@ func TimestringToTime(s string) time.Time {
 	return t
 }
 
-func GetLogFilesFromUserArgs(args []string, Connstr string) []string {
+func GetLogFilesFromUserArgs(args []string) []string {
 	var logFiles []string
 
 	if len(args) == 0 {
 		log.Debug().Msgf("No files / folders provided, looking for latest file from default locations: %v ...", detector.DEFAULT_LOG_LOCATIONS)
-		logFile, _, err := detector.DiscoverLatestLogFileAndFolder(nil, Connstr)
+		logFile, _, err := detector.DiscoverLatestLogFileAndFolder(nil)
 		if err != nil {
 			log.Warn().Msgf("Failed to detect any log files from default locations: %v", detector.DEFAULT_LOG_LOCATIONS)
 			return nil

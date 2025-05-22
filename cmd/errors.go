@@ -35,7 +35,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s, SystemOnly=%v", cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.FromTime, cfg.ToTime, cfg.SystemOnly)
 
-	logFiles := util.GetLogFilesFromUserArgs(args, Connstr)
+	logFiles := util.GetLogFilesFromUserArgs(args)
 
 	if len(logFiles) == 0 {
 		log.Error().Msg("No log files found to process")

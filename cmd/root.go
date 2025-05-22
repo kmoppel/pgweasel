@@ -40,7 +40,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&To, "to", "", "", "Log entries up to $time")
 	// rootCmd.PersistentFlags().BoolVarP(&Oneline, "oneline", "1", false, "Compact multiline entries")
 	rootCmd.PersistentFlags().StringArrayVarP(&Filters, "filter", "f", nil, "Add extra line match conditions (regex)")
-	rootCmd.PersistentFlags().StringVarP(&Connstr, "connstr", "", "", "Connect to specified instance and determine log location / settings")
 	// rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
 	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", `(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[\s:\-].*[\s:\-](?P<error_severity>[A-Z12345]+):\s*(?P<message>(?s:.*))$`, "Use a custom regex instead of:")
 }
@@ -52,7 +51,6 @@ type WeaselConfig struct {
 	MinErrLvl         string
 	SystemOnly        bool
 	MinSlowDurationMs int
-	Connstr           string
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -97,6 +95,5 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		MinErrLvl:         minErrLvl,
 		MinSlowDurationMs: MinSlowDurationMs,
 		SystemOnly:        false,
-		Connstr:           Connstr,
 	}
 }

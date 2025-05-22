@@ -2,12 +2,10 @@ package detector
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/kmoppel/pgweasel/internal/postgres"
 	"github.com/rs/zerolog/log"
 )
 
@@ -42,10 +40,11 @@ func FindMostRecentFileInFolders(foldersToScan []string) (latestFile string, lat
 	return latestFile, filepath.Dir(latestFile), nil
 }
 
-func DiscoverLatestLogFileAndFolder(fileOrFolder []string, pgConnstr string) (string, string, error) {
+// Folder will be used for tailing in the future
+func DiscoverLatestLogFileAndFolder(fileOrFolder []string) (string, string, error) {
 	var logFile string
 
-	if len(fileOrFolder) == 0 && pgConnstr == "" {
+	if len(fileOrFolder) == 0 {
 		log.Debug().Msgf("No log file or folder specified, using default log locations: %v", DEFAULT_LOG_LOCATIONS)
 		return FindMostRecentFileInFolders(DEFAULT_LOG_LOCATIONS)
 	}
@@ -58,16 +57,5 @@ func DiscoverLatestLogFileAndFolder(fileOrFolder []string, pgConnstr string) (st
 		return logFile, filepath.Dir(logFile), nil
 	}
 
-	if pgConnstr != "" {
-		log.Debug().Msg("Using --connstr to determine logs location ...")
-		logSettings, err := postgres.GetLogSettings(pgConnstr)
-		if err != nil {
-			log.Fatal().Err(err).Msg("Error getting log directory and prefix from DB")
-		}
-		log.Debug().Msgf("Postgres logSettings: %v", logSettings)
-		if logSettings.LogDestination != "stderr" {
-			return FindMostRecentFileInFolders([]string{path.Join(logSettings.DataDirectory, logSettings.LogDirectory)})
-		}
-	}
 	return FindMostRecentFileInFolders(DEFAULT_LOG_LOCATIONS)
 }
