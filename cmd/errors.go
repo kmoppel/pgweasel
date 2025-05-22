@@ -17,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var MinErrLvl string
+var MinErrLvl = "WARNING"
 var errorsCmd = &cobra.Command{
 	Use:   "errors [$LOG_FILE_OR_FOLDER]",
 	Short: "Shows WARNING and higher entries by default",
@@ -116,6 +116,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 	w := bufio.NewWriter(os.Stdout)
 	defer w.Flush()
 
+	minErrLvlSeverityNum := pglog.SeverityToNum(MinErrLvl)
+
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 
@@ -126,7 +128,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 			}
 			log.Debug().Msgf("Processing log entry: %+v", rec)
 
-			if TopNErrorsOnly && rec.SeverityNum() >= pglog.SeverityToNum(cfg.MinErrLvl) {
+			if TopNErrorsOnly && rec.SeverityNum() >= minErrLvlSeverityNum {
 				topErrors.AddError(rec.ErrorSeverity, rec.Message)
 			} else {
 				if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvl, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly) {
