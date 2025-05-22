@@ -81,12 +81,12 @@ func (tec *TopErrorsCollector) GetTopN(topN int) []TopError {
 	sort.Slice(topErrors, func(i, j int) bool {
 		return topErrors[i].Count > topErrors[j].Count
 	})
-	return topErrors
+	return topErrors[:topN]
 }
 
 func init() {
 	errorsCmd.AddCommand(errorsTopCmd)
-	errorsTopCmd.Flags().IntVarP(&TopNErrors, "top", "", 5, "Nr of top errors to show")
+	errorsTopCmd.Flags().IntVarP(&TopNErrors, "top", "", 10, "Nr of top errors to show")
 
 	rootCmd.AddCommand(errorsCmd)
 
@@ -145,9 +145,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	if TopNErrorsOnly {
-		topErrorsList := topErrors.GetTopN(TopNErrors)
-		for _, topError := range topErrorsList {
-			w.WriteString(strconv.Itoa(topError.Count) + " " + topError.Level + " " + topError.Message + "\n")
+		for _, topError := range topErrors.GetTopN(TopNErrors) {
+			w.WriteString(strconv.Itoa(topError.Count) + "x " + topError.Level + ": " + topError.Message + "\n")
 		}
 	}
 
