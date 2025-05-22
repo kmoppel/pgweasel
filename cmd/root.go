@@ -2,7 +2,14 @@ package cmd
 
 import (
 	"os"
+	"regexp"
+	"strings"
+	"time"
 
+	"github.com/kmoppel/pgweasel/internal/logparser"
+	"github.com/kmoppel/pgweasel/internal/util"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -36,4 +43,58 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&Connstr, "connstr", "", "", "Connect to specified instance and determine log location / settings")
 	// rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
 	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", `(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[\s:\-].*[\s:\-](?P<error_severity>[A-Z12345]+):\s*(?P<message>(?s:.*))$`, "Use a custom regex instead of:")
+}
+
+type WeaselConfig struct {
+	FromTime          time.Time
+	ToTime            time.Time
+	LogLineRegex      *regexp.Regexp
+	MinErrLvl         string
+	SystemOnly        bool
+	MinSlowDurationMs int
+}
+
+func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
+	var err error
+	var fromTime time.Time
+	var toTime time.Time
+	var logLineRegex *regexp.Regexp
+
+	if Verbose {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
+	MinErrLvl = strings.ToUpper(MinErrLvl)
+
+	if LogLineRegex != "" {
+		log.Debug().Msgf("Using regex to parse plain text entries: %s", LogLineRegex)
+		if !strings.Contains(LogLineRegex, "<log_time>") || !strings.Contains(LogLineRegex, "<error_severity>") || !strings.Contains(LogLineRegex, "<message>") {
+			log.Fatal().Msgf("Custom regex needs to have groups: log_time, error_severity, message. Default regex: %s", logparser.DEFAULT_REGEX_STR)
+		}
+		logLineRegex, err = regexp.Compile(LogLineRegex)
+		if err != nil {
+			log.Fatal().Msgf("Failed to compile provided regex: %s", LogLineRegex)
+		}
+	}
+
+	if From != "" {
+		fromTime, err = util.HumanTimeOrDeltaStringToTime(From, time.Time{})
+		if err != nil {
+			log.Warn().Msg("Error parsing --from timedelta input, supported units are 's', 'm', 'h'. Ignoring --from")
+		}
+	}
+	if To != "" {
+		toTime, err = util.HumanTimeOrDeltaStringToTime(To, time.Time{})
+		if err != nil {
+			log.Warn().Msg("Error parsing --to timedelta input, supported units are 's', 'm', 'h'. Ignoring --to")
+		}
+	}
+	return WeaselConfig{
+		FromTime:          fromTime,
+		ToTime:            toTime,
+		LogLineRegex:      logLineRegex,
+		MinErrLvl:         MinErrLvl,
+		MinSlowDurationMs: MinSlowDurationMs,
+		SystemOnly:        false,
+	}
 }
