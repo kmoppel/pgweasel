@@ -245,3 +245,25 @@ func GetLogFilesFromUserArgs(args []string) []string {
 	}
 	return logFiles
 }
+
+func NormalizeErrorMessage(msg string) string {
+	// Remove leading and trailing whitespace
+	msg = strings.TrimSpace(msg)
+
+	// Replace multiple spaces with a single space
+	msg = strings.Join(strings.Fields(msg), " ")
+
+	// Convert to lowercase
+	msg = strings.ToLower(msg)
+
+	// Remove special characters (except for alphanumeric and spaces)
+	msg = strings.Map(func(r rune) rune {
+		if r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == ' ' {
+			return r
+		}
+		return -1
+	}, msg)
+
+	return msg
+
+}
