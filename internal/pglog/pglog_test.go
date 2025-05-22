@@ -35,7 +35,8 @@ func TestIsSystemEntry(t *testing.T) {
 		{
 			name: "Plain text system entry",
 			entry: pglog.LogEntry{
-				Lines: []string{`2025-05-02 18:18:26.523 EEST [2240722] LOG:  listening on IPv4 address "0.0.0.0", port 5432`},
+				Lines:   []string{`2025-05-02 18:18:26.523 EEST [2240722] LOG:  listening on IPv4 address "0.0.0.0", port 5432`},
+				Message: `listening on IPv4 address "0.0.0.0", port 5432`,
 			},
 			expected: true,
 		},
@@ -45,6 +46,22 @@ func TestIsSystemEntry(t *testing.T) {
 				Lines: []string{`2025-05-02 18:25:03.959 EEST [2702612] krl@postgres LOG:  statement: vacuum pgbench_branches`},
 			},
 			expected: false,
+		},
+		{
+			name: "Plain text non-system entry2",
+			entry: pglog.LogEntry{
+				Lines:   []string{`2025-05-22 15:15:09.392 EEST [3239131] krl@postgres ERROR:  new row for relation "pgbench_accounts" violates check constraint "posbal"`},
+				Message: `new row for relation "pgbench_accounts" violates check constraint "posbal"`,
+			},
+			expected: false,
+		},
+		{
+			name: "Plain text system entry2",
+			entry: pglog.LogEntry{
+				Lines:   []string{`2025-05-19 09:27:35.644 EEST [3775] LOG:  database system was not properly shut down; automatic recovery in progress`},
+				Message: `database system was not properly shut down; automatic recovery in progress`,
+			},
+			expected: true,
 		},
 	}
 

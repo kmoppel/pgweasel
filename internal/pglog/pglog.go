@@ -49,7 +49,7 @@ type LogEntry struct {
 	CsvColumns    *CsvEntry
 }
 
-var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]+ [A-Z]+).*?[:\s]+(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s]+.*?(?P<error_severity>[A-Z0-9]+)[:\s]+.*$`)
+var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[:\s\-]+.*?(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s\-]+.*?(?P<error_severity>[A-Z12345]+)[:\s]+.*$`)
 
 func (e CsvEntry) String() string {
 	if e.CsvColumnCount == 23 {
@@ -207,14 +207,36 @@ func (e LogEntry) GetTime() time.Time {
 	return util.TimestringToTime(e.LogTime)
 }
 
+// Simplistic approach. Adding severity could help a bit
+var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
+	"invalid value ",
+	"configuration file ",
+	"starting  ",
+	"listening on ",
+	"database system ",
+	"received ",
+	"parameter ",
+	"automatic ", // vacuum / analyze
+	"checkpoint ",
+	"sending ",
+	"TimescaleDB ",
+}
+
 func (e LogEntry) IsSystemEntry() bool {
 	if e.CsvColumns != nil {
 		return e.CsvColumns.UserName == ""
-	} else { // TODO With plain text logs very hard to detect actually without log_line_prefix so need to use that as well
-		// let's assume for now user@db
-		if REGEX_USER_AT_DB.MatchString(strings.Join(e.Lines, "\n")) {
-			return false
+	}
+
+	// TODO With plain text logs very hard to detect actually without log_line_prefix so need to use that as well
+	// let's assume for now user@db
+	if REGEX_USER_AT_DB.MatchString(strings.Join(e.Lines, "\n")) {
+		return false
+	}
+	for _, prefix := range POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES {
+		if strings.HasPrefix(e.Message, prefix) {
+			return true
 		}
 	}
-	return true
+
+	return false
 }

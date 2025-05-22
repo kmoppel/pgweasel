@@ -97,6 +97,6 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		MinErrLvl:         minErrLvl,
 		MinErrLvlNum:      pglog.SeverityToNum(minErrLvl),
 		MinSlowDurationMs: MinSlowDurationMs,
-		SystemOnly:        false,
+		SystemOnly:        SystemOnly,
 	}
 }
