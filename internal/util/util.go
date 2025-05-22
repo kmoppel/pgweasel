@@ -246,7 +246,7 @@ func GetLogFilesFromUserArgs(args []string) []string {
 	return logFiles
 }
 
-func NormalizeErrorMessage(msg string) string {
+func NormalizeErrorMessage(msg string) string { // TODO
 	// Remove leading and trailing whitespace
 	msg = strings.TrimSpace(msg)
 

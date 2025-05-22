@@ -3,7 +3,6 @@ module github.com/kmoppel/pgweasel
 go 1.24.1
 
 require (
-	github.com/lib/pq v1.10.9
 	github.com/markusmobius/go-dateparser v1.2.4
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0

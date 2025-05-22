@@ -6,10 +6,12 @@ package cmd
 import (
 	"bufio"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/kmoppel/pgweasel/internal/logparser"
+	"github.com/kmoppel/pgweasel/internal/pglog"
 	"github.com/kmoppel/pgweasel/internal/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -24,20 +26,37 @@ var errorsCmd = &cobra.Command{
 	},
 	Aliases: []string{"err", "errs", "error"},
 }
-var TopNErrorsOnly int
+var TopNErrors int
+var TopNErrorsOnly bool
+
 var errorsTopCmd = &cobra.Command{
 	Use:   "top",
 	Short: "Top N errors",
-	Run:   showErrors,
+	Run: func(cmd *cobra.Command, args []string) {
+		TopNErrorsOnly = true
+		showErrors(cmd, args)
+	},
+}
+
+type ErrorLevelMessage struct {
+	ErrorLevel string
+	Message    string
 }
 
 type TopErrorsCollector struct {
-	NormalizedErrorCounts map[string]int
+	ErrorCounts map[string]map[string]int // [ERROR][MESSAGE] = COUNT
+	TotalCount  int
+}
+
+func (tec *TopErrorsCollector) Initialize() {
+	tec.ErrorCounts = make(map[string]map[string]int)
+	for _, level := range pglog.ERROR_SEVERITIES {
+		tec.ErrorCounts[level] = make(map[string]int)
+	}
 }
 
 func (tec *TopErrorsCollector) AddError(level string, message string) {
-	// uti
-	tec.NormalizedErrorCounts[message]++
+	tec.ErrorCounts[level][message]++
 }
 
 type TopError struct {
@@ -47,15 +66,27 @@ type TopError struct {
 }
 
 func (tec *TopErrorsCollector) GetTopN(topN int) []TopError {
-	// sort
-	// print
-	topErrors := make([]TopError, 0, topN)
+	// flatten before sorting
+	topErrors := make([]TopError, 0)
+	for level, messages := range tec.ErrorCounts {
+		for message, count := range messages {
+			topErrors = append(topErrors, TopError{
+				Level:   level,
+				Message: message,
+				Count:   count,
+			})
+		}
+	}
+	// sort by count
+	sort.Slice(topErrors, func(i, j int) bool {
+		return topErrors[i].Count > topErrors[j].Count
+	})
 	return topErrors
 }
 
 func init() {
 	errorsCmd.AddCommand(errorsTopCmd)
-	errorsTopCmd.Flags().IntVarP(&TopNErrorsOnly, "top", "", 0, "Nr of top errors to show")
+	errorsTopCmd.Flags().IntVarP(&TopNErrors, "top", "", 5, "Nr of top errors to show")
 
 	rootCmd.AddCommand(errorsCmd)
 
@@ -64,11 +95,12 @@ func init() {
 
 func showErrors(cmd *cobra.Command, args []string) {
 	var logFiles []string
-	var topErrors *TopErrorsCollector = &TopErrorsCollector{NormalizedErrorCounts: make(map[string]int)}
+	var topErrors *TopErrorsCollector = &TopErrorsCollector{}
+	topErrors.Initialize()
 
 	cfg := PreProcessArgs(cmd, args)
 
-	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s, SystemOnly=%v, TopNErrors=%d", cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, TopNErrorsOnly)
+	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s, SystemOnly=%v, TopNErrorsOnly=%t", cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, TopNErrorsOnly)
 
 	if len(args) == 0 && util.CheckStdinAvailable() {
 		logFiles = []string{"stdin"}
@@ -94,7 +126,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 			}
 			log.Debug().Msgf("Processing log entry: %+v", rec)
 
-			if TopNErrorsOnly > 0 {
+			if TopNErrorsOnly && rec.SeverityNum() >= pglog.SeverityToNum(cfg.MinErrLvl) {
 				topErrors.AddError(rec.ErrorSeverity, rec.Message)
 			} else {
 				if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvl, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly) {
@@ -110,10 +142,10 @@ func showErrors(cmd *cobra.Command, args []string) {
 		log.Debug().Msgf("Finished processing log file: %s", logFile)
 	}
 
-	if TopNErrorsOnly > 0 {
-		topErrorsList := topErrors.GetTopN(TopNErrorsOnly)
+	if TopNErrorsOnly {
+		topErrorsList := topErrors.GetTopN(TopNErrors)
 		for _, topError := range topErrorsList {
-			w.WriteString(topError.Level + ": " + topError.Message + " (" + strconv.Itoa(topError.Count) + ")\n")
+			w.WriteString(strconv.Itoa(topError.Count) + " " + topError.Level + " " + topError.Message + "\n")
 		}
 	}
 

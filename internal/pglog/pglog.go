@@ -9,6 +9,8 @@ import (
 	"github.com/kmoppel/pgweasel/internal/util"
 )
 
+var ERROR_SEVERITIES = []string{"WARNING", "ERROR", "FATAL", "PANIC"}
+
 type CsvEntry struct {
 	CsvColumnCount       int    // <v13=23, v14=24,v15+=26
 	LogTime              string // Column 1
