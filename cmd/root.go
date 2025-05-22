@@ -52,6 +52,7 @@ type WeaselConfig struct {
 	MinErrLvl         string
 	SystemOnly        bool
 	MinSlowDurationMs int
+	Connstr           string
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -64,7 +65,7 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
-	MinErrLvl = strings.ToUpper(MinErrLvl)
+	minErrLvl := strings.ToUpper(MinErrLvl)
 
 	if LogLineRegex != "" {
 		log.Debug().Msgf("Using regex to parse plain text entries: %s", LogLineRegex)
@@ -93,8 +94,9 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		FromTime:          fromTime,
 		ToTime:            toTime,
 		LogLineRegex:      logLineRegex,
-		MinErrLvl:         MinErrLvl,
+		MinErrLvl:         minErrLvl,
 		MinSlowDurationMs: MinSlowDurationMs,
 		SystemOnly:        false,
+		Connstr:           Connstr,
 	}
 }

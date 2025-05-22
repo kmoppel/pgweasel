@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kmoppel/pgweasel/internal/detector"
 	dps "github.com/markusmobius/go-dateparser"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -23,6 +24,15 @@ func IsPathExistsAndFile(filePath string) bool {
 		return true
 	}
 	return false
+}
+
+func IsPathExistsAndFolder(filePath string) bool {
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return false
+	}
+
+	return fileInfo.IsDir()
 }
 
 // Returns all text files recursively in the given folder, sorted by modification time
@@ -182,4 +192,43 @@ func TimestringToTime(s string) time.Time {
 		}
 	}
 	return t
+}
+
+func GetLogFilesFromUserArgs(args []string, Connstr string) []string {
+	var logFiles []string
+
+	if len(args) == 0 {
+		log.Debug().Msgf("No files / folders provided, looking for latest file from default locations: %v ...", detector.DEFAULT_LOG_LOCATIONS)
+		logFile, _, err := detector.DiscoverLatestLogFileAndFolder(nil, Connstr)
+		if err != nil {
+			log.Warn().Msgf("Failed to detect any log files from default locations: %v", detector.DEFAULT_LOG_LOCATIONS)
+			return nil
+		}
+		logFiles = append(logFiles, logFile)
+	} else {
+		for _, arg := range args {
+			log.Debug().Msgf("Checking input path: %s ...", arg)
+			_, err := os.Stat(arg)
+			if err != nil {
+				log.Warn().Err(err).Msgf("Error accessing path: %s", arg)
+				continue
+			}
+
+			if IsPathExistsAndFile(arg) {
+				logFiles = append(logFiles, arg)
+				continue
+			}
+			if IsPathExistsAndFolder(arg) {
+				log.Debug().Msgf("Looking for log files from folder: %s ..", arg)
+				logFiles, err = GetPostgresLogFilesTimeSorted(arg)
+				if err != nil {
+					log.Warn().Err(err).Msgf("Error scanning for log files from folder: %s", arg)
+					continue
+				}
+				log.Debug().Msgf("Found %d log files", len(logFiles))
+				logFiles = append(logFiles, logFiles...)
+			}
+		}
+	}
+	return logFiles
 }

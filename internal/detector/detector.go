@@ -17,7 +17,6 @@ const DEFAULT_LOGFILE_SUFFIX = ".log"
 
 // Returns the most recent file in the specified folder, plus it's parent folder
 func FindMostRecentFileInFolders(foldersToScan []string) (latestFile string, latestFileParentFolder string, err error) {
-	// var latestFile string
 	var latestModTime time.Time
 
 	for _, folder := range foldersToScan {
