@@ -131,7 +131,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 			if TopNErrorsOnly && rec.SeverityNum() >= minErrLvlSeverityNum {
 				topErrors.AddError(rec.ErrorSeverity, rec.Message)
 			} else {
-				if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvl, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly) {
+				if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly) {
 					if rec.CsvColumns != nil {
 						w.WriteString(rec.CsvColumns.String())
 					} else {

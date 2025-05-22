@@ -171,8 +171,7 @@ func (e LogEntry) SeverityNum() int {
 }
 
 func SeverityToNum(severity string) int {
-	severity = strings.ToUpper(severity)
-	switch severity {
+	switch strings.ToUpper(severity) {
 	case "DEBUG5":
 		return 0
 	case "DEBUG4":

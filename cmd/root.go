@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/kmoppel/pgweasel/internal/logparser"
+	"github.com/kmoppel/pgweasel/internal/pglog"
 	"github.com/kmoppel/pgweasel/internal/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -49,6 +50,7 @@ type WeaselConfig struct {
 	ToTime            time.Time
 	LogLineRegex      *regexp.Regexp
 	MinErrLvl         string
+	MinErrLvlNum      int
 	SystemOnly        bool
 	MinSlowDurationMs int
 }
@@ -93,6 +95,7 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		ToTime:            toTime,
 		LogLineRegex:      logLineRegex,
 		MinErrLvl:         minErrLvl,
+		MinErrLvlNum:      pglog.SeverityToNum(minErrLvl),
 		MinSlowDurationMs: MinSlowDurationMs,
 		SystemOnly:        false,
 	}

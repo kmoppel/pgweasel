@@ -144,8 +144,8 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvl string, extraRegexFilters []string, fromTime time.Time, toTime time.Time, minSlowDurationMs int, systemOnly bool) bool {
-	if rec.SeverityNum() < pglog.SeverityToNum(minLvl) {
+func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvlNum int, extraRegexFilters []string, fromTime time.Time, toTime time.Time, minSlowDurationMs int, systemOnly bool) bool {
+	if rec.SeverityNum() < minLvlNum {
 		return false
 	}
 
