@@ -31,15 +31,20 @@ func init() {
 }
 
 func showErrors(cmd *cobra.Command, args []string) {
+	var logFiles []string
+
 	cfg := PreProcessArgs(cmd, args)
 
 	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s, SystemOnly=%v", cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.FromTime, cfg.ToTime, cfg.SystemOnly)
 
-	logFiles := util.GetLogFilesFromUserArgs(args)
-
-	if len(logFiles) == 0 {
-		log.Error().Msg("No log files found to process")
-		return
+	if len(args) == 0 && util.CheckStdinAvailable() {
+		logFiles = []string{"stdin"}
+	} else {
+		logFiles = util.GetLogFilesFromUserArgs(args)
+		if len(logFiles) == 0 {
+			log.Error().Msg("No log files found to process")
+			return
+		}
 	}
 
 	// Create a buffered writer for better performance
@@ -48,7 +53,6 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
-		continue
 
 		for rec := range logparser.GetLogRecordsFromFile(logFile, cfg.LogLineRegex) {
 			log.Debug().Msgf("Processing log entry: %+v", rec)

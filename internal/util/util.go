@@ -194,6 +194,19 @@ func TimestringToTime(s string) time.Time {
 	return t
 }
 
+func CheckStdinAvailable() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		log.Error().Err(err).Msg("Error Stat-ing stdin")
+		return false
+	}
+	if fi.Mode()&os.ModeNamedPipe == 0 {
+		log.Debug().Msg("Stdin is not available")
+		return false
+	}
+	return true
+}
+
 func GetLogFilesFromUserArgs(args []string) []string {
 	var logFiles []string
 

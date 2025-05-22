@@ -70,28 +70,35 @@ func ExtractDurationMillisFromLogMessage(message string) float64 {
 func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regexp) <-chan pglog.LogEntry {
 	log.Debug().Msgf("Looking for log entries from plain text log file: %s", filePath)
 	ch := make(chan pglog.LogEntry)
+	var scanner *bufio.Scanner
+
 	go func() {
 		defer close(ch)
-		// Open file from filePath and loop line by line
-		file, err := os.Open(filePath)
-		if err != nil {
-			log.Error().Err(err).Msgf("Error opening file: %s", filePath)
-			return
-		}
-		defer file.Close()
 
-		var reader io.Reader = file
-		if strings.HasSuffix(filePath, ".gz") {
-			gzReader, err := gzip.NewReader(file)
+		if filePath == "stdin" {
+			scanner = bufio.NewScanner(os.Stdin)
+		} else {
+			// Open file from filePath and loop line by line
+			file, err := os.Open(filePath)
 			if err != nil {
-				log.Error().Err(err).Msgf("Error creating gzip reader for file: %s", filePath)
+				log.Error().Err(err).Msgf("Error opening file: %s", filePath)
 				return
 			}
-			defer gzReader.Close()
-			reader = gzReader
+			defer file.Close()
+
+			var reader io.Reader = file
+			if strings.HasSuffix(filePath, ".gz") {
+				gzReader, err := gzip.NewReader(file)
+				if err != nil {
+					log.Error().Err(err).Msgf("Error creating gzip reader for file: %s", filePath)
+					return
+				}
+				defer gzReader.Close()
+				reader = gzReader
+			}
+			scanner = bufio.NewScanner(reader)
 		}
 
-		scanner := bufio.NewScanner(reader)
 		scanner.Split(bufio.ScanLines)
 
 		var lines = make([]string, 0)
