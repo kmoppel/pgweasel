@@ -231,6 +231,11 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"aborting ",
 	"The failed archive command was",
 	"archiving write-ahead log ",
+	"Failed ",
+	"out of memory",
+	"terminating ",
+	"server process ",
+	"could not ",
 }
 
 var POSTGRES_LOG_LVL_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
