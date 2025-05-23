@@ -217,7 +217,9 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"received ",
 	"parameter ",
 	"automatic ", // vacuum / analyze
+	"autovacuum: ",
 	"checkpoint ",
+	"Checkpoint ",
 	"sending ",
 	"TimescaleDB ",
 	"redo ",
@@ -237,6 +239,11 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"server process ",
 	"could not create ",
 	"could not write ",
+	"could not attach ",
+	"could not fsync ",
+	"WAL redo ",
+	"replication ",
+	"Replication ",
 }
 
 var POSTGRES_LOG_LVL_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
@@ -259,6 +266,10 @@ var POSTGRES_LOG_LVL_NON_SYSTEM_REGEXES = []*regexp.Regexp{
 func (e LogEntry) IsSystemEntry() bool {
 	if e.CsvColumns != nil {
 		return e.CsvColumns.UserName == ""
+	}
+
+	if e.ErrorSeverity == "FATAL" || e.ErrorSeverity == "PANIC" {
+		return !strings.Contains(e.Message, "password authentication")
 	}
 
 	for _, prefix := range POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES {
