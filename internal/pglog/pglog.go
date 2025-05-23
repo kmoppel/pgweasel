@@ -211,7 +211,7 @@ func (e LogEntry) GetTime() time.Time {
 var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"invalid value ",
 	"configuration file ",
-	"starting  ",
+	"starting ",
 	"listening on ",
 	"database system ",
 	"received ",
@@ -222,6 +222,20 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"TimescaleDB ",
 	"redo ",
 	"invalid ",
+	"archive ",
+	"selected ",
+	"consistent recovery ",
+	"entering ",
+	"shutting  ",
+	"background worker ",
+	"aborting ",
+	"The failed archive command was",
+	"archiving write-ahead log ",
+}
+
+var POSTGRES_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
+	"duration: ",
+	"statement: ",
 }
 
 func (e LogEntry) IsSystemEntry() bool {
@@ -229,15 +243,26 @@ func (e LogEntry) IsSystemEntry() bool {
 		return e.CsvColumns.UserName == ""
 	}
 
+	for _, prefix := range POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES {
+		if strings.HasPrefix(e.Message, prefix) {
+			return true
+		}
+	}
+
 	// TODO With plain text logs very hard to detect actually without log_line_prefix so need to use that as well
 	// let's assume for now user@db
 	if REGEX_USER_AT_DB.MatchString(strings.Join(e.Lines, "\n")) {
 		return false
 	}
-	for _, prefix := range POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES {
-		if strings.HasPrefix(e.Message, prefix) {
-			return true
+
+	// Everything with level LOG minus "slow queries" and pgaudit
+	if e.ErrorSeverity == "LOG" {
+		for _, prefix := range POSTGRES_NON_SYSTEM_MESSAGES_IDENT_PREXIFES {
+			if strings.HasPrefix(e.Message, prefix) {
+				return false
+			}
 		}
+		return true
 	}
 
 	return false

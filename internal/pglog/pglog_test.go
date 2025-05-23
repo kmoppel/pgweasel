@@ -71,6 +71,14 @@ func TestIsSystemEntry(t *testing.T) {
 			},
 			expected: true,
 		},
+		{
+			name: "Plain text system entry4",
+			entry: pglog.LogEntry{
+				Lines:   []string{`2021-05-28 12:19:06.386 JST [8216] LOG:  database system was shut down at 2021-05-28 12:19:06 JST`},
+				Message: `database system was shut down at 2021-05-28 12:19:06 JST`,
+			},
+			expected: true,
+		},
 	}
 
 	for _, tt := range tests {

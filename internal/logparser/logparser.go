@@ -15,11 +15,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const DEFAULT_REGEX_STR = `(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[\s:\-].*[\s:\-](?P<error_severity>[A-Z12345]+):\s*(?P<message>(?s:.*))$` // (?s:.*) is a non-capturing group
+const DEFAULT_REGEX_STR = `(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[\s:\-].*?[\s:\-](?P<error_severity>[A-Z12345]+):\s*(?P<message>(?s:.*))$` // (?s:.*) is a non-capturing group
 
 var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
 var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
 var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]{19,23} [A-Z]{2,5})`)
+var REGEX_LOG_LEVEL = regexp.MustCompile(`^[A-Z12345]{3,12}$`)
 
 func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
@@ -42,6 +43,10 @@ func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp) (pglog.LogEntry, e
 	e.LogTime = result["log_time"]
 
 	e.ErrorSeverity = result["error_severity"]
+
+	if !REGEX_LOG_LEVEL.MatchString(e.ErrorSeverity) {
+		return e, errors.New("invalid log level: " + e.ErrorSeverity)
+	}
 
 	e.Message = result["message"]
 
@@ -118,6 +123,7 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 					if err != nil {
 						log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
 					}
+					log.Debug().Msgf("Capture OK. severity:%s lines: %d len(lines): %d", e.ErrorSeverity, len(lines), len(strings.Join(lines, " ")))
 					lines = make([]string, 0)
 					lines = append(lines, line)
 					ch <- e

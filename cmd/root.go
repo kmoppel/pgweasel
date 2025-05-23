@@ -42,7 +42,7 @@ func init() {
 	// rootCmd.PersistentFlags().BoolVarP(&Oneline, "oneline", "1", false, "Compact multiline entries")
 	rootCmd.PersistentFlags().StringArrayVarP(&Filters, "filter", "f", nil, "Add extra line match conditions (regex)")
 	// rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
-	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", `(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[\s:\-].*[\s:\-](?P<error_severity>[A-Z12345]+):\s*(?P<message>(?s:.*))$`, "Use a custom regex instead of:")
+	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", `(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[\s:\-].*?[\s:\-](?P<error_severity>[A-Z12345]+):\s*(?P<message>(?s:.*))$`, "Use a custom regex instead of:")
 }
 
 type WeaselConfig struct {
