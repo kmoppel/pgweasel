@@ -235,7 +235,8 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"out of memory",
 	"terminating ",
 	"server process ",
-	"could not ",
+	"could not create ",
+	"could not write ",
 }
 
 var POSTGRES_LOG_LVL_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
