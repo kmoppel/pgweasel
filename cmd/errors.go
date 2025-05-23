@@ -139,6 +139,9 @@ func showErrors(cmd *cobra.Command, args []string) {
 					}
 					w.WriteByte('\n')
 				}
+				if Verbose {
+					w.Flush()
+				}
 			}
 		}
 		log.Debug().Msgf("Finished processing log file: %s", logFile)

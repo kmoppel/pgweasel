@@ -267,3 +267,11 @@ func NormalizeErrorMessage(msg string) string { // TODO
 	return msg
 
 }
+
+func TruncateString(s string, maxChars int) string {
+	runes := []rune(s)
+	if len(runes) > maxChars {
+		return string(runes[:maxChars])
+	}
+	return s
+}

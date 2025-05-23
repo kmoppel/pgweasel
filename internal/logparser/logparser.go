@@ -117,8 +117,6 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 					e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex)
 					if err != nil {
 						log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
-					} else {
-						log.Debug().Msgf("Capture OK. severity=%s len(lines): %d", e.ErrorSeverity, len(lines))
 					}
 					lines = make([]string, 0)
 					lines = append(lines, line)
@@ -134,8 +132,6 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 			e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex)
 			if err != nil {
 				log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
-			} else {
-				log.Debug().Msgf("Capture OK. severity=%s len(lines): %d", e.ErrorSeverity, len(lines))
 			}
 			ch <- e
 		}
@@ -145,12 +141,12 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
 func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvlNum int, extraRegexFilters []string, fromTime time.Time, toTime time.Time, minSlowDurationMs int, systemOnly bool) bool {
-	if rec.SeverityNum() < minLvlNum {
-		return false
-	}
-
 	if systemOnly {
 		return rec.IsSystemEntry()
+	}
+
+	if rec.SeverityNum() < minLvlNum {
+		return false
 	}
 
 	if len(extraRegexFilters) > 0 {

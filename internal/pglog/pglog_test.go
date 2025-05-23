@@ -63,6 +63,14 @@ func TestIsSystemEntry(t *testing.T) {
 			},
 			expected: true,
 		},
+		{
+			name: "Plain text system entry3",
+			entry: pglog.LogEntry{
+				Lines:   []string{`2025-05-18 14:43:19.424 EEST [3807] LOG:  checkpoint starting: time`},
+				Message: `checkpoint starting: time`,
+			},
+			expected: true,
+		},
 	}
 
 	for _, tt := range tests {

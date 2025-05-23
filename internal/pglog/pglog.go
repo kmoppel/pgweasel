@@ -220,6 +220,8 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"checkpoint ",
 	"sending ",
 	"TimescaleDB ",
+	"redo ",
+	"invalid ",
 }
 
 func (e LogEntry) IsSystemEntry() bool {
