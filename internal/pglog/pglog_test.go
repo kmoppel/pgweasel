@@ -74,10 +74,20 @@ func TestIsSystemEntry(t *testing.T) {
 		{
 			name: "Plain text system entry4",
 			entry: pglog.LogEntry{
-				Lines:   []string{`2021-05-28 12:19:06.386 JST [8216] LOG:  database system was shut down at 2021-05-28 12:19:06 JST`},
-				Message: `database system was shut down at 2021-05-28 12:19:06 JST`,
+				Lines:         []string{`2021-05-28 12:19:06.386 JST [8216] LOG:  database system was shut down at 2021-05-28 12:19:06 JST`},
+				Message:       `database system was shut down at 2021-05-28 12:19:06 JST`,
+				ErrorSeverity: "LOG",
 			},
 			expected: true,
+		},
+		{
+			name: "Plain text non-system entry3",
+			entry: pglog.LogEntry{
+				Lines:         []string{`2021-12-09 12:40:04.921 UTC-61b1f89a.4aa20-LOG:  process 305696 still waiting for ExclusiveLock on extension of relation 16538 of database 14344 after 1000.004 ms`},
+				Message:       `process 305696 still waiting for ExclusiveLock on extension of relation 16538 of database 14344 after 1000.004 ms`,
+				ErrorSeverity: "LOG",
+			},
+			expected: false,
 		},
 	}
 

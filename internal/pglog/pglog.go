@@ -233,9 +233,18 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"archiving write-ahead log ",
 }
 
-var POSTGRES_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
+var POSTGRES_LOG_LVL_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"duration: ",
 	"statement: ",
+	"connection authorized: ",
+	"connection received: ",
+	"could not receive data from client: ",
+	"could not send data to client: ",
+}
+
+var POSTGRES_LOG_LVL_NON_SYSTEM_REGEXES = []*regexp.Regexp{
+	regexp.MustCompile(`^process [0-9]+ acquired`),
+	regexp.MustCompile(`^process [0-9]+ still waiting`),
 }
 
 func (e LogEntry) IsSystemEntry() bool {
@@ -257,7 +266,14 @@ func (e LogEntry) IsSystemEntry() bool {
 
 	// Everything with level LOG minus "slow queries" and pgaudit
 	if e.ErrorSeverity == "LOG" {
-		for _, prefix := range POSTGRES_NON_SYSTEM_MESSAGES_IDENT_PREXIFES {
+		// Check if message matches any of the regexes indicating non-system messages
+		for _, regex := range POSTGRES_LOG_LVL_NON_SYSTEM_REGEXES {
+			if regex.MatchString(e.Message) {
+				return false
+			}
+		}
+
+		for _, prefix := range POSTGRES_LOG_LVL_NON_SYSTEM_MESSAGES_IDENT_PREXIFES {
 			if strings.HasPrefix(e.Message, prefix) {
 				return false
 			}
