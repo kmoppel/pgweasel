@@ -77,6 +77,9 @@ func (tec *TopErrorsCollector) GetTopN(topN int) []TopError {
 			})
 		}
 	}
+	if len(topErrors) <= topN {
+		return topErrors
+	}
 	// sort by count
 	sort.Slice(topErrors, func(i, j int) bool {
 		return topErrors[i].Count > topErrors[j].Count
