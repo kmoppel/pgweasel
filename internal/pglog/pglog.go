@@ -256,11 +256,17 @@ var POSTGRES_LOG_LVL_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"could not receive data from client: ",
 	"could not send data to client: ",
 	"AUDIT: ",
+	"unexpected EOF ",
 }
 
 var POSTGRES_LOG_LVL_NON_SYSTEM_REGEXES = []*regexp.Regexp{
 	regexp.MustCompile(`^process [0-9]+ acquired`),
 	regexp.MustCompile(`^process [0-9]+ still waiting`),
+}
+
+var POSTGRES_SYS_FATAL_PREFIXES_TO_IGNORE = []string{
+	"password authentication failed ",
+	"connection to client lost",
 }
 
 func (e LogEntry) IsSystemEntry() bool {
@@ -269,7 +275,12 @@ func (e LogEntry) IsSystemEntry() bool {
 	}
 
 	if e.ErrorSeverity == "FATAL" || e.ErrorSeverity == "PANIC" {
-		return !strings.Contains(e.Message, "password authentication")
+		for _, prefix := range POSTGRES_SYS_FATAL_PREFIXES_TO_IGNORE {
+			if strings.HasPrefix(e.Message, prefix) {
+				return false
+			}
+		}
+		return true
 	}
 
 	for _, prefix := range POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES {
