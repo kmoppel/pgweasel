@@ -243,9 +243,12 @@ var POSTGRES_LOG_LVL_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"duration: ",
 	"statement: ",
 	"connection authorized: ",
+	"connection authenticated: ",
 	"connection received: ",
+	"disconnection: ",
 	"could not receive data from client: ",
 	"could not send data to client: ",
+	"AUDIT: ",
 }
 
 var POSTGRES_LOG_LVL_NON_SYSTEM_REGEXES = []*regexp.Regexp{
