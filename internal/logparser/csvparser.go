@@ -13,26 +13,36 @@ import (
 )
 
 func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
+	log.Debug().Msgf("Looking for log entries from CSV file: %s", filePath)
 	ch := make(chan pglog.LogEntry)
+
 	go func() {
 		defer close(ch)
-		file, err := os.Open(filePath)
-		if err != nil {
-			log.Error().Err(err).Msgf("Error opening file: %s", filePath)
-			return
-		}
-		defer file.Close()
 
-		var reader io.Reader = file
+		var reader io.Reader
 
-		if strings.HasSuffix(filePath, ".gz") {
-			gzReader, err := gzip.NewReader(file)
+		if filePath == "stdin" {
+			reader = os.Stdin
+		} else {
+			file, err := os.Open(filePath)
 			if err != nil {
-				log.Error().Err(err).Msgf("Error creating gzip reader for file: %s", filePath)
+				log.Error().Err(err).Msgf("Error opening file: %s", filePath)
 				return
 			}
-			defer gzReader.Close()
-			reader = gzReader
+			defer file.Close()
+
+			reader = file
+
+			if strings.HasSuffix(filePath, ".gz") {
+				gzReader, err := gzip.NewReader(file)
+				if err != nil {
+					log.Error().Err(err).Msgf("Error creating gzip reader for file: %s", filePath)
+					return
+				}
+				defer gzReader.Close()
+				reader = gzReader
+			}
+
 		}
 
 		r := csv.NewReader(reader)

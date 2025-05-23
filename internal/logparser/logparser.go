@@ -199,11 +199,11 @@ func HasTimestampPrefix(line string) bool {
 	return REGEX_HAS_TIMESTAMP_PREFIX.MatchString(line)
 }
 
-func GetLogRecordsFromFile(filePath string, r *regexp.Regexp) <-chan pglog.LogEntry {
+func GetLogRecordsFromFile(filePath string, r *regexp.Regexp, useCsvFormat bool) <-chan pglog.LogEntry {
 	ch := make(chan pglog.LogEntry)
 	go func() {
 		defer close(ch)
-		if strings.Contains(filePath, ".csv") {
+		if strings.Contains(filePath, ".csv") || useCsvFormat {
 			for rec := range GetLogRecordsFromCsvFile(filePath) {
 				ch <- rec
 			}

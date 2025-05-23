@@ -34,6 +34,7 @@ var Filters []string
 var Connstr string
 var Tail bool
 var LogLineRegex string
+var Csv bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "More chat")
@@ -43,6 +44,7 @@ func init() {
 	rootCmd.PersistentFlags().StringArrayVarP(&Filters, "filter", "f", nil, "Add extra line match conditions (regex)")
 	// rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
 	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", logparser.DEFAULT_REGEX_STR, "Use a custom regex instead of:")
+	rootCmd.PersistentFlags().BoolVarP(&Csv, "csv", "", false, "Specify that input file or stdin is actually CSV regardless of file extension")
 }
 
 type WeaselConfig struct {
@@ -53,6 +55,7 @@ type WeaselConfig struct {
 	MinErrLvlNum      int
 	SystemOnly        bool
 	MinSlowDurationMs int
+	ForceCsvInput     bool
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -98,5 +101,6 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		MinErrLvlNum:      pglog.SeverityToNum(minErrLvl),
 		MinSlowDurationMs: MinSlowDurationMs,
 		SystemOnly:        SystemOnly,
+		ForceCsvInput:     Csv,
 	}
 }

@@ -121,7 +121,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 
-		for rec := range logparser.GetLogRecordsFromFile(logFile, cfg.LogLineRegex) {
+		for rec := range logparser.GetLogRecordsFromFile(logFile, cfg.LogLineRegex, cfg.ForceCsvInput) {
 			if rec.ErrorSeverity == "" {
 				log.Error().Msgf("Got invalid entry: %+v", rec)
 				continue
