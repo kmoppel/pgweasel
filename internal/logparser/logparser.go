@@ -15,14 +15,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const DEFAULT_REGEX_STR = `(?s)^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<log_time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,6})[\s:\-].*?[\s:\-]?(?P<error_severity>[A-Z12345]{3,12}):\s*(?P<message>(?s:.*))$` // (?s:.*) is a non-capturing group
+const DEFAULT_REGEX_STR = `(?s)^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<log_time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5})[\s:\-].*?[\s:\-]?(?P<error_severity>[A-Z12345]{3,12}):\s*(?P<message>(?s:.*))$`
 
 var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
 var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
-var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,6})`)
+var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5})`)
 var REGEX_LOG_LEVEL = regexp.MustCompile(`^[A-Z12345]{3,12}$`)
 
-func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp) (pglog.LogEntry, error) {
+func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp, filename string) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
 	if len(lines) == 0 {
 		return e, errors.New("empty log line")
@@ -30,7 +30,7 @@ func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp) (pglog.LogEntry, e
 	line := strings.Join(lines, "\n")
 	match := r.FindStringSubmatch(line)
 	if match == nil {
-		return e, errors.New("failed to parse log line regex")
+		return e, errors.New("failed to parse log line regex for file: " + filename)
 	}
 	// log.Debug().Msgf("Regex match: %+v", match)
 
@@ -120,7 +120,7 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 			// If the line does not have a timestamp, it is a continuation of the previous entry
 			if HasTimestampPrefix(line) {
 				if firstCompleteEntryFound {
-					e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex)
+					e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex, filePath)
 					if err != nil {
 						log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
 					}
@@ -136,7 +136,7 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 		}
 		// Special handling for the last line
 		if firstCompleteEntryFound && len(lines) > 0 {
-			e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex)
+			e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex, filePath)
 			if err != nil {
 				log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
 			}

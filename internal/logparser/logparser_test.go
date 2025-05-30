@@ -16,7 +16,7 @@ var log3 = []string{`2025-05-02 18:18:26.523 EEST [2240722] LOG:  listening on I
 var log4 = []string{`2025-05-02 18:18:26.533 EEST [2240726] LOG:  database system was shut down at 2025-05-01 18:18:26 EEST`}
 
 func TestFileLogger(t *testing.T) {
-	e, err := logparser.EventLinesToPgLogEntry(log1, logparser.DEFAULT_REGEX)
+	e, err := logparser.EventLinesToPgLogEntry(log1, logparser.DEFAULT_REGEX, "")
 	assert.NoError(t, err)
 	assert.Equal(t, e.LogTime, "2025-05-02 12:27:52.634 EEST")
 	assert.Equal(t, e.ErrorSeverity, "ERROR")
@@ -24,7 +24,7 @@ func TestFileLogger(t *testing.T) {
 }
 
 func TestFileLogger2(t *testing.T) {
-	e, err := logparser.EventLinesToPgLogEntry(log2, logparser.DEFAULT_REGEX)
+	e, err := logparser.EventLinesToPgLogEntry(log2, logparser.DEFAULT_REGEX, "")
 	assert.NoError(t, err)
 	assert.Equal(t, e.LogTime, "2025-05-02 18:25:51.151 EEST")
 	assert.Equal(t, e.ErrorSeverity, "STATEMENT")
@@ -34,7 +34,7 @@ func TestFileLogger2(t *testing.T) {
 }
 
 func TestFileLogger3(t *testing.T) {
-	e, err := logparser.EventLinesToPgLogEntry(log3, logparser.DEFAULT_REGEX)
+	e, err := logparser.EventLinesToPgLogEntry(log3, logparser.DEFAULT_REGEX, "")
 	assert.NoError(t, err)
 	assert.Equal(t, e.LogTime, "2025-05-02 18:18:26.523 EEST")
 	assert.Equal(t, e.ErrorSeverity, "LOG")
@@ -42,7 +42,7 @@ func TestFileLogger3(t *testing.T) {
 }
 
 func TestFileLogger4(t *testing.T) {
-	e, err := logparser.EventLinesToPgLogEntry(log4, logparser.DEFAULT_REGEX)
+	e, err := logparser.EventLinesToPgLogEntry(log4, logparser.DEFAULT_REGEX, "")
 	assert.NoError(t, err)
 	assert.Equal(t, e.LogTime, "2025-05-02 18:18:26.533 EEST")
 	assert.Equal(t, e.ErrorSeverity, "LOG")
@@ -55,7 +55,7 @@ func TestHasTimestampPrefix(t *testing.T) {
 	assert.True(t, logparser.HasTimestampPrefix("2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: BEGIN;"))
 	assert.False(t, logparser.HasTimestampPrefix("    ON CONFLICT (id) DO UPDATE SET master_time = (now() at time zone 'utc');"))
 	assert.True(t, logparser.HasTimestampPrefix("May 30 11:03:43 i13400f postgres[693826]: [5-1] 2025-05-30 11:03:43.622 EEST [693826] LOG:  database system is ready to accept connections"))
-	assert.True(t, logparser.HasTimestampPrefix("2025-01-09 20:48:11.713 GMTLOG:  checkpoint starting: time"))
+	assert.True(t, logparser.HasTimestampPrefix("2025-01-09 20:48:11.713 GMT LOG:  checkpoint starting: time"))
 	assert.True(t, logparser.HasTimestampPrefix("2022-02-19 14:47:24 +08 [66019]: [10-1] session=6210927b.101e3,user=postgres,db=ankara,app=PostgreSQL JDBC Driver,client=localhost | LOG:  duration: 0.073 ms"))
 }
 
