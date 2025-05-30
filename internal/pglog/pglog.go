@@ -241,9 +241,21 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"could not write ",
 	"could not attach ",
 	"could not fsync ",
+	"could not access ",
+	"Could not open ",
+	"cannot ",
+	"database ",
 	"WAL redo ",
 	"replication ",
 	"Replication ",
+}
+
+// Case sensitive
+var POSTGRES_SYSTEM_MESSAGES_IDENT_CONTAINS = []string{
+	" XID",
+	" corruption ",
+	" wraparound ",
+	" postmaster ",
 }
 
 var POSTGRES_LOG_LVL_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
@@ -285,6 +297,12 @@ func (e LogEntry) IsSystemEntry() bool {
 
 	for _, prefix := range POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES {
 		if strings.HasPrefix(e.Message, prefix) {
+			return true
+		}
+	}
+
+	for _, ident := range POSTGRES_SYSTEM_MESSAGES_IDENT_CONTAINS {
+		if strings.Contains(e.Message, ident) {
 			return true
 		}
 	}
