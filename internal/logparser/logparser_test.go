@@ -55,6 +55,8 @@ func TestHasTimestampPrefix(t *testing.T) {
 	assert.True(t, logparser.HasTimestampPrefix("2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: BEGIN;"))
 	assert.False(t, logparser.HasTimestampPrefix("    ON CONFLICT (id) DO UPDATE SET master_time = (now() at time zone 'utc');"))
 	assert.True(t, logparser.HasTimestampPrefix("May 30 11:03:43 i13400f postgres[693826]: [5-1] 2025-05-30 11:03:43.622 EEST [693826] LOG:  database system is ready to accept connections"))
+	assert.True(t, logparser.HasTimestampPrefix("2025-01-09 20:48:11.713 GMTLOG:  checkpoint starting: time"))
+	assert.True(t, logparser.HasTimestampPrefix("2022-02-19 14:47:24 +08 [66019]: [10-1] session=6210927b.101e3,user=postgres,db=ankara,app=PostgreSQL JDBC Driver,client=localhost | LOG:  duration: 0.073 ms"))
 }
 
 func TestDefaultRegex(t *testing.T) {
