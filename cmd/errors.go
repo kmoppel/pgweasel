@@ -135,11 +135,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 				topErrors.AddError(rec.ErrorSeverity, rec.Message)
 			} else {
 				if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly) {
-					if rec.CsvColumns != nil {
-						w.WriteString(rec.CsvColumns.String())
-					} else {
-						w.WriteString(strings.Join(rec.Lines, "\n"))
-					}
+					OutputLogRecord(rec, w, cfg.Oneline)
 					w.WriteByte('\n')
 				}
 				if Verbose {
@@ -157,4 +153,20 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	w.Flush()
+}
+
+func OutputLogRecord(rec pglog.LogEntry, w *bufio.Writer, oneline bool) {
+	if rec.CsvColumns != nil {
+		if oneline {
+			w.WriteString(strings.ReplaceAll(rec.CsvColumns.String(), "\n", " "))
+		} else {
+			w.WriteString(rec.CsvColumns.String())
+		}
+	} else {
+		if oneline {
+			w.WriteString(strings.Join(rec.Lines, " "))
+		} else {
+			w.WriteString(strings.Join(rec.Lines, "\n"))
+		}
+	}
 }

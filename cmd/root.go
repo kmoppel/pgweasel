@@ -40,7 +40,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "More chat")
 	rootCmd.PersistentFlags().StringVarP(&From, "from", "", "", "Log entries from $time, e.g.: -1h")
 	rootCmd.PersistentFlags().StringVarP(&To, "to", "", "", "Log entries up to $time")
-	// rootCmd.PersistentFlags().BoolVarP(&Oneline, "oneline", "1", false, "Compact multiline entries")
+	rootCmd.PersistentFlags().BoolVarP(&Oneline, "oneline", "1", false, "Compact multiline entries")
 	rootCmd.PersistentFlags().StringArrayVarP(&Filters, "filter", "f", nil, "Add extra line match conditions (regex)")
 	// rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
 	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", logparser.DEFAULT_REGEX_STR, "Use a custom regex instead of:")
@@ -56,6 +56,7 @@ type WeaselConfig struct {
 	SystemOnly        bool
 	MinSlowDurationMs int
 	ForceCsvInput     bool
+	Oneline           bool
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -102,5 +103,6 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		MinSlowDurationMs: MinSlowDurationMs,
 		SystemOnly:        SystemOnly,
 		ForceCsvInput:     Csv,
+		Oneline:           Oneline,
 	}
 }
