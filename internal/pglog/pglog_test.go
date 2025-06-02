@@ -2,6 +2,7 @@ package pglog_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/kmoppel/pgweasel/internal/pglog"
 	"github.com/stretchr/testify/assert"
@@ -97,4 +98,13 @@ func TestIsSystemEntry(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+func TestEventBucket(t *testing.T) {
+	b := pglog.EventBucket{}
+	b.Init()
+	b.AddEvent(pglog.LogEntry{LogTime: "2025-05-02 18:18:26.523 EEST", ErrorSeverity: "LOG", Message: "Test message 1"}, time.Duration(5*time.Minute))
+	b.AddEvent(pglog.LogEntry{LogTime: "2025-05-02 18:18:26.523 EEST", ErrorSeverity: "ERROR", Message: "Test message 2"}, time.Duration(5*time.Minute))
+	assert.Equal(t, 2, b.TotalEvents, "Event bucket should contain 2 events")
+	assert.Equal(t, 1, b.TotalBySeverity["ERROR"], "Event bucket should contain 1 ERROR event")
 }

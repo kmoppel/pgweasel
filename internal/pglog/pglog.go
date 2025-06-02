@@ -10,6 +10,7 @@ import (
 )
 
 var ERROR_SEVERITIES = []string{"WARNING", "ERROR", "FATAL", "PANIC"}
+var ALL_SEVERITIES = []string{"DEBUG5", "DEBUG4", "DEBUG3", "DEBUG2", "DEBUG1", "INFO", "NOTICE", "WARNING", "ERROR", "LOG", "FATAL", "PANIC"}
 
 type CsvEntry struct {
 	CsvColumnCount       int    // <v13=23, v14=24,v15+=26
@@ -47,6 +48,12 @@ type LogEntry struct {
 	Message       string
 	Lines         []string // For plain text logs
 	CsvColumns    *CsvEntry
+}
+
+type EventBucket struct {
+	BucketsBySeverity map[string]map[time.Time]int
+	TotalEvents       int
+	TotalBySeverity   map[string]int
 }
 
 var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[:\s\-]+.*?(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s\-]+.*?(?P<error_severity>[A-Z12345]{3,12})[:\s]+.*$`)
@@ -343,4 +350,25 @@ func (e LogEntry) IsSystemEntry() bool {
 	}
 
 	return false
+}
+
+func (b *EventBucket) Init() {
+	b.BucketsBySeverity = make(map[string]map[time.Time]int)
+
+	// Initialize map entry for each severity level
+	for _, severity := range ALL_SEVERITIES {
+		b.BucketsBySeverity[severity] = make(map[time.Time]int)
+	}
+	b.TotalBySeverity = make(map[string]int)
+}
+
+func (b *EventBucket) AddEvent(e LogEntry, bucketInterval time.Duration) {
+	if b.BucketsBySeverity == nil {
+		panic("BucketsBySeverity is nil, call Init()")
+	}
+	bucketTime := e.GetTime().Truncate(bucketInterval)
+
+	b.BucketsBySeverity[e.ErrorSeverity][bucketTime]++
+	b.TotalBySeverity[e.ErrorSeverity]++
+	b.TotalEvents++
 }
