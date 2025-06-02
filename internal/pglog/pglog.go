@@ -248,6 +248,11 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"WAL redo ",
 	"replication ",
 	"Replication ",
+	"cache lookup ",
+	"function ",
+	"requested ",
+	"unrecognized ",
+	"internal error",
 }
 
 // Case sensitive
@@ -256,6 +261,10 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_CONTAINS = []string{
 	" corruption ",
 	" wraparound ",
 	" postmaster ",
+	" configuration file ",
+	" relfrozenxid ",
+	"multixact",
+	"MultiXact",
 }
 
 var POSTGRES_LOG_LVL_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
