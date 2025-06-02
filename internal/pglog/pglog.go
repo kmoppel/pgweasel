@@ -292,6 +292,9 @@ var POSTGRES_SYS_FATAL_PREFIXES_TO_IGNORE = []string{
 
 func (e LogEntry) IsSystemEntry() bool {
 	if e.CsvColumns != nil {
+		if strings.HasPrefix(e.CsvColumns.Message, "connection ") {
+			return false
+		}
 		return e.CsvColumns.UserName == ""
 	}
 
