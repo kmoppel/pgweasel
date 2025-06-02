@@ -180,6 +180,14 @@ func TimestringToTime(s string) time.Time {
 	if s == "" {
 		return time.Time{}
 	}
+
+	// Check if it's an epoch timestamp (log_line_prefix %n) a la 1748867052.006
+	if epoch, err := strconv.ParseFloat(s, 64); err == nil {
+		sec := int64(epoch)
+		nsec := int64((epoch - float64(sec)) * 1e9)
+		return time.Unix(sec, nsec)
+	}
+
 	layout := "2006-01-02 15:04:05.000 MST"
 
 	t, err := time.Parse(layout, s)

@@ -94,4 +94,7 @@ func TestTimestringToTime(t *testing.T) {
 	ts := util.TimestringToTime("2025-05-02 12:27:52.634 EEST")
 	assert.Equal(t, ts.Year(), 2025)
 	assert.Equal(t, ts.Month(), time.Month(5))
+	ts2 := util.TimestringToTime("1748867052.047")
+	assert.Equal(t, ts2.Year(), 2025)
+	assert.Equal(t, ts2.Month(), time.Month(6))
 }
