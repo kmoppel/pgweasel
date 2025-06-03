@@ -60,6 +60,7 @@ type WeaselConfig struct {
 	ForceCsvInput     bool
 	Oneline           bool
 	PeaksOnly         bool
+	LocksOnly         bool
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -108,5 +109,6 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		ForceCsvInput:     Csv,
 		Oneline:           Oneline,
 		PeaksOnly:         Peaks,
+		LocksOnly:         LocksOnly,
 	}
 }

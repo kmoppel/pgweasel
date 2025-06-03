@@ -109,3 +109,19 @@ func TestEventBucket(t *testing.T) {
 	assert.Equal(t, 2, b.TotalEvents, "Event bucket should contain 2 events")
 	assert.Equal(t, 1, b.TotalBySeverity["ERROR"], "Event bucket should contain 1 ERROR event")
 }
+func TestIsLockingRelatedEntry(t *testing.T) {
+	tests := []pglog.LogEntry{
+		pglog.LogEntry{
+			Message: "process 3634152 acquired ShareLock on transaction 280767 after 5.016 ms",
+		},
+		pglog.LogEntry{
+			Message: "ERROR:  deadlock detected",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.Message, func(t *testing.T) {
+			assert.True(t, tt.IsLockingRelatedEntry())
+		})
+	}
+}

@@ -311,6 +311,31 @@ var POSTGRES_SYS_FATAL_PREFIXES_TO_IGNORE = []string{
 	"connection to client lost",
 }
 
+// Case sensitive
+var LOCKING_RELATED_MESSAGE_CONTAINS_LIST = []string{
+	" conflicts ",
+	" conflicting ",
+	" still waiting for ",
+	"Wait queue:",
+	"while locking tuple",
+	"while updating tuple",
+	"conflict detected",
+	"deadlock detected",
+	"buffer deadlock",
+	"blocked by process ",
+	"recovery conflict ",
+	" concurrent update",
+	"could not serialize",
+	"could not obtain ",
+	"lock on relation ",
+	"cannot lock rows",
+	" semaphore:",
+}
+
+var LOCKING_RELATED_MESSAGE_REGEXES = []*regexp.Regexp{
+	regexp.MustCompile(`^process [0-9]+ acquired`),
+}
+
 func (e LogEntry) IsSystemEntry() bool {
 	if e.CsvColumns != nil {
 		if strings.HasPrefix(e.CsvColumns.Message, "connection ") {
@@ -361,6 +386,22 @@ func (e LogEntry) IsSystemEntry() bool {
 			}
 		}
 		return true
+	}
+
+	return false
+}
+
+func (e LogEntry) IsLockingRelatedEntry() bool {
+	for _, ident := range LOCKING_RELATED_MESSAGE_CONTAINS_LIST {
+		if strings.Contains(e.Message, ident) {
+			return true
+		}
+	}
+
+	for _, regex := range LOCKING_RELATED_MESSAGE_REGEXES {
+		if regex.MatchString(e.Message) {
+			return true
+		}
 	}
 
 	return false

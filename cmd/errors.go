@@ -139,6 +139,17 @@ func showErrors(cmd *cobra.Command, args []string) {
 			}
 			log.Debug().Msgf("Processing log entry: %+v", rec)
 
+			if cfg.LocksOnly {
+				if rec.IsLockingRelatedEntry() {
+					OutputLogRecord(rec, w, cfg.Oneline)
+					w.WriteByte('\n')
+					if Verbose {
+						w.Flush()
+					}
+				}
+				continue
+			}
+
 			if cfg.PeaksOnly {
 				peaksBucket.AddEvent(rec, PeakBucketDuration)
 				continue
