@@ -1,11 +1,14 @@
 package pglog
 
 import (
+	"bufio"
 	"regexp"
 	"strings"
 	"time"
 
+	"github.com/beorn7/perks/quantile"
 	"github.com/icza/gox/gox"
+	"github.com/kmoppel/pgweasel/internal/logparser"
 	"github.com/kmoppel/pgweasel/internal/util"
 )
 
@@ -68,6 +71,17 @@ type EventBucket struct {
 	BucketsBySeverity map[string]map[time.Time]int
 	TotalEvents       int
 	TotalBySeverity   map[string]int
+}
+
+type StatsAggregator struct {
+	TotalEvents           int
+	TotalEventsBySeverity map[string]int
+	FirstEventTime        time.Time
+	LastEventTime         time.Time
+	Connections           int
+	Disconnections        int
+	SlowQueries           int
+	QueryTimesHistogram   *quantile.Stream
 }
 
 var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[:\s\-]+.*?(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s\-]+.*?(?P<error_severity>[A-Z12345]{3,12})[:\s]+.*$`)
@@ -459,4 +473,51 @@ func (b *EventBucket) GetTopBucketsBySeverity() map[string]map[time.Time]int {
 		}
 	}
 	return ret
+}
+
+func (sa *StatsAggregator) Init() {
+	sa.TotalEventsBySeverity = make(map[string]int)
+	sa.QueryTimesHistogram = quantile.NewTargeted(map[float64]float64{
+		0.50: 0.001,
+		0.90: 0.001,
+		0.99: 0.001,
+	})
+}
+
+func (sa *StatsAggregator) AddEvent(e LogEntry, bucketInterval time.Duration) {
+	if sa.TotalEventsBySeverity == nil {
+		panic("Call Init() first")
+	}
+	// Extra context not considered a separate event here
+	if !ALL_SEVERITIES_MAP[e.ErrorSeverity] {
+		return
+	}
+
+	et := e.GetTime()
+	if sa.FirstEventTime.IsZero() || et.Before(sa.FirstEventTime) {
+		sa.FirstEventTime = et
+	}
+	if sa.LastEventTime.IsZero() || et.After(sa.LastEventTime) {
+		sa.LastEventTime = et
+	}
+
+	sa.TotalEventsBySeverity[e.ErrorSeverity]++
+	sa.TotalEvents++
+
+	if strings.HasPrefix(e.Message, "connection received") {
+		sa.Connections++
+	}
+	if strings.HasPrefix(e.Message, "disconnection:") {
+		sa.Disconnections++
+	}
+	if e.ErrorSeverity == "LOG" && strings.Contains(e.Message, "duration: ") && strings.Contains(e.Message, "statement: ") {
+		durMs := logparser.ExtractDurationMillisFromLogMessage(e.Message)
+		if durMs > 0 {
+			sa.QueryTimesHistogram.Insert(durMs)
+		}
+	}
+}
+
+func (b *StatsAggregator) ShowStats(w *bufio.Writer) {
+
 }
