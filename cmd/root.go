@@ -35,6 +35,7 @@ var Connstr string
 var Tail bool
 var LogLineRegex string
 var Csv bool
+var Peaks bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "More chat")
@@ -45,6 +46,7 @@ func init() {
 	// rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
 	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", logparser.DEFAULT_REGEX_STR, "Use a custom regex instead of:")
 	rootCmd.PersistentFlags().BoolVarP(&Csv, "csv", "", false, "Specify that input file or stdin is actually CSV regardless of file extension")
+	rootCmd.PersistentFlags().BoolVarP(&Peaks, "peaks", "", false, "Show only event counts per log level for peak load periods")
 }
 
 type WeaselConfig struct {
@@ -57,6 +59,7 @@ type WeaselConfig struct {
 	MinSlowDurationMs int
 	ForceCsvInput     bool
 	Oneline           bool
+	PeaksOnly         bool
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -104,5 +107,6 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		SystemOnly:        SystemOnly,
 		ForceCsvInput:     Csv,
 		Oneline:           Oneline,
+		PeaksOnly:         Peaks,
 	}
 }

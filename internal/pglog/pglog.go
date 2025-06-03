@@ -11,6 +11,20 @@ import (
 
 var ERROR_SEVERITIES = []string{"WARNING", "ERROR", "FATAL", "PANIC"}
 var ALL_SEVERITIES = []string{"DEBUG5", "DEBUG4", "DEBUG3", "DEBUG2", "DEBUG1", "INFO", "NOTICE", "WARNING", "ERROR", "LOG", "FATAL", "PANIC"}
+var ALL_SEVERITIES_MAP = map[string]bool{
+	"DEBUG5":  true,
+	"DEBUG4":  true,
+	"DEBUG3":  true,
+	"DEBUG2":  true,
+	"DEBUG1":  true,
+	"INFO":    true,
+	"NOTICE":  true,
+	"WARNING": true,
+	"ERROR":   true,
+	"LOG":     true,
+	"FATAL":   true,
+	"PANIC":   true,
+}
 
 type CsvEntry struct {
 	CsvColumnCount       int    // <v13=23, v14=24,v15+=26
@@ -366,9 +380,42 @@ func (b *EventBucket) AddEvent(e LogEntry, bucketInterval time.Duration) {
 	if b.BucketsBySeverity == nil {
 		panic("BucketsBySeverity is nil, call Init()")
 	}
+	// Extra context not considered a separate event here
+	if !ALL_SEVERITIES_MAP[e.ErrorSeverity] {
+		return
+	}
+
 	bucketTime := e.GetTime().Truncate(bucketInterval)
 
 	b.BucketsBySeverity[e.ErrorSeverity][bucketTime]++
 	b.TotalBySeverity[e.ErrorSeverity]++
 	b.TotalEvents++
+}
+
+func (b *EventBucket) GetTopBucketsBySeverity() map[string]map[time.Time]int {
+	ret := make(map[string]map[time.Time]int)
+
+	for severity, bucket := range b.BucketsBySeverity {
+		if len(bucket) == 0 {
+			continue
+		}
+
+		var maxCount int
+		var maxTime time.Time
+
+		// Find the highest count for this severity
+		for bucketTime, eventCount := range bucket {
+			if eventCount > maxCount {
+				maxCount = eventCount
+				maxTime = bucketTime
+			}
+		}
+
+		// Only include non-zero entries
+		if maxCount > 0 {
+			ret[severity] = map[time.Time]int{maxTime: maxCount}
+			// log.Debug().Msgf("Top bucket for %s: %s with %d events", severity, maxTime.Format(time.RFC3339), maxCount)
+		}
+	}
+	return ret
 }

@@ -105,6 +105,7 @@ func TestEventBucket(t *testing.T) {
 	b.Init()
 	b.AddEvent(pglog.LogEntry{LogTime: "2025-05-02 18:18:26.523 EEST", ErrorSeverity: "LOG", Message: "Test message 1"}, time.Duration(5*time.Minute))
 	b.AddEvent(pglog.LogEntry{LogTime: "2025-05-02 18:18:26.523 EEST", ErrorSeverity: "ERROR", Message: "Test message 2"}, time.Duration(5*time.Minute))
+	b.AddEvent(pglog.LogEntry{LogTime: "2025-05-02 18:18:26.523 EEST", ErrorSeverity: "STATEMENT", Message: "Test message 3"}, time.Duration(5*time.Minute))
 	assert.Equal(t, 2, b.TotalEvents, "Event bucket should contain 2 events")
 	assert.Equal(t, 1, b.TotalBySeverity["ERROR"], "Event bucket should contain 1 ERROR event")
 }

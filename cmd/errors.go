@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kmoppel/pgweasel/internal/logparser"
 	"github.com/kmoppel/pgweasel/internal/pglog"
@@ -121,6 +122,18 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	minErrLvlSeverityNum := pglog.SeverityToNum(MinErrLvl)
 
+	peaksBucket := pglog.EventBucket{}
+	if cfg.PeaksOnly {
+		peaksBucket.Init()
+
+		var err error
+		PeakBucketDuration, err = time.ParseDuration(PeakBucketIntervalStr)
+		if err != nil {
+			log.Fatal().Err(err).Msgf("Failed to parse PeakBucketIntervalStr: %s", PeakBucketIntervalStr)
+		}
+		log.Debug().Msgf("Using peaks bucket with interval: %s", PeakBucketIntervalStr)
+	}
+
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 
@@ -131,10 +144,15 @@ func showErrors(cmd *cobra.Command, args []string) {
 			}
 			log.Debug().Msgf("Processing log entry: %+v", rec)
 
+			if cfg.PeaksOnly {
+				peaksBucket.AddEvent(rec, PeakBucketDuration)
+				continue
+			}
+
 			if TopNErrorsOnly && rec.SeverityNum() >= minErrLvlSeverityNum {
 				topErrors.AddError(rec.ErrorSeverity, rec.Message)
 			} else {
-				if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly) {
+				if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly) { // TODO pass cfg
 					OutputLogRecord(rec, w, cfg.Oneline)
 					w.WriteByte('\n')
 				}
@@ -149,6 +167,15 @@ func showErrors(cmd *cobra.Command, args []string) {
 	if TopNErrorsOnly {
 		for _, topError := range topErrors.GetTopN(TopNErrors) {
 			w.WriteString(strconv.Itoa(topError.Count) + " " + topError.Level + ": " + topError.Message + "\n")
+		}
+	}
+
+	if cfg.PeaksOnly {
+		w.WriteString("Most events per severity:\n")
+		for lvl, bucketWithCount := range peaksBucket.GetTopBucketsBySeverity() {
+			for timeBucket, count := range bucketWithCount {
+				w.WriteString(lvl + ": " + timeBucket.Format(time.RFC3339) + ": " + strconv.Itoa(count) + "\n")
+			}
 		}
 	}
 
