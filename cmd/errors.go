@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -125,13 +126,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 	peaksBucket := pglog.EventBucket{}
 	if cfg.PeaksOnly {
 		peaksBucket.Init()
-
-		var err error
-		PeakBucketDuration, err = time.ParseDuration(PeakBucketIntervalStr)
-		if err != nil {
-			log.Fatal().Err(err).Msgf("Failed to parse PeakBucketIntervalStr: %s", PeakBucketIntervalStr)
-		}
-		log.Debug().Msgf("Using peaks bucket with interval: %s", PeakBucketIntervalStr)
+		log.Debug().Msgf("In peaks mode with bucket interval: %v", PeakBucketDuration)
 	}
 
 	for _, logFile := range logFiles {
@@ -174,7 +169,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 		w.WriteString("Most events per severity:\n")
 		for lvl, bucketWithCount := range peaksBucket.GetTopBucketsBySeverity() {
 			for timeBucket, count := range bucketWithCount {
-				w.WriteString(lvl + ": " + timeBucket.Format(time.RFC3339) + ": " + strconv.Itoa(count) + "\n")
+				w.WriteString(fmt.Sprintf("%-12s", lvl) + ": " + timeBucket.Format(time.RFC3339) + " (+" + PeakBucketIntervalStr + "): " + strconv.Itoa(count) + "\n")
 			}
 		}
 	}
