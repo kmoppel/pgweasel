@@ -73,14 +73,17 @@ type EventBucket struct {
 }
 
 type StatsAggregator struct {
-	TotalEvents           int
-	TotalEventsBySeverity map[string]int
-	FirstEventTime        time.Time
-	LastEventTime         time.Time
-	Connections           int
-	Disconnections        int
-	SlowQueries           int
-	QueryTimesHistogram   *quantile.Stream
+	TotalEvents              int
+	TotalEventsBySeverity    map[string]int
+	FirstEventTime           time.Time
+	LastEventTime            time.Time
+	Connections              int
+	Disconnections           int
+	SlowQueries              int
+	QueryTimesHistogram      *quantile.Stream
+	CheckpointsTimed         int
+	CheckpointsForced        int
+	LongestCheckpointSeconds float64
 }
 
 var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[:\s\-]+.*?(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s\-]+.*?(?P<error_severity>[A-Z12345]{3,12})[:\s]+.*$`)
@@ -509,11 +512,28 @@ func (sa *StatsAggregator) AddEvent(e LogEntry) {
 	if strings.HasPrefix(e.Message, "disconnection:") {
 		sa.Disconnections++
 	}
-	if e.ErrorSeverity == "LOG" && strings.Contains(e.Message, "duration: ") && strings.Contains(e.Message, " ms") && !(strings.Contains(e.Message, " bind ") || strings.Contains(e.Message, " parse ")) {
-		durMs := util.ExtractDurationMillisFromLogMessage(e.Message)
-		if durMs > 0 {
-			sa.QueryTimesHistogram.Insert(durMs)
-			sa.SlowQueries++
+	if e.ErrorSeverity == "LOG" {
+		// Query durations / quantiles
+		if strings.Contains(e.Message, "duration: ") && strings.Contains(e.Message, " ms") && !(strings.Contains(e.Message, " bind ") || strings.Contains(e.Message, " parse ")) {
+			durMs := util.ExtractDurationMillisFromLogMessage(e.Message)
+			if durMs > 0 {
+				sa.QueryTimesHistogram.Insert(durMs)
+				sa.SlowQueries++
+			}
+		}
+		// Checkpoints
+		if strings.HasPrefix(e.Message, "checkpoint starting: ") { // include also restartpoints?
+			if strings.Contains(e.Message, "starting: time") {
+				sa.CheckpointsTimed++
+			} else {
+				sa.CheckpointsForced++
+			}
+		}
+		if strings.HasPrefix(e.Message, "checkpoint complete: ") {
+			durSeconds := util.ExtractCheckpointDurationSecondsFromLogMessage(e.Message)
+			if durSeconds > sa.LongestCheckpointSeconds {
+				sa.LongestCheckpointSeconds = durSeconds
+			}
 		}
 	}
 }
@@ -537,4 +557,7 @@ func (sa *StatsAggregator) ShowStats() {
 		fmt.Println("No query times histogram available")
 	}
 	fmt.Println("Query durations records:", sa.SlowQueries)
+	fmt.Println("Checkpoints timed:", sa.CheckpointsTimed)
+	fmt.Println("Checkpoints forced:", sa.CheckpointsForced)
+	fmt.Printf("Longest checkpoint duration: %.3f seconds\n", sa.LongestCheckpointSeconds)
 }

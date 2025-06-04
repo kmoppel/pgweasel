@@ -16,6 +16,7 @@ import (
 )
 
 var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
+var REGEX_CHECKPOINT_DURATION_SECONDS = regexp.MustCompile(`total=([\d\.]+) s;`)
 
 func IsPathExistsAndFile(filePath string) bool {
 	fileInfo, err := os.Stat(filePath)
@@ -291,6 +292,22 @@ func TruncateString(s string, maxChars int) string {
 func ExtractDurationMillisFromLogMessage(message string) float64 {
 	// Example message: "duration: 0.211 ms"
 	match := REGEX_DURATION_MILLIS.FindStringSubmatch(message)
+	if match == nil {
+		return 0.0
+	}
+
+	durationStr := match[1]
+	duration, err := strconv.ParseFloat(durationStr, 64)
+	if err != nil {
+		return 0.0
+	}
+	return duration
+}
+
+// Returns 0 if no match or error
+func ExtractCheckpointDurationSecondsFromLogMessage(message string) float64 {
+	// checkpoint complete: wrote 66 buffers (0.4%); 0 WAL file(s) added, 0 removed, 0 recycled; write=6.468 s, sync=0.036 s, total=6.517 s; sync files=48, longest=0.009 s, average=0.001 s; distance=152 kB, estimate=152 kB
+	match := REGEX_CHECKPOINT_DURATION_SECONDS.FindStringSubmatch(message)
 	if match == nil {
 		return 0.0
 	}

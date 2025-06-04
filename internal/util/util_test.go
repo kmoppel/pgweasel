@@ -127,3 +127,27 @@ func TestExtractDurationMillisFromLogMessage(t *testing.T) {
 		assert.InDelta(t, tt.expectedMillis, millis, 0.1, "Duration should be within 0.1ms of expected value")
 	}
 }
+func TestExtractCheckpointDurationSecondsFromLogMessage(t *testing.T) {
+	tests := []struct {
+		message          string
+		expectedDuration float64
+	}{
+		{
+			message:          "checkpoint complete: wrote 66 buffers (0.4%); 0 WAL file(s) added, 0 removed, 0 recycled; write=6.468 s, sync=0.036 s, total=6.517 s; sync files=48, longest=0.009 s, average=0.001 s; distance=152 kB, estimate=152 kB",
+			expectedDuration: 6.517,
+		},
+		{
+			message:          "checkpoint complete: wrote 1524 buffers (9.3%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.091 s, sync=0.008 s, total=0.184 s; sync files=12, longest=0.003 s, average=0.001 s; distance=32823 kB, estimate=32823 kB",
+			expectedDuration: 0.184,
+		},
+		{
+			message:          "checkpoint starting: time",
+			expectedDuration: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		duration := util.ExtractCheckpointDurationSecondsFromLogMessage(tt.message)
+		assert.InDelta(t, tt.expectedDuration, duration, 0.001, "Duration should be within 0.001s of expected value for message: %s", tt.message)
+	}
+}
