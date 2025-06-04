@@ -290,6 +290,9 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"requested ",
 	"unrecognized ",
 	"internal error",
+	"restartpoint ",
+	"was at log time",
+	"recovery ",
 }
 
 // Case sensitive
