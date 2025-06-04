@@ -569,13 +569,24 @@ func (sa *StatsAggregator) AddEvent(e LogEntry) {
 }
 
 func (sa *StatsAggregator) ShowStats() {
-	fmt.Println("Total events:", sa.TotalEvents)
+	eventsPerMinute := float64(sa.TotalEvents) / (sa.LastEventTime.Sub(sa.FirstEventTime).Minutes())
+	fmt.Println("Total events:", sa.TotalEvents, fmt.Sprintf("(%.2f events/minute)", eventsPerMinute))
 	for severity, count := range sa.TotalEventsBySeverity {
-		fmt.Printf("%s events: %d\n", severity, count)
+		if count > 0 {
+			fmt.Printf("%s events: %d (%.1f%%)\n", severity, count, float64(count)/float64(sa.TotalEvents)*100)
+		} else {
+			fmt.Printf("%s events: %d\n", severity, count)
+		}
 	}
 	fmt.Println("First event time:", sa.FirstEventTime)
 	fmt.Println("Last event time:", sa.LastEventTime)
-	fmt.Println("Total connections:", sa.Connections)
+
+	var connectsPerMinute float64
+	timeDiffMinutes := sa.LastEventTime.Sub(sa.FirstEventTime).Minutes()
+	if timeDiffMinutes > 0 {
+		connectsPerMinute = float64(sa.Connections) / timeDiffMinutes
+	}
+	fmt.Println("Total connections:", sa.Connections, fmt.Sprintf("(%.2f connections/minute)", connectsPerMinute))
 	fmt.Println("Total disconnections:", sa.Disconnections)
 	if sa.QueryTimesHistogram != nil {
 		fmt.Println("Query times histogram:")
