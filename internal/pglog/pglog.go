@@ -73,17 +73,21 @@ type EventBucket struct {
 }
 
 type StatsAggregator struct {
-	TotalEvents              int
-	TotalEventsBySeverity    map[string]int
-	FirstEventTime           time.Time
-	LastEventTime            time.Time
-	Connections              int
-	Disconnections           int
-	SlowQueries              int
-	QueryTimesHistogram      *quantile.Stream
-	CheckpointsTimed         int
-	CheckpointsForced        int
-	LongestCheckpointSeconds float64
+	TotalEvents                   int
+	TotalEventsBySeverity         map[string]int
+	FirstEventTime                time.Time
+	LastEventTime                 time.Time
+	Connections                   int
+	Disconnections                int
+	SlowQueries                   int
+	QueryTimesHistogram           *quantile.Stream
+	CheckpointsTimed              int
+	CheckpointsForced             int
+	LongestCheckpointSeconds      float64
+	Autovacuums                   int
+	AutovacuumMaxDurationSeconds  float64
+	Autoanalyzes                  int
+	AutoanalyzeMaxDurationSeconds float64
 }
 
 var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[:\s\-]+.*?(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s\-]+.*?(?P<error_severity>[A-Z12345]{3,12})[:\s]+.*$`)
@@ -356,14 +360,18 @@ var LOCKING_RELATED_MESSAGE_REGEXES = []*regexp.Regexp{
 }
 
 func (e LogEntry) IsSystemEntry() bool {
+	if e.ErrorSeverity == "PANIC" {
+		return true
+	}
+
 	if e.CsvColumns != nil {
 		if strings.HasPrefix(e.CsvColumns.Message, "connection ") {
 			return false
 		}
-		return e.CsvColumns.UserName == ""
+		return e.CsvColumns.UserName == "" // TODO re-check that this assumption is correct
 	}
 
-	if e.ErrorSeverity == "FATAL" || e.ErrorSeverity == "PANIC" {
+	if e.ErrorSeverity == "FATAL" {
 		for _, prefix := range POSTGRES_SYS_FATAL_PREFIXES_TO_IGNORE {
 			if strings.HasPrefix(e.Message, prefix) {
 				return false
@@ -538,6 +546,21 @@ func (sa *StatsAggregator) AddEvent(e LogEntry) {
 				sa.LongestCheckpointSeconds = durSeconds
 			}
 		}
+		// Autovacuum and autoanalyze
+		if strings.HasPrefix(e.Message, "automatic analyze") {
+			sa.Autoanalyzes++
+			durSeconds := util.ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(e.Message)
+			if durSeconds > sa.LongestCheckpointSeconds {
+				sa.AutoanalyzeMaxDurationSeconds = durSeconds
+			}
+		}
+		if strings.HasPrefix(e.Message, "automatic vacuum") {
+			sa.Autovacuums++
+			durSeconds := util.ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(e.Message)
+			if durSeconds > sa.LongestCheckpointSeconds {
+				sa.AutovacuumMaxDurationSeconds = durSeconds
+			}
+		}
 	}
 }
 
@@ -563,4 +586,8 @@ func (sa *StatsAggregator) ShowStats() {
 	fmt.Println("Checkpoints timed:", sa.CheckpointsTimed)
 	fmt.Println("Checkpoints forced:", sa.CheckpointsForced)
 	fmt.Printf("Longest checkpoint duration: %.3f seconds\n", sa.LongestCheckpointSeconds)
+	fmt.Println("Autovacuums:", sa.Autovacuums)
+	fmt.Printf("Longest autovacuum duration: %.3f seconds\n", sa.AutovacuumMaxDurationSeconds)
+	fmt.Println("Autoanalyzes:", sa.Autoanalyzes)
+	fmt.Printf("Longest autoanalyze duration: %.3f seconds\n", sa.AutoanalyzeMaxDurationSeconds)
 }
