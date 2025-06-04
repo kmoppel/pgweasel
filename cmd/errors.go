@@ -105,7 +105,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	cfg := PreProcessArgs(cmd, args)
 
-	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s, SystemOnly=%v, TopNErrorsOnly=%t", cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, TopNErrorsOnly)
+	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s, SystemOnly=%v, TopNErrorsOnly=%t, PeaksOnly=%t, StatsOnly=%t", cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, TopNErrorsOnly, cfg.PeaksOnly, cfg.StatsOnly)
 
 	if len(args) == 0 && util.CheckStdinAvailable() {
 		logFiles = []string{"stdin"}
@@ -129,6 +129,11 @@ func showErrors(cmd *cobra.Command, args []string) {
 		log.Debug().Msgf("In peaks mode with bucket interval: %v", PeakBucketDuration)
 	}
 
+	statsAggregator := pglog.StatsAggregator{}
+	if cfg.StatsOnly {
+		statsAggregator.Init()
+	}
+
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 
@@ -138,6 +143,11 @@ func showErrors(cmd *cobra.Command, args []string) {
 				continue
 			}
 			log.Debug().Msgf("Processing log entry: %+v", rec)
+
+			if cfg.StatsOnly {
+				statsAggregator.AddEvent(rec)
+				continue
+			}
 
 			if cfg.LocksOnly {
 				if rec.IsLockingRelatedEntry() {
@@ -183,6 +193,10 @@ func showErrors(cmd *cobra.Command, args []string) {
 				w.WriteString(fmt.Sprintf("%-12s", lvl) + ": " + timeBucket.Format(time.RFC3339) + " (+" + PeakBucketIntervalStr + "): " + strconv.Itoa(count) + "\n")
 			}
 		}
+	}
+
+	if cfg.StatsOnly {
+		statsAggregator.ShowStats()
 	}
 
 	w.Flush()

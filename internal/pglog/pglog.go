@@ -1,14 +1,13 @@
 package pglog
 
 import (
-	"bufio"
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
 
 	"github.com/beorn7/perks/quantile"
 	"github.com/icza/gox/gox"
-	"github.com/kmoppel/pgweasel/internal/logparser"
 	"github.com/kmoppel/pgweasel/internal/util"
 )
 
@@ -484,7 +483,7 @@ func (sa *StatsAggregator) Init() {
 	})
 }
 
-func (sa *StatsAggregator) AddEvent(e LogEntry, bucketInterval time.Duration) {
+func (sa *StatsAggregator) AddEvent(e LogEntry) {
 	if sa.TotalEventsBySeverity == nil {
 		panic("Call Init() first")
 	}
@@ -510,14 +509,32 @@ func (sa *StatsAggregator) AddEvent(e LogEntry, bucketInterval time.Duration) {
 	if strings.HasPrefix(e.Message, "disconnection:") {
 		sa.Disconnections++
 	}
-	if e.ErrorSeverity == "LOG" && strings.Contains(e.Message, "duration: ") && strings.Contains(e.Message, "statement: ") {
-		durMs := logparser.ExtractDurationMillisFromLogMessage(e.Message)
+	if e.ErrorSeverity == "LOG" && strings.Contains(e.Message, "duration: ") && strings.Contains(e.Message, " ms") && !(strings.Contains(e.Message, " bind ") || strings.Contains(e.Message, " parse ")) {
+		durMs := util.ExtractDurationMillisFromLogMessage(e.Message)
 		if durMs > 0 {
 			sa.QueryTimesHistogram.Insert(durMs)
+			sa.SlowQueries++
 		}
 	}
 }
 
-func (b *StatsAggregator) ShowStats(w *bufio.Writer) {
-
+func (sa *StatsAggregator) ShowStats() {
+	fmt.Println("Total events:", sa.TotalEvents)
+	for severity, count := range sa.TotalEventsBySeverity {
+		fmt.Printf("%s events: %d\n", severity, count)
+	}
+	fmt.Println("First event time:", sa.FirstEventTime)
+	fmt.Println("Last event time:", sa.LastEventTime)
+	fmt.Println("Total connections:", sa.Connections)
+	fmt.Println("Total disconnections:", sa.Disconnections)
+	if sa.QueryTimesHistogram != nil {
+		fmt.Println("Query times histogram:")
+		for _, q := range []float64{0.50, 0.90, 0.99} {
+			value := sa.QueryTimesHistogram.Query(q)
+			fmt.Printf("  %.2f quantile: %.2f ms\n", q, value)
+		}
+	} else {
+		fmt.Println("No query times histogram available")
+	}
+	fmt.Println("Query durations records:", sa.SlowQueries)
 }

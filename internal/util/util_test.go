@@ -98,3 +98,32 @@ func TestTimestringToTime(t *testing.T) {
 	assert.Equal(t, ts2.Year(), 2025)
 	assert.Equal(t, ts2.Month(), time.Month(6))
 }
+
+func TestExtractDurationMillisFromLogMessage(t *testing.T) {
+	tests := []struct {
+		message        string
+		expectedMillis float64
+	}{
+		{
+			message:        "duration: 123 ms statement: SELECT * FROM table",
+			expectedMillis: 123,
+		},
+		{
+			message:        "2025-05-16 14:26:01.872 UTC [3076] LOG:  duration: 18.237 ms",
+			expectedMillis: 18.237,
+		},
+		{
+			message:        "LOG: statement executed, duration: 5.678 ms",
+			expectedMillis: 5.678,
+		},
+		{
+			message:        "LOG: statement executed without timing info",
+			expectedMillis: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		millis := util.ExtractDurationMillisFromLogMessage(tt.message)
+		assert.InDelta(t, tt.expectedMillis, millis, 0.1, "Duration should be within 0.1ms of expected value")
+	}
+}

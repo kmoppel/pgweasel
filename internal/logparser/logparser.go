@@ -7,18 +7,17 @@ import (
 	"io"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/kmoppel/pgweasel/internal/pglog"
+	"github.com/kmoppel/pgweasel/internal/util"
 	"github.com/rs/zerolog/log"
 )
 
 const DEFAULT_REGEX_STR = `(?s)^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<log_time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})[\s:\-].*?[\s:\-]?(?P<error_severity>[A-Z12345]{3,12}):\s*(?P<message>(?s:.*))$`
 
 var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
-var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
 var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})`)
 var REGEX_LOG_LEVEL = regexp.MustCompile(`^[A-Z12345]{3,12}$`)
 
@@ -54,22 +53,6 @@ func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp, filename string) (
 	e.Lines = lines
 
 	return e, nil
-}
-
-// Returns 0 if no match or error
-func ExtractDurationMillisFromLogMessage(message string) float64 {
-	// Example message: "duration: 0.211 ms"
-	match := REGEX_DURATION_MILLIS.FindStringSubmatch(message)
-	if match == nil {
-		return 0.0
-	}
-
-	durationStr := match[1]
-	duration, err := strconv.ParseFloat(durationStr, 64)
-	if err != nil {
-		return 0.0
-	}
-	return duration
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
@@ -175,7 +158,7 @@ func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvlNum int, extraReg
 	}
 
 	if minSlowDurationMs > 0 {
-		duration := ExtractDurationMillisFromLogMessage(rec.Message)
+		duration := util.ExtractDurationMillisFromLogMessage(rec.Message)
 		log.Debug().Msgf("Extracted duration: %f, message: %s", duration, rec.Message)
 		if duration < float64(minSlowDurationMs) {
 			return false

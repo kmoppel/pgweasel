@@ -3,6 +3,7 @@ package util
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,6 +14,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
+
+var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
 
 func IsPathExistsAndFile(filePath string) bool {
 	fileInfo, err := os.Stat(filePath)
@@ -282,4 +285,20 @@ func TruncateString(s string, maxChars int) string {
 		return string(runes[:maxChars])
 	}
 	return s
+}
+
+// Returns 0 if no match or error
+func ExtractDurationMillisFromLogMessage(message string) float64 {
+	// Example message: "duration: 0.211 ms"
+	match := REGEX_DURATION_MILLIS.FindStringSubmatch(message)
+	if match == nil {
+		return 0.0
+	}
+
+	durationStr := match[1]
+	duration, err := strconv.ParseFloat(durationStr, 64)
+	if err != nil {
+		return 0.0
+	}
+	return duration
 }

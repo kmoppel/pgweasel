@@ -61,6 +61,7 @@ type WeaselConfig struct {
 	Oneline           bool
 	PeaksOnly         bool
 	LocksOnly         bool
+	StatsOnly         bool
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -110,5 +111,6 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		Oneline:           Oneline,
 		PeaksOnly:         Peaks,
 		LocksOnly:         LocksOnly,
+		StatsOnly:         Stats,
 	}
 }
