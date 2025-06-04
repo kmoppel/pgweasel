@@ -17,7 +17,7 @@ import (
 
 var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
 var REGEX_CHECKPOINT_DURATION_SECONDS = regexp.MustCompile(`total=([\d\.]+) s;`)
-var REGEX_AUTOVACUUM_DURATION_SECONDS = regexp.MustCompile(` elapsed=([\d\.]+) s`)
+var REGEX_AUTOVACUUM_DURATION_SECONDS = regexp.MustCompile(`(?s)^automatic (analyze|vacuum) of table "(?P<table_name>[\w\.\-]+)".* elapsed: (?P<duration>[\d\.]+) s$`)
 
 func IsPathExistsAndFile(filePath string) bool {
 	fileInfo, err := os.Stat(filePath)
@@ -321,18 +321,31 @@ func ExtractCheckpointDurationSecondsFromLogMessage(message string) float64 {
 	return duration
 }
 
-// Returns 0 if no match or error
-func ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(message string) float64 {
-	// ... system usage: CPU: user: 2.59 s, system: 4.46 s, elapsed: 2326.38 s
+// Returns duration in seconds and table name if matched, otherwise 0 and empty string
+func ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(message string) (float64, string) {
+	// Example: automatic vacuum of table "mytable"... elapsed: 2326.38 s
 	match := REGEX_AUTOVACUUM_DURATION_SECONDS.FindStringSubmatch(message)
 	if match == nil {
-		return 0.0
+		return 0.0, ""
 	}
 
-	durationStr := match[1]
+	// Get named capture groups
+	tableName := ""
+	durationStr := ""
+
+	for i, name := range REGEX_AUTOVACUUM_DURATION_SECONDS.SubexpNames() {
+		if i > 0 && i <= len(match) {
+			if name == "table_name" {
+				tableName = match[i]
+			} else if name == "duration" {
+				durationStr = match[i]
+			}
+		}
+	}
+
 	duration, err := strconv.ParseFloat(durationStr, 64)
 	if err != nil {
-		return 0.0
+		return 0.0, ""
 	}
-	return duration
+	return duration, tableName
 }

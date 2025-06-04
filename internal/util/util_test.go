@@ -1,6 +1,7 @@
 package util_test
 
 import (
+	"log"
 	"testing"
 	"time"
 
@@ -150,4 +151,30 @@ func TestExtractCheckpointDurationSecondsFromLogMessage(t *testing.T) {
 		duration := util.ExtractCheckpointDurationSecondsFromLogMessage(tt.message)
 		assert.InDelta(t, tt.expectedDuration, duration, 0.001, "Duration should be within 0.001s of expected value for message: %s", tt.message)
 	}
+}
+
+func TestExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(t *testing.T) {
+	msgVacuum := `automatic vacuum of table "rbcc-postgres.public.event_log": index scans: 0
+	      pages: 165509 removed, 4251301 remain, 1468607 scanned (33.25% of total)
+	      tuples: 11539400 removed, 272957578 remain, 0 are dead but not yet removable
+	      removable cutoff: 129452, which was 1 XIDs old when operation ended
+	      frozen: 107 pages from table (0.00% of total) had 3631 tuples frozen
+	      index scan not needed: 166775 pages from table (3.78% of total) had 11539400 dead item identifiers removed
+	      avg read rate: 5.492 MB/s, avg write rate: 4.932 MB/s
+	      buffer usage: 1468979 hits, 1635272 misses, 1468726 dirtied
+	      WAL usage: 1802239 records, 166829 full page images, 178819332 bytes
+	      system usage: CPU: user: 2.59 s, system: 4.46 s, elapsed: 2326.38 s`
+	msgAnalyze := `automatic analyze of table "rbcc-postgres.public.event_log"
+          avg read rate: 14.355 MB/s, avg write rate: 0.004 MB/s
+          buffer usage: 671 hits, 30049 misses, 9 dirtied
+          system usage: CPU: user: 0.26 s, system: 0.35 s, elapsed: 16.35 s`
+
+	durVacuum, tblName := util.ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(msgVacuum)
+	assert.InDelta(t, 2326.38, durVacuum, 0.01, "Vacuum elapsed duration should be parsed correctly")
+	assert.Equal(t, tblName, "rbcc-postgres.public.event_log", "Vacuum table name should be parsed correctly")
+
+	durAnalyze, tblName := util.ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(msgAnalyze)
+	log.Println("Analyze duration:", durAnalyze, "Table name:", tblName)
+	assert.InDelta(t, 16.35, durAnalyze, 0.01, "Analyze elapsed duration should be parsed correctly")
+	assert.Equal(t, tblName, "rbcc-postgres.public.event_log", "Vacuum table name should be parsed correctly")
 }

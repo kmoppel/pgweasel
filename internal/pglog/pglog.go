@@ -86,8 +86,10 @@ type StatsAggregator struct {
 	LongestCheckpointSeconds      float64
 	Autovacuums                   int
 	AutovacuumMaxDurationSeconds  float64
+	AutovacuumMaxDurationTable    string
 	Autoanalyzes                  int
 	AutoanalyzeMaxDurationSeconds float64
+	AutoanalyzeMaxDurationTable   string
 }
 
 var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[:\s\-]+.*?(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s\-]+.*?(?P<error_severity>[A-Z12345]{3,12})[:\s]+.*$`)
@@ -549,16 +551,18 @@ func (sa *StatsAggregator) AddEvent(e LogEntry) {
 		// Autovacuum and autoanalyze
 		if strings.HasPrefix(e.Message, "automatic analyze") {
 			sa.Autoanalyzes++
-			durSeconds := util.ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(e.Message)
+			durSeconds, tbl := util.ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(e.Message)
 			if durSeconds > sa.LongestCheckpointSeconds {
 				sa.AutoanalyzeMaxDurationSeconds = durSeconds
+				sa.AutoanalyzeMaxDurationTable = tbl
 			}
 		}
 		if strings.HasPrefix(e.Message, "automatic vacuum") {
 			sa.Autovacuums++
-			durSeconds := util.ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(e.Message)
+			durSeconds, tbl := util.ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(e.Message)
 			if durSeconds > sa.LongestCheckpointSeconds {
 				sa.AutovacuumMaxDurationSeconds = durSeconds
+				sa.AutovacuumMaxDurationTable = tbl
 			}
 		}
 	}
@@ -585,9 +589,9 @@ func (sa *StatsAggregator) ShowStats() {
 	fmt.Println("Query durations records:", sa.SlowQueries)
 	fmt.Println("Checkpoints timed:", sa.CheckpointsTimed)
 	fmt.Println("Checkpoints forced:", sa.CheckpointsForced)
-	fmt.Printf("Longest checkpoint duration: %.3f seconds\n", sa.LongestCheckpointSeconds)
+	fmt.Printf("Longest checkpoint duration: %.3f s\n", sa.LongestCheckpointSeconds) // TODO show duration "as is" ?
 	fmt.Println("Autovacuums:", sa.Autovacuums)
-	fmt.Printf("Longest autovacuum duration: %.3f seconds\n", sa.AutovacuumMaxDurationSeconds)
+	fmt.Printf("Longest autovacuum duration: %.3f s (on \"%s\")\n", sa.AutovacuumMaxDurationSeconds, sa.AutovacuumMaxDurationTable)
 	fmt.Println("Autoanalyzes:", sa.Autoanalyzes)
-	fmt.Printf("Longest autoanalyze duration: %.3f seconds\n", sa.AutoanalyzeMaxDurationSeconds)
+	fmt.Printf("Longest autoanalyze duration: %.3f s (on \"%s\")\n", sa.AutoanalyzeMaxDurationSeconds, sa.AutoanalyzeMaxDurationTable)
 }
