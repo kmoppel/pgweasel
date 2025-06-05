@@ -189,15 +189,15 @@ func showErrors(cmd *cobra.Command, args []string) {
 		w.WriteString("Most events per " + PeakBucketIntervalStr + ":\n\n")
 		for lvl, bucketWithCount := range peaksBucket.GetTopBucketsBySeverity() {
 			for timeBucket, count := range bucketWithCount {
-				w.WriteString(fmt.Sprintf("%-12s: %-6d (%s)\n", lvl, count, timeBucket))
+				w.WriteString(fmt.Sprintf("%-12s: %-6d (%s, e.g.: %s)\n", lvl, count, timeBucket, peaksBucket.GetFirstRealTimeStringForBucket(timeBucket)))
 			}
 		}
 
-		topLockingTime, lockCount := peaksBucket.GetTopLockingPeriod()
-		w.WriteString(fmt.Sprintf("\n%-12s: %-6d (%s)\n", "LOCKS", lockCount, topLockingTime))
+		topLockingTime, lockCount, realTimeString := peaksBucket.GetTopLockingPeriod()
+		w.WriteString(fmt.Sprintf("\n%-12s: %-6d (%s, e.g.: %s)\n", "LOCKS", lockCount, topLockingTime, realTimeString))
 
-		topConnsTime, connsCount := peaksBucket.GetTopConnectPeriod()
-		w.WriteString(fmt.Sprintf("\n%-12s: %-6d (%s)\n", "CONNECTS", connsCount, topConnsTime))
+		topConnsTime, connsCount, realTimeString := peaksBucket.GetTopConnectPeriod()
+		w.WriteString(fmt.Sprintf("\n%-12s: %-6d (%s, e.g: %s)\n", "CONNECTS", connsCount, topConnsTime, realTimeString))
 	}
 
 	if cfg.StatsOnly {

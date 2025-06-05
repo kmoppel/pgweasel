@@ -68,11 +68,12 @@ type LogEntry struct {
 
 // For "peaks"
 type EventBucket struct {
-	BucketsBySeverity map[string]map[time.Time]int
-	TotalEvents       int
-	TotalBySeverity   map[string]int
-	LockEvents        map[time.Time]int
-	ConnectEvents     map[time.Time]int
+	BucketsBySeverity    map[string]map[time.Time]int
+	TotalEvents          int
+	TotalBySeverity      map[string]int
+	LockEvents           map[time.Time]int
+	ConnectEvents        map[time.Time]int
+	BucketActualLogTimes map[time.Time]string // map with first actual LogTime string for each time bucket for display purposes
 }
 
 type StatsAggregator struct {
@@ -459,6 +460,7 @@ func (b *EventBucket) Init() {
 	b.TotalBySeverity = make(map[string]int)
 	b.LockEvents = make(map[time.Time]int)
 	b.ConnectEvents = make(map[time.Time]int)
+	b.BucketActualLogTimes = make(map[time.Time]string) // initialize
 }
 
 func (b *EventBucket) AddEvent(e LogEntry, bucketInterval time.Duration) {
@@ -471,6 +473,11 @@ func (b *EventBucket) AddEvent(e LogEntry, bucketInterval time.Duration) {
 	}
 
 	bucketTime := e.GetTime().Truncate(bucketInterval)
+
+	// Record the first LogTime string for this bucketTime
+	if _, exists := b.BucketActualLogTimes[bucketTime]; !exists {
+		b.BucketActualLogTimes[bucketTime] = e.LogTime
+	}
 
 	b.BucketsBySeverity[e.ErrorSeverity][bucketTime]++
 	b.TotalBySeverity[e.ErrorSeverity]++
@@ -513,9 +520,9 @@ func (b *EventBucket) GetTopBucketsBySeverity() map[string]map[time.Time]int {
 }
 
 // Returns the top LockEvents period
-func (b *EventBucket) GetTopLockingPeriod() (time.Time, int) {
+func (b *EventBucket) GetTopLockingPeriod() (time.Time, int, string) {
 	if len(b.LockEvents) == 0 {
-		return time.Time{}, 0
+		return time.Time{}, 0, ""
 	}
 
 	var maxTime time.Time
@@ -528,12 +535,16 @@ func (b *EventBucket) GetTopLockingPeriod() (time.Time, int) {
 		}
 	}
 
-	return maxTime, maxCount
+	return maxTime, maxCount, b.BucketActualLogTimes[maxTime]
 }
 
-func (b *EventBucket) GetTopConnectPeriod() (time.Time, int) {
+func (b *EventBucket) GetFirstRealTimeStringForBucket(bucket time.Time) string {
+	return b.BucketActualLogTimes[bucket]
+}
+
+func (b *EventBucket) GetTopConnectPeriod() (time.Time, int, string) {
 	if len(b.ConnectEvents) == 0 {
-		return time.Time{}, 0
+		return time.Time{}, 0, ""
 	}
 
 	var maxTime time.Time
@@ -546,7 +557,7 @@ func (b *EventBucket) GetTopConnectPeriod() (time.Time, int) {
 		}
 	}
 
-	return maxTime, maxCount
+	return maxTime, maxCount, b.BucketActualLogTimes[maxTime]
 }
 
 func (sa *StatsAggregator) Init() {
