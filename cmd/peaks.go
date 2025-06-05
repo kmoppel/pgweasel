@@ -25,19 +25,8 @@ var peaksCmd = &cobra.Command{
 	Aliases: []string{"peak", "busy"},
 }
 
-var TopCmd = &cobra.Command{
-	Use:   "top",
-	Short: "Top N errors",
-	Run: func(cmd *cobra.Command, args []string) {
-		TopNErrorsOnly = true
-		showErrors(cmd, args)
-	},
-}
-
 func init() {
 	rootCmd.AddCommand(peaksCmd)
 
 	peaksCmd.Flags().StringVarP(&PeakBucketIntervalStr, "bucket", "b", "10m", "Bucket interval")
-
-	peaksCmd.ad
 }
