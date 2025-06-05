@@ -66,10 +66,13 @@ type LogEntry struct {
 	CsvColumns    *CsvEntry
 }
 
+// For "peaks"
 type EventBucket struct {
 	BucketsBySeverity map[string]map[time.Time]int
 	TotalEvents       int
 	TotalBySeverity   map[string]int
+	LockEvents        map[time.Time]int
+	ConnectEvents     map[time.Time]int
 }
 
 type StatsAggregator struct {
@@ -444,6 +447,8 @@ func (b *EventBucket) Init() {
 		b.BucketsBySeverity[severity] = make(map[time.Time]int)
 	}
 	b.TotalBySeverity = make(map[string]int)
+	b.LockEvents = make(map[time.Time]int)
+	b.ConnectEvents = make(map[time.Time]int)
 }
 
 func (b *EventBucket) AddEvent(e LogEntry, bucketInterval time.Duration) {
@@ -460,6 +465,13 @@ func (b *EventBucket) AddEvent(e LogEntry, bucketInterval time.Duration) {
 	b.BucketsBySeverity[e.ErrorSeverity][bucketTime]++
 	b.TotalBySeverity[e.ErrorSeverity]++
 	b.TotalEvents++
+	if e.IsLockingRelatedEntry() {
+		b.LockEvents[bucketTime]++
+	}
+	if strings.HasPrefix(e.Message, "connection received") {
+		b.ConnectEvents[bucketTime]++
+	}
+
 }
 
 func (b *EventBucket) GetTopBucketsBySeverity() map[string]map[time.Time]int {
@@ -488,6 +500,43 @@ func (b *EventBucket) GetTopBucketsBySeverity() map[string]map[time.Time]int {
 		}
 	}
 	return ret
+}
+
+// Returns the top LockEvents period
+func (b *EventBucket) GetTopLockingPeriod() (time.Time, int) {
+	if len(b.LockEvents) == 0 {
+		return time.Time{}, 0
+	}
+
+	var maxTime time.Time
+	var maxCount int
+
+	for bucketTime, count := range b.LockEvents {
+		if count > maxCount {
+			maxCount = count
+			maxTime = bucketTime
+		}
+	}
+
+	return maxTime, maxCount
+}
+
+func (b *EventBucket) GetTopConnectPeriod() (time.Time, int) {
+	if len(b.ConnectEvents) == 0 {
+		return time.Time{}, 0
+	}
+
+	var maxTime time.Time
+	var maxCount int
+
+	for bucketTime, count := range b.ConnectEvents {
+		if count > maxCount {
+			maxCount = count
+			maxTime = bucketTime
+		}
+	}
+
+	return maxTime, maxCount
 }
 
 func (sa *StatsAggregator) Init() {

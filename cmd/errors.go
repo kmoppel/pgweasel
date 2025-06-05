@@ -10,7 +10,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/kmoppel/pgweasel/internal/logparser"
 	"github.com/kmoppel/pgweasel/internal/pglog"
@@ -187,12 +186,18 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	if cfg.PeaksOnly {
-		w.WriteString("Most events per severity:\n")
+		w.WriteString("Most events per " + PeakBucketIntervalStr + ":\n\n")
 		for lvl, bucketWithCount := range peaksBucket.GetTopBucketsBySeverity() {
 			for timeBucket, count := range bucketWithCount {
-				w.WriteString(fmt.Sprintf("%-12s", lvl) + ": " + timeBucket.Format(time.RFC3339) + " (+" + PeakBucketIntervalStr + "): " + strconv.Itoa(count) + "\n")
+				w.WriteString(fmt.Sprintf("%-12s: %-6d (%s)\n", lvl, count, timeBucket))
 			}
 		}
+
+		topLockingTime, lockCount := peaksBucket.GetTopLockingPeriod()
+		w.WriteString(fmt.Sprintf("\n%-12s: %-6d (%s)\n", "LOCKS", lockCount, topLockingTime))
+
+		topConnsTime, connsCount := peaksBucket.GetTopConnectPeriod()
+		w.WriteString(fmt.Sprintf("\n%-12s: %-6d (%s)\n", "CONNECTS", connsCount, topConnsTime))
 	}
 
 	if cfg.StatsOnly {
