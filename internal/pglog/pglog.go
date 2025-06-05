@@ -334,6 +334,10 @@ var POSTGRES_LOG_LVL_NON_SYSTEM_REGEXES = []*regexp.Regexp{
 	regexp.MustCompile(`^process [0-9]+ still waiting`),
 }
 
+var NON_SYSTEM_REGEXES = []*regexp.Regexp{
+	regexp.MustCompile(`^cannot execute \w+ in a read-only transaction`),
+}
+
 var POSTGRES_SYS_FATAL_PREFIXES_TO_IGNORE = []string{
 	"password authentication failed ",
 	"connection to client lost",
@@ -383,6 +387,12 @@ func (e LogEntry) IsSystemEntry() bool {
 			}
 		}
 		return true
+	}
+
+	for _, regex := range NON_SYSTEM_REGEXES {
+		if regex.MatchString(e.Message) {
+			return false
+		}
 	}
 
 	for _, prefix := range POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES {

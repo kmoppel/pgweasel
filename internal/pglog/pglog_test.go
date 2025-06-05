@@ -90,6 +90,15 @@ func TestIsSystemEntry(t *testing.T) {
 			},
 			expected: false,
 		},
+		{
+			name: "Plain text non-system entry4",
+			entry: pglog.LogEntry{
+				Lines:         []string{`2022-03-11 09:42:32.449 UTC [17504] ERROR:  cannot execute UPDATE in a read-only transaction`},
+				Message:       `cannot execute UPDATE in a read-only transaction`,
+				ErrorSeverity: "ERROR",
+			},
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
