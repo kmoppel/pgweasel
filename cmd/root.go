@@ -57,6 +57,8 @@ type WeaselConfig struct {
 	MinErrLvlNum      int
 	SystemOnly        bool
 	MinSlowDurationMs int
+	SlowTopN          int
+	SlowTopNOnly      bool
 	ForceCsvInput     bool
 	Oneline           bool
 	PeaksOnly         bool
@@ -112,5 +114,7 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		PeaksOnly:         Peaks,
 		LocksOnly:         LocksOnly,
 		StatsOnly:         Stats,
+		SlowTopNOnly:      SlowTopNOnly,
+		SlowTopN:          SlowTopN,
 	}
 }

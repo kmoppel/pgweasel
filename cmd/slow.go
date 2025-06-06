@@ -26,6 +26,22 @@ var slowCmd = &cobra.Command{
 	Aliases: []string{"slo"},
 }
 
+var SlowTopN int
+var SlowTopNOnly bool
+
+var slowTopCmd = &cobra.Command{
+	Use:   "top",
+	Short: "Show Top N slowest queries",
+	Run: func(cmd *cobra.Command, args []string) {
+		SlowTopNOnly = true
+		showErrors(cmd, args)
+	},
+}
+
 func init() {
+	slowTopCmd.Flags().IntVarP(&SlowTopN, "top", "", 10, "Top slowest queries to show")
+
+	slowCmd.AddCommand(slowTopCmd)
+
 	rootCmd.AddCommand(slowCmd)
 }

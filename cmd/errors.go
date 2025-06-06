@@ -104,7 +104,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	cfg := PreProcessArgs(cmd, args)
 
-	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, From=%s, To=%s, SystemOnly=%v, TopNErrorsOnly=%t, PeaksOnly=%t, StatsOnly=%t", cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, TopNErrorsOnly, cfg.PeaksOnly, cfg.StatsOnly)
+	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, SlowTopNOnly=%t, SlowTopN=%d, From=%s, To=%s, SystemOnly=%v, TopNErrorsOnly=%t, PeaksOnly=%t, StatsOnly=%t",
+		cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.SlowTopNOnly, cfg.SlowTopN, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, TopNErrorsOnly, cfg.PeaksOnly, cfg.StatsOnly)
 
 	if len(args) == 0 && util.CheckStdinAvailable() {
 		logFiles = []string{"stdin"}
@@ -142,6 +143,17 @@ func showErrors(cmd *cobra.Command, args []string) {
 				continue
 			}
 			log.Debug().Msgf("Processing log entry: %+v", rec)
+
+			if cfg.SlowTopNOnly {
+				if rec.ErrorSeverity != "LOG" {
+					continue
+				}
+				duration := util.ExtractDurationMillisFromLogMessage(rec.Message)
+				if duration == 0.0 {
+					continue
+				}
+				continue
+			}
 
 			if cfg.StatsOnly {
 				statsAggregator.AddEvent(rec)
