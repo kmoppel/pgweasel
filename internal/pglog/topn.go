@@ -1,10 +1,13 @@
 package pglog
 
-import "container/heap"
+import (
+	"container/heap"
+	"sort"
+)
 
 type TopNSlowLogEntry struct {
 	Rec        *LogEntry
-	DurationMs int
+	DurationMs float64
 }
 type SlowEntryHeap []TopNSlowLogEntry
 
@@ -48,5 +51,9 @@ func (t *TopN) Add(val TopNSlowLogEntry) {
 func (t *TopN) Values() []TopNSlowLogEntry {
 	hCopy := make([]TopNSlowLogEntry, len(*t.Heap))
 	copy(hCopy, *t.Heap)
+	// Sort by DurationMs in descending order
+	sort.Slice(hCopy, func(i, j int) bool {
+		return hCopy[i].DurationMs > hCopy[j].DurationMs
+	})
 	return hCopy
 }

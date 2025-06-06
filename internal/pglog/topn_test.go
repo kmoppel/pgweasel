@@ -23,7 +23,7 @@ func TestSlowEntryHeap_TopN(t *testing.T) {
 	}
 
 	// Should contain the two largest DurationMs: 70 and 50
-	found := map[int]bool{}
+	found := map[float64]bool{}
 	for _, e := range *h.Heap {
 		found[e.DurationMs] = true
 	}

@@ -134,6 +134,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 		statsAggregator.Init()
 	}
 
+	slowTopNCollector := pglog.NewTopN(cfg.SlowTopN)
+
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 
@@ -152,6 +154,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 				if duration == 0.0 {
 					continue
 				}
+				slowTopNCollector.Add(pglog.TopNSlowLogEntry{Rec: &rec, DurationMs: duration})
 				continue
 			}
 
@@ -214,6 +217,17 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	if cfg.StatsOnly {
 		statsAggregator.ShowStats()
+	}
+
+	if cfg.SlowTopNOnly {
+		for _, slowTopNEntry := range slowTopNCollector.Values() {
+			message := slowTopNEntry.Rec.LogTime + " " + slowTopNEntry.Rec.Message
+			messageRunes := []rune(message)
+			if len(messageRunes) > 200 {
+				message = string(messageRunes[:197]) + "..."
+			}
+			w.WriteString(strings.ReplaceAll(message, "\n", " ") + "\n")
+		}
 	}
 
 	w.Flush()

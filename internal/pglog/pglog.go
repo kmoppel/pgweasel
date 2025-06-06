@@ -217,6 +217,14 @@ func (e LogEntry) SeverityNum() int {
 	}
 }
 
+func (e LogEntry) String() string {
+	if e.CsvColumns != nil {
+		return e.CsvColumns.String()
+	} else {
+		return strings.Join(e.Lines, "\n")
+	}
+}
+
 func SeverityToNum(severity string) int {
 	switch strings.ToUpper(severity) {
 	case "DEBUG5":
