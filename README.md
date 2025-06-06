@@ -81,3 +81,4 @@ All kinds of feedback and help would be much appreciated - especially as I'm not
 * goreleaser support
 * more test & refactoring
 * temp files mode
+* perf optimizations, no effort so far
