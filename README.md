@@ -20,6 +20,10 @@ pgweasel tries to:
 
 `pgweasel errors top $LOG` - Show the most frequent error messages with counts
 
+`pgweasel errors --hist $LOG` - Show a basic vertical histogram of error counts. Default --bucket=1h
+
+`pgweasel errors --hist -l debug5 $LOG` - Show a histogram for all events, not only errors
+
 `pgweasel locks $LOG` - Only show locking (incl. deadlocks, recovery conflicts) entries
 
 `pgweasel peaks $LOG` - Show the "busiest" time periods with most log events, using a 10min bucket by default
