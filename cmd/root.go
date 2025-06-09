@@ -50,22 +50,22 @@ func init() {
 }
 
 type WeaselConfig struct {
-	FromTime          time.Time
-	ToTime            time.Time
-	LogLineRegex      *regexp.Regexp
-	MinErrLvl         string
-	MinErrLvlNum      int
-	SystemOnly        bool
-	MinSlowDurationMs int
-	SlowTopN          int
-	SlowTopNOnly      bool
-	ForceCsvInput     bool
-	Oneline           bool
-	PeaksOnly         bool
-	LocksOnly         bool
-	StatsOnly         bool
-	ErrorsHistogram   bool
-	HistogramBucket   time.Duration
+	FromTime                time.Time
+	ToTime                  time.Time
+	LogLineRegex            *regexp.Regexp
+	MinErrLvl               string
+	MinErrLvlNum            int
+	SystemOnly              bool
+	MinSlowDurationMs       int
+	SlowTopN                int
+	SlowTopNOnly            bool
+	ForceCsvInput           bool
+	Oneline                 bool
+	PeaksOnly               bool
+	LocksOnly               bool
+	StatsOnly               bool
+	ErrorsHistogram         bool
+	HistogramBucketDuration time.Duration
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -112,21 +112,21 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		}
 	}
 	return WeaselConfig{
-		FromTime:          fromTime,
-		ToTime:            toTime,
-		LogLineRegex:      logLineRegex,
-		MinErrLvl:         minErrLvl,
-		MinErrLvlNum:      pglog.SeverityToNum(minErrLvl),
-		MinSlowDurationMs: MinSlowDurationMs,
-		SystemOnly:        SystemOnly,
-		ForceCsvInput:     Csv,
-		Oneline:           Oneline,
-		PeaksOnly:         Peaks,
-		LocksOnly:         LocksOnly,
-		StatsOnly:         Stats,
-		SlowTopNOnly:      SlowTopNOnly,
-		SlowTopN:          SlowTopN,
-		ErrorsHistogram:   ErrorsShowHistogram,
-		HistogramBucket:   PeakBucketDuration,
+		FromTime:                fromTime,
+		ToTime:                  toTime,
+		LogLineRegex:            logLineRegex,
+		MinErrLvl:               minErrLvl,
+		MinErrLvlNum:            pglog.SeverityToNum(minErrLvl),
+		MinSlowDurationMs:       MinSlowDurationMs,
+		SystemOnly:              SystemOnly,
+		ForceCsvInput:           Csv,
+		Oneline:                 Oneline,
+		PeaksOnly:               Peaks,
+		LocksOnly:               LocksOnly,
+		StatsOnly:               Stats,
+		SlowTopNOnly:            SlowTopNOnly,
+		SlowTopN:                SlowTopN,
+		ErrorsHistogram:         ErrorsShowHistogram,
+		HistogramBucketDuration: PeakBucketDuration,
 	}
 }

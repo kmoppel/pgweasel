@@ -143,7 +143,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	histoBuckets := pglog.HistogramBucket{}
 	if cfg.ErrorsHistogram {
-		histoBuckets.Init()
+		histoBuckets.Init(cfg.HistogramBucketDuration)
 	}
 
 	for _, logFile := range logFiles {
@@ -157,7 +157,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 			log.Debug().Msgf("Processing log entry: %+v", rec)
 
 			if cfg.ErrorsHistogram {
-				histoBuckets.Add(rec, cfg.HistogramBucket)
+				histoBuckets.Add(rec, cfg.HistogramBucketDuration)
 				continue
 			}
 

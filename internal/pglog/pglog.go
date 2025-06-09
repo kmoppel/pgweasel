@@ -3,7 +3,6 @@ package pglog
 import (
 	"fmt"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -81,40 +80,7 @@ type EventBucket struct {
 type HistogramBucket struct {
 	CountBuckets map[time.Time]int
 	TotalEvents  int
-}
-
-// GetSortedBuckets returns a slice of time-count pairs sorted in chronological order
-func (h HistogramBucket) GetSortedBuckets() []struct {
-	Time  time.Time
-	Count int
-} {
-	if len(h.CountBuckets) == 0 {
-		return nil
-	}
-
-	// Create a slice to hold the bucket time-count pairs
-	result := make([]struct {
-		Time  time.Time
-		Count int
-	}, 0, len(h.CountBuckets))
-
-	// Add all entries to the slice
-	for t, count := range h.CountBuckets {
-		result = append(result, struct {
-			Time  time.Time
-			Count int
-		}{
-			Time:  t,
-			Count: count,
-		})
-	}
-
-	// Sort the slice by timestamp
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Time.Before(result[j].Time)
-	})
-
-	return result
+	BucketWith   time.Duration
 }
 
 type StatsAggregator struct {
@@ -726,12 +692,74 @@ func (sa *StatsAggregator) ShowStats() {
 	fmt.Printf("Longest autoanalyze duration: %.3f s (on \"%s\")\n", sa.AutoanalyzeMaxDurationSeconds, sa.AutoanalyzeMaxDurationTable)
 }
 
-func (h *HistogramBucket) Init() {
+func (h *HistogramBucket) Init(bucketWith time.Duration) {
 	h.CountBuckets = make(map[time.Time]int)
+	h.BucketWith = bucketWith
 }
 
 func (h *HistogramBucket) Add(e LogEntry, bucketInterval time.Duration) {
 	bucketTime := e.GetTime().Truncate(bucketInterval)
 	h.CountBuckets[bucketTime]++
 	h.TotalEvents++
+}
+
+// GetSortedBuckets returns a slice of time-count pairs sorted in chronological order
+func (h HistogramBucket) GetSortedBuckets() []struct {
+	Time  time.Time
+	Count int
+} {
+	if len(h.CountBuckets) == 0 {
+		return nil
+	}
+
+	// Find min and max timestamps
+	var minTime, maxTime time.Time
+	first := true
+	for t := range h.CountBuckets {
+		if first {
+			minTime = t
+			maxTime = t
+			first = false
+		} else {
+			if t.Before(minTime) {
+				minTime = t
+			}
+			if t.After(maxTime) {
+				maxTime = t
+			}
+		}
+	}
+
+	// Calculate how many buckets to create
+	numBuckets := int(maxTime.Sub(minTime)/h.BucketWith) + 1
+
+	// Create a slice with the right capacity
+	result := make([]struct {
+		Time  time.Time
+		Count int
+	}, numBuckets)
+
+	// Fill with zero counts by default
+	for i := 0; i < numBuckets; i++ {
+		bucketTime := minTime.Add(time.Duration(i) * h.BucketWith)
+		result[i] = struct {
+			Time  time.Time
+			Count int
+		}{
+			Time:  bucketTime,
+			Count: 0,
+		}
+	}
+
+	// Now populate with actual counts where available
+	for t, count := range h.CountBuckets {
+		// Calculate bucket index
+		idx := int(t.Sub(minTime) / h.BucketWith)
+		// Ensure we don't go out of bounds
+		if idx >= 0 && idx < len(result) {
+			result[idx].Count = count
+		}
+	}
+
+	return result
 }

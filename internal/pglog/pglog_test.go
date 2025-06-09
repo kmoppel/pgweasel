@@ -134,3 +134,96 @@ func TestIsLockingRelatedEntry(t *testing.T) {
 		})
 	}
 }
+func TestHistogramBucketGetSortedBuckets(t *testing.T) {
+	tests := []struct {
+		name             string
+		buckets          map[time.Time]int
+		bucketWith       time.Duration
+		expectedCount    int
+		expectedFirstVal int
+		expectedLastVal  int
+	}{
+		{
+			name:          "Empty buckets",
+			buckets:       map[time.Time]int{},
+			bucketWith:    time.Minute,
+			expectedCount: 0,
+		},
+		{
+			name: "Single bucket",
+			buckets: map[time.Time]int{
+				time.Date(2025, 5, 2, 10, 0, 0, 0, time.UTC): 5,
+			},
+			bucketWith:       time.Minute,
+			expectedCount:    1,
+			expectedFirstVal: 5,
+			expectedLastVal:  5,
+		},
+		{
+			name: "Sequential buckets",
+			buckets: map[time.Time]int{
+				time.Date(2025, 5, 2, 10, 0, 0, 0, time.UTC): 5,
+				time.Date(2025, 5, 2, 10, 1, 0, 0, time.UTC): 10,
+				time.Date(2025, 5, 2, 10, 2, 0, 0, time.UTC): 15,
+			},
+			bucketWith:       time.Minute,
+			expectedCount:    3,
+			expectedFirstVal: 5,
+			expectedLastVal:  15,
+		},
+		{
+			name: "Sparse buckets",
+			buckets: map[time.Time]int{
+				time.Date(2025, 5, 2, 10, 0, 0, 0, time.UTC): 5,
+				time.Date(2025, 5, 2, 10, 5, 0, 0, time.UTC): 10,
+			},
+			bucketWith:       time.Minute,
+			expectedCount:    6,
+			expectedFirstVal: 5,
+			expectedLastVal:  10,
+		},
+		{
+			name: "Hourly buckets",
+			buckets: map[time.Time]int{
+				time.Date(2025, 5, 2, 10, 0, 0, 0, time.UTC): 100,
+				time.Date(2025, 5, 2, 11, 0, 0, 0, time.UTC): 200,
+				time.Date(2025, 5, 2, 12, 0, 0, 0, time.UTC): 300,
+			},
+			bucketWith:       time.Hour,
+			expectedCount:    3,
+			expectedFirstVal: 100,
+			expectedLastVal:  300,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			h := pglog.HistogramBucket{}
+			h.Init(tt.bucketWith)
+			h.CountBuckets = tt.buckets
+
+			result := h.GetSortedBuckets()
+
+			if tt.expectedCount == 0 {
+				assert.Nil(t, result, "Expected nil result for empty buckets")
+				return
+			}
+
+			assert.Equal(t, tt.expectedCount, len(result), "Unexpected number of buckets")
+			assert.Equal(t, tt.expectedFirstVal, result[0].Count, "First bucket has unexpected count")
+			assert.Equal(t, tt.expectedLastVal, result[len(result)-1].Count, "Last bucket has unexpected count")
+
+			// Check time ordering
+			for i := 1; i < len(result); i++ {
+				assert.True(t, result[i-1].Time.Before(result[i].Time) || result[i-1].Time.Equal(result[i].Time),
+					"Buckets are not in chronological order")
+			}
+
+			// Check if time difference between consecutive buckets equals bucketWith
+			if len(result) > 1 {
+				timeDiff := result[1].Time.Sub(result[0].Time)
+				assert.Equal(t, tt.bucketWith, timeDiff, "Bucket time intervals are not consistent")
+			}
+		})
+	}
+}
