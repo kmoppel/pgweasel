@@ -227,3 +227,22 @@ func TestHistogramBucketGetSortedBuckets(t *testing.T) {
 		})
 	}
 }
+func TestHistogramBucketAddMinErrorLevel(t *testing.T) {
+	testData := []pglog.LogEntry{
+		pglog.LogEntry{LogTime: "2025-05-02 10:00:00 UTC", ErrorSeverity: "DEBUG1", Message: "Debug message"},
+		pglog.LogEntry{LogTime: "2025-05-02 10:01:00 UTC", ErrorSeverity: "INFO", Message: "Info message"},
+		pglog.LogEntry{LogTime: "2025-05-02 10:02:00 UTC", ErrorSeverity: "NOTICE", Message: "Notice message"},
+		pglog.LogEntry{LogTime: "2025-05-02 10:03:00 UTC", ErrorSeverity: "WARNING", Message: "Warning message"},
+		pglog.LogEntry{LogTime: "2025-05-02 10:04:00 UTC", ErrorSeverity: "ERROR", Message: "Error message"},
+	}
+	bucketInterval := time.Minute
+	minErrLvlSeverityNum := pglog.SeverityToNum("WARNING")
+	h := pglog.HistogramBucket{}
+	h.Init(bucketInterval)
+
+	for _, entry := range testData {
+		h.Add(entry, bucketInterval, minErrLvlSeverityNum)
+	}
+
+	assert.Equal(t, 2, h.TotalEvents, "TotalEvents count doesn't match expected value")
+}

@@ -159,7 +159,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 			log.Debug().Msgf("Processing log entry: %+v", rec)
 
 			if cfg.ErrorsHistogram {
-				histoBuckets.Add(rec, cfg.HistogramBucketDuration)
+				histoBuckets.Add(rec, cfg.HistogramBucketDuration, cfg.MinErrLvlNum)
 				continue
 			}
 

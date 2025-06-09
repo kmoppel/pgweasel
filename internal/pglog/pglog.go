@@ -697,7 +697,10 @@ func (h *HistogramBucket) Init(bucketWith time.Duration) {
 	h.BucketWith = bucketWith
 }
 
-func (h *HistogramBucket) Add(e LogEntry, bucketInterval time.Duration) {
+func (h *HistogramBucket) Add(e LogEntry, bucketInterval time.Duration, minErrorLevelNum int) {
+	if SeverityToNum(e.ErrorSeverity) < minErrorLevelNum {
+		return
+	}
 	bucketTime := e.GetTime().Truncate(bucketInterval)
 	h.CountBuckets[bucketTime]++
 	h.TotalEvents++
