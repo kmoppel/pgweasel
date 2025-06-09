@@ -64,6 +64,8 @@ type WeaselConfig struct {
 	PeaksOnly         bool
 	LocksOnly         bool
 	StatsOnly         bool
+	ErrorsHistogram   bool
+	HistogramBucket   time.Duration
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -101,6 +103,14 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 			log.Warn().Msg("Error parsing --to timedelta input, supported units are 's', 'm', 'h'. Ignoring --to")
 		}
 	}
+	if ErrorsShowHistogram {
+		log.Debug().Msgf("Histogram bucket duration: %s", ErrorsHistogramBucketIntervalStr)
+		var err error
+		PeakBucketDuration, err = time.ParseDuration(ErrorsHistogramBucketIntervalStr)
+		if err != nil {
+			log.Fatal().Err(err).Msgf("Invalid histogram --bucket input: %s", ErrorsHistogramBucketIntervalStr)
+		}
+	}
 	return WeaselConfig{
 		FromTime:          fromTime,
 		ToTime:            toTime,
@@ -116,5 +126,7 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		StatsOnly:         Stats,
 		SlowTopNOnly:      SlowTopNOnly,
 		SlowTopN:          SlowTopN,
+		ErrorsHistogram:   ErrorsShowHistogram,
+		HistogramBucket:   PeakBucketDuration,
 	}
 }

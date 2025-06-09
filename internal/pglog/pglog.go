@@ -3,6 +3,7 @@ package pglog
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -74,6 +75,46 @@ type EventBucket struct {
 	LockEvents           map[time.Time]int
 	ConnectEvents        map[time.Time]int
 	BucketActualLogTimes map[time.Time]string // map with first actual LogTime string for each time bucket for display purposes
+}
+
+// For histogram
+type HistogramBucket struct {
+	CountBuckets map[time.Time]int
+	TotalEvents  int
+}
+
+// GetSortedBuckets returns a slice of time-count pairs sorted in chronological order
+func (h HistogramBucket) GetSortedBuckets() []struct {
+	Time  time.Time
+	Count int
+} {
+	if len(h.CountBuckets) == 0 {
+		return nil
+	}
+
+	// Create a slice to hold the bucket time-count pairs
+	result := make([]struct {
+		Time  time.Time
+		Count int
+	}, 0, len(h.CountBuckets))
+
+	// Add all entries to the slice
+	for t, count := range h.CountBuckets {
+		result = append(result, struct {
+			Time  time.Time
+			Count int
+		}{
+			Time:  t,
+			Count: count,
+		})
+	}
+
+	// Sort the slice by timestamp
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Time.Before(result[j].Time)
+	})
+
+	return result
 }
 
 type StatsAggregator struct {
@@ -683,4 +724,14 @@ func (sa *StatsAggregator) ShowStats() {
 	fmt.Printf("Longest autovacuum duration: %.3f s (on \"%s\")\n", sa.AutovacuumMaxDurationSeconds, sa.AutovacuumMaxDurationTable)
 	fmt.Println("Autoanalyzes:", sa.Autoanalyzes)
 	fmt.Printf("Longest autoanalyze duration: %.3f s (on \"%s\")\n", sa.AutoanalyzeMaxDurationSeconds, sa.AutoanalyzeMaxDurationTable)
+}
+
+func (h *HistogramBucket) Init() {
+	h.CountBuckets = make(map[time.Time]int)
+}
+
+func (h *HistogramBucket) Add(e LogEntry, bucketInterval time.Duration) {
+	bucketTime := e.GetTime().Truncate(bucketInterval)
+	h.CountBuckets[bucketTime]++
+	h.TotalEvents++
 }

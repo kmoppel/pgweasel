@@ -29,6 +29,8 @@ var errorsCmd = &cobra.Command{
 }
 var TopNErrors int
 var TopNErrorsOnly bool
+var ErrorsShowHistogram bool
+var ErrorsHistogramBucketIntervalStr string
 
 var errorsTopCmd = &cobra.Command{
 	Use:   "top",
@@ -37,6 +39,18 @@ var errorsTopCmd = &cobra.Command{
 		TopNErrorsOnly = true
 		showErrors(cmd, args)
 	},
+}
+
+func init() {
+	errorsCmd.AddCommand(errorsTopCmd)
+	errorsCmd.Flags().BoolVarP(&ErrorsShowHistogram, "histo", "", false, "Show error counts histogram")
+	errorsCmd.Flags().StringVarP(&ErrorsHistogramBucketIntervalStr, "bucket", "b", "1h", "Bucket size for histogram, e.g. 10min, 1h, 1d")
+
+	errorsTopCmd.Flags().IntVarP(&TopNErrors, "top", "", 10, "Nr of top errors to show")
+
+	rootCmd.AddCommand(errorsCmd)
+
+	errorsCmd.Flags().StringVarP(&MinErrLvl, "min-level", "l", "WARNING", "The minimum Postgres error level to show")
 }
 
 type ErrorLevelMessage struct {
@@ -88,15 +102,6 @@ func (tec *TopErrorsCollector) GetTopN(topN int) []TopError {
 	return topErrors[:topN]
 }
 
-func init() {
-	errorsCmd.AddCommand(errorsTopCmd)
-	errorsTopCmd.Flags().IntVarP(&TopNErrors, "top", "", 10, "Nr of top errors to show")
-
-	rootCmd.AddCommand(errorsCmd)
-
-	errorsCmd.Flags().StringVarP(&MinErrLvl, "min-level", "l", "WARNING", "The minimum Postgres error level to show")
-}
-
 func showErrors(cmd *cobra.Command, args []string) {
 	var logFiles []string
 	var topErrors *TopErrorsCollector = &TopErrorsCollector{}
@@ -136,6 +141,11 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	slowTopNCollector := pglog.NewTopN(cfg.SlowTopN)
 
+	histoBuckets := pglog.HistogramBucket{}
+	if cfg.ErrorsHistogram {
+		histoBuckets.Init()
+	}
+
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 
@@ -145,6 +155,11 @@ func showErrors(cmd *cobra.Command, args []string) {
 				continue
 			}
 			log.Debug().Msgf("Processing log entry: %+v", rec)
+
+			if cfg.ErrorsHistogram {
+				histoBuckets.Add(rec, cfg.HistogramBucket)
+				continue
+			}
 
 			if cfg.SlowTopNOnly {
 				if rec.ErrorSeverity != "LOG" {
@@ -228,6 +243,14 @@ func showErrors(cmd *cobra.Command, args []string) {
 			}
 			w.WriteString(strings.ReplaceAll(message, "\n", " ") + "\n")
 		}
+	}
+
+	if cfg.ErrorsHistogram {
+		w.WriteString("Error counts histogram:\n\n")
+		for _, hb := range histoBuckets.GetSortedBuckets() {
+			w.WriteString(fmt.Sprintf("%-20s: %d\n", hb.Time, hb.Count))
+		}
+		w.WriteString("\nTotal errors: " + strconv.Itoa(histoBuckets.TotalEvents) + "\n")
 	}
 
 	w.Flush()
