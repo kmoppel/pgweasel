@@ -9,26 +9,28 @@ pgweasel tries to:
 * focus on CLI interactions - no html / json
 * more cloud-friendly - no deps, a single binary
 * zero config - not dependent on Postgres `log_line_prefix`
-* be more user-friendly, for example supporting relative time inputs
+* be more user-friendly - handle relative time inputs, auto-detect the latest log file location if not, subcommand short aliases
 
 
 # Operating modes
 
-`pgweasel errors` - Show only ERROR+ log entries "as is"
+`pgweasel errors $LOGFILE(S)_OR_FOLDER` - Show WARN+ log entries "as is"
 
-`pgweasel errors top` - Show the most frequent error messages with counts
+`pgweasel errors --from 10m $LOG` - Show WARN+ log entries from last 10min
 
-`pgweasel locks` - Only show locking (incl. deadlocks, recovery conflicts) entries
+`pgweasel errors top $LOG` - Show the most frequent error messages with counts
 
-`pgweasel peaks` - Show the "busiest" time periods with most log events, using a 10min bucket by default
+`pgweasel locks $LOG` - Only show locking (incl. deadlocks, recovery conflicts) entries
 
-`pgweasel slow 1s` - Show queries taking longer than give threshold
+`pgweasel peaks $LOG` - Show the "busiest" time periods with most log events, using a 10min bucket by default
 
-`pgweasel slow top` - Show top 10 (by default) slowest queries
+`pgweasel slow 1s $LOG` - Show queries taking longer than give threshold
 
-`pgweasel stats` - Summary of log events - counts / frequency of errors, connections, checkpoints, autovacuums
+`pgweasel slow top $LOG` - Show top 10 (by default) slowest queries
 
-`pgweasel system` - Show instance lifecycle events only, i.e. Postgres internal processes, replication, extensions
+`pgweasel stats $LOG` - Summary of log events - counts / frequency of errors, connections, checkpoints, autovacuums
+
+`pgweasel system $LOG` - Show instance lifecycle events only, i.e. Postgres internal processes, replication, extensions
 
 
 # Quickstart
