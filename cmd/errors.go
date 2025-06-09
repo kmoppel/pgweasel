@@ -41,6 +41,8 @@ var errorsTopCmd = &cobra.Command{
 	},
 }
 
+const MAX_HISTO_WIDTH_CHARS = 80 // Maximum width of histogram output in characters in addition to timestamp + count
+
 func init() {
 	errorsCmd.AddCommand(errorsTopCmd)
 	errorsCmd.Flags().BoolVarP(&ErrorsShowHistogram, "histo", "", false, "Show error counts histogram")
@@ -246,10 +248,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	if cfg.ErrorsHistogram {
-		w.WriteString("Error counts histogram:\n\n")
-		for _, hb := range histoBuckets.GetSortedBuckets() {
-			w.WriteString(fmt.Sprintf("%-20s: %d\n", hb.Time, hb.Count))
-		}
+		OutputHistogramAsVertical(histoBuckets.GetSortedBuckets(), w, MAX_HISTO_WIDTH_CHARS)
 		w.WriteString("\nTotal errors: " + strconv.Itoa(histoBuckets.TotalEvents) + "\n")
 	}
 
@@ -269,5 +268,35 @@ func OutputLogRecord(rec pglog.LogEntry, w *bufio.Writer, oneline bool) {
 		} else {
 			w.WriteString(strings.Join(rec.Lines, "\n"))
 		}
+	}
+}
+
+func OutputHistogramAsVertical(buckets []pglog.TimeBucket, w *bufio.Writer, maxWidth int) {
+	// Find maximum count to normalize
+	maxCount := 0
+	for _, hb := range buckets {
+		if hb.Count > maxCount {
+			maxCount = hb.Count
+		}
+	}
+
+	if maxCount == 0 {
+		return // No data to show
+	}
+
+	// Output histogram bars
+	for _, hb := range buckets {
+		// Calculate normalized width
+		normalizedWidth := 1
+		if maxCount > 1 {
+			normalizedWidth = int(float64(hb.Count) / float64(maxCount) * float64(maxWidth))
+			if normalizedWidth < 1 {
+				normalizedWidth = 1 // Ensure at least one asterisk
+			}
+		}
+
+		// Format: timestamp: count [asterisks representing count]
+		bar := strings.Repeat("*", normalizedWidth)
+		w.WriteString(fmt.Sprintf("%-20s: %-5d %s\n", hb.Time, hb.Count, bar))
 	}
 }

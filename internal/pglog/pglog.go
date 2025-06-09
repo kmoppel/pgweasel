@@ -704,10 +704,12 @@ func (h *HistogramBucket) Add(e LogEntry, bucketInterval time.Duration) {
 }
 
 // GetSortedBuckets returns a slice of time-count pairs sorted in chronological order
-func (h HistogramBucket) GetSortedBuckets() []struct {
+type TimeBucket struct {
 	Time  time.Time
 	Count int
-} {
+}
+
+func (h HistogramBucket) GetSortedBuckets() []TimeBucket {
 	if len(h.CountBuckets) == 0 {
 		return nil
 	}
@@ -734,18 +736,12 @@ func (h HistogramBucket) GetSortedBuckets() []struct {
 	numBuckets := int(maxTime.Sub(minTime)/h.BucketWith) + 1
 
 	// Create a slice with the right capacity
-	result := make([]struct {
-		Time  time.Time
-		Count int
-	}, numBuckets)
+	result := make([]TimeBucket, numBuckets)
 
 	// Fill with zero counts by default
 	for i := 0; i < numBuckets; i++ {
 		bucketTime := minTime.Add(time.Duration(i) * h.BucketWith)
-		result[i] = struct {
-			Time  time.Time
-			Count int
-		}{
+		result[i] = TimeBucket{
 			Time:  bucketTime,
 			Count: 0,
 		}
