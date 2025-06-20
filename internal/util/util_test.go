@@ -178,3 +178,25 @@ func TestExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(t *testing.T) {
 	assert.InDelta(t, 16.35, durAnalyze, 0.01, "Analyze elapsed duration should be parsed correctly")
 	assert.Equal(t, tblName, "rbcc-postgres.public.event_log", "Vacuum table name should be parsed correctly")
 }
+func TestHumanTimeOrDeltaStringToTime_Days(t *testing.T) {
+	now := time.Now()
+
+	tests := []struct {
+		input    string
+		expected time.Time
+	}{
+		{"-1d", now.Add(time.Duration(-24) * time.Hour)},
+		{"2d", now.Add(time.Duration(-48) * time.Hour)},
+		{"3days", now.Add(time.Duration(-72) * time.Hour)},
+		{"-2days", now.Add(time.Duration(-48) * time.Hour)},
+		{"1day", now.Add(time.Duration(-24) * time.Hour)},
+		{"14d", now.Add(time.Duration(-336) * time.Hour)},
+	}
+
+	for _, tt := range tests {
+		got, err := util.HumanTimeOrDeltaStringToTime(tt.input, now)
+		assert.NoError(t, err, "should not error for input %s", tt.input)
+		// Allow a small delta for roundings
+		assert.InDelta(t, tt.expected.UnixMilli(), got.UnixMilli(), 100, "unexpected time delta for input %s", tt.input)
+	}
+}
