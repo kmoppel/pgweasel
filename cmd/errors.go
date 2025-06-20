@@ -150,6 +150,18 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
+		if !cfg.ToTime.IsZero() && logFile != "stdin" {
+			// Peek at the first record and skip file if past the --to time
+			firstRecord, err := logparser.PeekRecordFromFile(logFile, cfg.LogLineRegex, cfg.ForceCsvInput)
+			if err != nil {
+				log.Warn().Err(err).Msgf("Failed to peek at first record in %s", logFile)
+			} else if firstRecord != nil {
+				if firstRecord.GetTime().After(cfg.ToTime) {
+					log.Warn().Msgf("Skipping file %s as first line is past the --to time", logFile)
+					continue
+				}
+			}
+		}
 
 		for rec := range logparser.GetLogRecordsFromFile(logFile, cfg.LogLineRegex, cfg.ForceCsvInput) {
 			if rec.ErrorSeverity == "" {

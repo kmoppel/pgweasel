@@ -93,3 +93,28 @@ func TestDefaultRegex(t *testing.T) {
 		}
 	}
 }
+
+func TestPeekRecord(t *testing.T) {
+	// Test with a CSV file
+	csvFile := "../../testdata/csvlog1.csv"
+	entry, err := logparser.PeekRecordFromFile(csvFile, nil, true)
+	assert.NoError(t, err)
+	assert.NotNil(t, entry)
+	assert.NotEmpty(t, entry.LogTime)
+	assert.NotEmpty(t, entry.ErrorSeverity)
+	assert.NotNil(t, entry.CsvColumns)
+
+	// Test with a plain text log file
+	logFile := "../../testdata/debian_default.log"
+	entry, err = logparser.PeekRecordFromFile(logFile, nil, false)
+	assert.NoError(t, err)
+	assert.NotNil(t, entry)
+	assert.NotEmpty(t, entry.LogTime)
+	assert.NotEmpty(t, entry.ErrorSeverity)
+	assert.NotEmpty(t, entry.Lines)
+
+	// Test with non-existent file
+	entry, err = logparser.PeekRecordFromFile("non-existent-file.log", nil, false)
+	assert.Error(t, err)
+	assert.Nil(t, entry)
+}
