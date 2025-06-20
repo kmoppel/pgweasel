@@ -682,7 +682,8 @@ func (sa *StatsAggregator) ShowStats() {
 	} else {
 		fmt.Println("No query times histogram available")
 	}
-	fmt.Println("Query durations records:", sa.SlowQueries)
+	slowQueriesPerMinute := float64(sa.SlowQueries) / timeDiffMinutes
+	fmt.Println("Query durations records:", sa.SlowQueries, fmt.Sprintf("(%.2f slow queries/minute)", slowQueriesPerMinute))
 	fmt.Println("Checkpoints timed:", sa.CheckpointsTimed)
 	fmt.Println("Checkpoints forced:", sa.CheckpointsForced)
 	fmt.Printf("Longest checkpoint duration: %.3f s\n", sa.LongestCheckpointSeconds) // TODO show duration "as is" ?
