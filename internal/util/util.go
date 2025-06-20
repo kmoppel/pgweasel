@@ -91,6 +91,15 @@ func HumanTimeOrDeltaStringToTime(humanInput string, referenceTime time.Time) (t
 		return time.Date(year, month, day, 0, 0, 0, 0, referenceTime.Location()), nil
 	}
 
+	// Convert day unit input to hours as ParseDuration doesn't support days
+	dayRegex := regexp.MustCompile(`^(-?\d+)(d|day|days)$`)
+	if matches := dayRegex.FindStringSubmatch(humanInput); matches != nil {
+		daysNum, err := strconv.Atoi(matches[1])
+		if err == nil {
+			humanInput = strconv.Itoa(daysNum*24) + "h" // Convert days to hours
+		}
+	}
+
 	// Try parsing simple deltas first as probably the most common case
 	// ParseDuration valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 	dur, err := time.ParseDuration(humanInput)

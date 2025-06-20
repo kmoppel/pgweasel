@@ -94,7 +94,7 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 	if From != "" {
 		fromTime, err = util.HumanTimeOrDeltaStringToTime(From, time.Time{})
 		if err != nil {
-			log.Warn().Msg("Error parsing --from timedelta input, supported units are 's', 'm', 'h'. Ignoring --from")
+			log.Warn().Msg("Error parsing --from timedelta input, supported units are 's', 'm', 'h', 'd'. Ignoring --from")
 		}
 	}
 	if To != "" {
