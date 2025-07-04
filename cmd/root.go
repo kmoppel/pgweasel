@@ -66,6 +66,8 @@ type WeaselConfig struct {
 	StatsOnly               bool
 	ErrorsHistogram         bool
 	HistogramBucketDuration time.Duration
+	GrepString              string
+	GrepRegex               *regexp.Regexp
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -128,5 +130,7 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		SlowTopN:                SlowTopN,
 		ErrorsHistogram:         ErrorsShowHistogram,
 		HistogramBucketDuration: PeakBucketDuration,
+		GrepRegex:               GrepRegex,
+		GrepString:              GrepString,
 	}
 }
