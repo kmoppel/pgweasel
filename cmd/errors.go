@@ -111,8 +111,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	cfg := PreProcessArgs(cmd, args)
 
-	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, SlowTopNOnly=%t, SlowTopN=%d, From=%s, To=%s, SystemOnly=%v, TopNErrorsOnly=%t, PeaksOnly=%t, StatsOnly=%t, GrepString=%s",
-		cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.SlowTopNOnly, cfg.SlowTopN, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, TopNErrorsOnly, cfg.PeaksOnly, cfg.StatsOnly, cfg.GrepString)
+	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, SlowTopNOnly=%t, SlowTopN=%d, From=%s, To=%s, SystemOnly=%v, TopNErrorsOnly=%t, PeaksOnly=%t, StatsOnly=%t, GrepString=%s, ShowPlans=%t",
+		cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.SlowTopNOnly, cfg.SlowTopN, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, TopNErrorsOnly, cfg.PeaksOnly, cfg.StatsOnly, cfg.GrepString, cfg.ShowPlans)
 
 	if len(args) == 0 && util.CheckStdinAvailable() {
 		logFiles = []string{"stdin"}
@@ -175,7 +175,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 				continue
 			}
 
-			if cfg.SlowTopNOnly {
+			if cfg.SlowTopNOnly || cfg.ShowPlans {
 				if rec.ErrorSeverity != "LOG" {
 					continue
 				}
@@ -183,8 +183,14 @@ func showErrors(cmd *cobra.Command, args []string) {
 				if duration == 0.0 {
 					continue
 				}
-				slowTopNCollector.Add(pglog.TopNSlowLogEntry{Rec: &rec, DurationMs: duration})
-				continue
+				if cfg.ShowPlans && strings.Contains(rec.Message, "ms  plan:\n") {
+					if duration < float64(cfg.MinSlowDurationMs) {
+						continue
+					}
+				} else {
+					slowTopNCollector.Add(pglog.TopNSlowLogEntry{Rec: &rec, DurationMs: duration})
+					continue
+				}
 			}
 
 			if cfg.StatsOnly {
@@ -214,6 +220,9 @@ func showErrors(cmd *cobra.Command, args []string) {
 				if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly, cfg.GrepRegex) { // TODO pass cfg
 					OutputLogRecord(rec, w, cfg.Oneline)
 					w.WriteByte('\n')
+					if cfg.ShowPlans {
+						w.WriteByte('\n')
+					}
 				}
 				if Verbose {
 					w.Flush()
