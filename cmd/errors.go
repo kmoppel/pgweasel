@@ -251,11 +251,15 @@ func showErrors(cmd *cobra.Command, args []string) {
 	if cfg.SlowTopNOnly {
 		for _, slowTopNEntry := range slowTopNCollector.Values() {
 			message := slowTopNEntry.Rec.LogTime + " " + slowTopNEntry.Rec.Message
-			messageRunes := []rune(message)
-			if len(messageRunes) > 200 {
-				message = string(messageRunes[:197]) + "..."
+			if cfg.Oneline {
+				messageRunes := []rune(message)
+				if len(messageRunes) > 200 {
+					message = string(messageRunes[:197]) + "..."
+				}
+				w.WriteString(strings.ReplaceAll(message, "\n", " ") + "\n")
+			} else {
+				w.WriteString(message + "\n\n")
 			}
-			w.WriteString(strings.ReplaceAll(message, "\n", " ") + "\n")
 		}
 	}
 
