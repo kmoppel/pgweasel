@@ -28,7 +28,7 @@ index scan not needed: 0 pages from table (0.00% of total) had 0 dead item ident
 avg read rate: 0.000 MB/s, avg write rate: 56.922 MB/s
 buffer usage: 39 hits, 0 misses, 4 dirtied
 WAL usage: 1 records, 0 full page images, 188 bytes
-system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.50 s
 2025-05-21 10:39:23.950 UTC [227]: [2-1] db=,user=,host= LOG:  automatic analyze of table "cloudsqladmin.public.heartbeat"
 avg read rate: 11.719 MB/s, avg write rate: 9.766 MB/s
 buffer usage: 178 hits, 6 misses, 5 dirtied

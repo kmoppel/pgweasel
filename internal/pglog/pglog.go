@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/beorn7/perks/quantile"
 	"github.com/icza/gox/gox"
 	"github.com/kmoppel/pgweasel/internal/util"
@@ -643,21 +645,12 @@ func (sa *StatsAggregator) AddEvent(e LogEntry) {
 				sa.AutoanalyzeMaxDurationSeconds = durSeconds
 				sa.AutoanalyzeMaxDurationTable = tbl
 			}
-			if durSeconds > 0 {
-				// Extract read/write rates for autoanalyze
-				readRate, writeRate := util.ExtractAutovacuumReadWriteRatesFromLogMessage(e.Message)
-				if readRate > 0 {
-					sa.AutovacuumReadRates = append(sa.AutovacuumReadRates, readRate)
-				}
-				if writeRate > 0 {
-					sa.AutovacuumWriteRates = append(sa.AutovacuumWriteRates, writeRate)
-				}
-			}
 		}
 		if strings.HasPrefix(e.Message, "automatic vacuum") {
 			sa.Autovacuums++
 			durSeconds, tbl := util.ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(e.Message)
 			if durSeconds > sa.LongestCheckpointSeconds {
+				log.Debug().Msgf("New longest Autovacuum duration: %.1f seconds on table %s", durSeconds, tbl)
 				sa.AutovacuumMaxDurationSeconds = durSeconds
 				sa.AutovacuumMaxDurationTable = tbl
 			}
@@ -710,7 +703,7 @@ func (sa *StatsAggregator) ShowStats() {
 	fmt.Println("Checkpoints forced:", sa.CheckpointsForced)
 	fmt.Printf("Longest checkpoint duration: %.1f s\n", sa.LongestCheckpointSeconds) // TODO show duration "as is" ?
 	fmt.Println("Autovacuums:", sa.Autovacuums)
-	fmt.Printf("Longest autovacuum duration: %.1f s (on \"%s\")\n", sa.AutovacuumMaxDurationSeconds, sa.AutovacuumMaxDurationTable)
+	fmt.Printf("Longest autovacuum duration: %.1f s (on table \"%s\")\n", sa.AutovacuumMaxDurationSeconds, sa.AutovacuumMaxDurationTable)
 	if len(sa.AutovacuumReadRates) > 0 {
 		var sum float64
 		for _, rate := range sa.AutovacuumReadRates {
@@ -728,7 +721,7 @@ func (sa *StatsAggregator) ShowStats() {
 		fmt.Printf("Autovacuum avg write rate: %.1f MB/s\n", avgWriteRate)
 	}
 	fmt.Println("Autoanalyzes:", sa.Autoanalyzes)
-	fmt.Printf("Longest autoanalyze duration: %.1f s (on \"%s\")\n", sa.AutoanalyzeMaxDurationSeconds, sa.AutoanalyzeMaxDurationTable)
+	fmt.Printf("Longest autoanalyze duration: %.1f s (on table \"%s\")\n", sa.AutoanalyzeMaxDurationSeconds, sa.AutoanalyzeMaxDurationTable)
 }
 
 func (h *HistogramBucket) Init(bucketWith time.Duration) {
