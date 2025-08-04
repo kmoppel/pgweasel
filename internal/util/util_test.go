@@ -200,3 +200,42 @@ func TestHumanTimeOrDeltaStringToTime_Days(t *testing.T) {
 		assert.InDelta(t, tt.expected.UnixMilli(), got.UnixMilli(), 100, "unexpected time delta for input %s", tt.input)
 	}
 }
+
+func TestExtractAutovacuumReadWriteRatesFromLogMessage(t *testing.T) {
+	tests := []struct {
+		message   string
+		readRate  float64
+		writeRate float64
+	}{
+		{
+			"avg read rate: 5.492 MB/s, avg write rate: 4.932 MB/s",
+			5.492, 4.932,
+		},
+		{
+			"avg read rate: 14.355 MB/s, avg write rate: 0.004 MB/s",
+			14.355, 0.004,
+		},
+		{
+			"avg read rate: 107.365 MB/s, avg write rate: 0.011 MB/s",
+			107.365, 0.011,
+		},
+		{
+			"avg read rate: 0.000 MB/s, avg write rate: 0.000 MB/s",
+			0.000, 0.000,
+		},
+		{
+			"some other log message without rates",
+			0.0, 0.0,
+		},
+		{
+			"partial match: avg read rate: 5.5 MB/s",
+			0.0, 0.0,
+		},
+	}
+
+	for _, tt := range tests {
+		readRate, writeRate := util.ExtractAutovacuumReadWriteRatesFromLogMessage(tt.message)
+		assert.Equal(t, tt.readRate, readRate, "read rate should match for message: %s", tt.message)
+		assert.Equal(t, tt.writeRate, writeRate, "write rate should match for message: %s", tt.message)
+	}
+}

@@ -18,6 +18,7 @@ import (
 var REGEX_DURATION_MILLIS = regexp.MustCompile(`duration:\s*([\d\.]+)\s*ms`)
 var REGEX_CHECKPOINT_DURATION_SECONDS = regexp.MustCompile(`total=([\d\.]+) s;`)
 var REGEX_AUTOVACUUM_DURATION_SECONDS = regexp.MustCompile(`(?s)^automatic (analyze|vacuum) of table "(?P<table_name>[\w\.\-]+)".* elapsed: (?P<duration>[\d\.]+) s$`)
+var REGEX_AUTOVACUUM_READ_WRITE_RATES = regexp.MustCompile(`avg read rate: ([\d\.]+) MB/s, avg write rate: ([\d\.]+) MB/s`)
 
 func IsPathExistsAndFile(filePath string) bool {
 	fileInfo, err := os.Stat(filePath)
@@ -357,4 +358,25 @@ func ExtractAutovacuumOrAnalyzeDurationSecondsFromLogMessage(message string) (fl
 		return 0.0, ""
 	}
 	return duration, tableName
+}
+
+// Returns read rate and write rate in MB/s if matched, otherwise 0.0, 0.0
+func ExtractAutovacuumReadWriteRatesFromLogMessage(message string) (float64, float64) {
+	// Example: avg read rate: 5.492 MB/s, avg write rate: 4.932 MB/s
+	match := REGEX_AUTOVACUUM_READ_WRITE_RATES.FindStringSubmatch(message)
+	if match == nil {
+		return 0.0, 0.0
+	}
+
+	readRate, err := strconv.ParseFloat(match[1], 64)
+	if err != nil {
+		return 0.0, 0.0
+	}
+
+	writeRate, err := strconv.ParseFloat(match[2], 64)
+	if err != nil {
+		return 0.0, 0.0
+	}
+
+	return readRate, writeRate
 }

@@ -101,6 +101,8 @@ type StatsAggregator struct {
 	Autoanalyzes                  int
 	AutoanalyzeMaxDurationSeconds float64
 	AutoanalyzeMaxDurationTable   string
+	AutovacuumReadRates           []float64
+	AutovacuumWriteRates          []float64
 }
 
 var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[:\s\-]+.*?(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s\-]+.*?(?P<error_severity>[A-Z12345]{3,12})[:\s]+.*$`)
@@ -641,6 +643,14 @@ func (sa *StatsAggregator) AddEvent(e LogEntry) {
 				sa.AutoanalyzeMaxDurationSeconds = durSeconds
 				sa.AutoanalyzeMaxDurationTable = tbl
 			}
+			// Extract read/write rates for autoanalyze
+			readRate, writeRate := util.ExtractAutovacuumReadWriteRatesFromLogMessage(e.Message)
+			if readRate > 0 {
+				sa.AutovacuumReadRates = append(sa.AutovacuumReadRates, readRate)
+			}
+			if writeRate > 0 {
+				sa.AutovacuumWriteRates = append(sa.AutovacuumWriteRates, writeRate)
+			}
 		}
 		if strings.HasPrefix(e.Message, "automatic vacuum") {
 			sa.Autovacuums++
@@ -648,6 +658,14 @@ func (sa *StatsAggregator) AddEvent(e LogEntry) {
 			if durSeconds > sa.LongestCheckpointSeconds {
 				sa.AutovacuumMaxDurationSeconds = durSeconds
 				sa.AutovacuumMaxDurationTable = tbl
+			}
+			// Extract read/write rates for autovacuum
+			readRate, writeRate := util.ExtractAutovacuumReadWriteRatesFromLogMessage(e.Message)
+			if readRate > 0 {
+				sa.AutovacuumReadRates = append(sa.AutovacuumReadRates, readRate)
+			}
+			if writeRate > 0 {
+				sa.AutovacuumWriteRates = append(sa.AutovacuumWriteRates, writeRate)
 			}
 		}
 	}
@@ -689,6 +707,22 @@ func (sa *StatsAggregator) ShowStats() {
 	fmt.Printf("Longest checkpoint duration: %.3f s\n", sa.LongestCheckpointSeconds) // TODO show duration "as is" ?
 	fmt.Println("Autovacuums:", sa.Autovacuums)
 	fmt.Printf("Longest autovacuum duration: %.3f s (on \"%s\")\n", sa.AutovacuumMaxDurationSeconds, sa.AutovacuumMaxDurationTable)
+	if len(sa.AutovacuumReadRates) > 0 {
+		var sum float64
+		for _, rate := range sa.AutovacuumReadRates {
+			sum += rate
+		}
+		avgReadRate := sum / float64(len(sa.AutovacuumReadRates))
+		fmt.Printf("Autovacuum avg read rate: %.3f MB/s\n", avgReadRate)
+	}
+	if len(sa.AutovacuumWriteRates) > 0 {
+		var sum float64
+		for _, rate := range sa.AutovacuumWriteRates {
+			sum += rate
+		}
+		avgWriteRate := sum / float64(len(sa.AutovacuumWriteRates))
+		fmt.Printf("Autovacuum avg write rate: %.3f MB/s\n", avgWriteRate)
+	}
 	fmt.Println("Autoanalyzes:", sa.Autoanalyzes)
 	fmt.Printf("Longest autoanalyze duration: %.3f s (on \"%s\")\n", sa.AutoanalyzeMaxDurationSeconds, sa.AutoanalyzeMaxDurationTable)
 }
