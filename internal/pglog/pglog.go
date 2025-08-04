@@ -643,13 +643,15 @@ func (sa *StatsAggregator) AddEvent(e LogEntry) {
 				sa.AutoanalyzeMaxDurationSeconds = durSeconds
 				sa.AutoanalyzeMaxDurationTable = tbl
 			}
-			// Extract read/write rates for autoanalyze
-			readRate, writeRate := util.ExtractAutovacuumReadWriteRatesFromLogMessage(e.Message)
-			if readRate > 0 {
-				sa.AutovacuumReadRates = append(sa.AutovacuumReadRates, readRate)
-			}
-			if writeRate > 0 {
-				sa.AutovacuumWriteRates = append(sa.AutovacuumWriteRates, writeRate)
+			if durSeconds > 0 {
+				// Extract read/write rates for autoanalyze
+				readRate, writeRate := util.ExtractAutovacuumReadWriteRatesFromLogMessage(e.Message)
+				if readRate > 0 {
+					sa.AutovacuumReadRates = append(sa.AutovacuumReadRates, readRate)
+				}
+				if writeRate > 0 {
+					sa.AutovacuumWriteRates = append(sa.AutovacuumWriteRates, writeRate)
+				}
 			}
 		}
 		if strings.HasPrefix(e.Message, "automatic vacuum") {
@@ -659,13 +661,15 @@ func (sa *StatsAggregator) AddEvent(e LogEntry) {
 				sa.AutovacuumMaxDurationSeconds = durSeconds
 				sa.AutovacuumMaxDurationTable = tbl
 			}
-			// Extract read/write rates for autovacuum
-			readRate, writeRate := util.ExtractAutovacuumReadWriteRatesFromLogMessage(e.Message)
-			if readRate > 0 {
-				sa.AutovacuumReadRates = append(sa.AutovacuumReadRates, readRate)
-			}
-			if writeRate > 0 {
-				sa.AutovacuumWriteRates = append(sa.AutovacuumWriteRates, writeRate)
+			if durSeconds > 0 {
+				// Extract read/write rates for autovacuum
+				readRate, writeRate := util.ExtractAutovacuumReadWriteRatesFromLogMessage(e.Message)
+				if readRate > 0 {
+					sa.AutovacuumReadRates = append(sa.AutovacuumReadRates, readRate)
+				}
+				if writeRate > 0 {
+					sa.AutovacuumWriteRates = append(sa.AutovacuumWriteRates, writeRate)
+				}
 			}
 		}
 	}
