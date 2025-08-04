@@ -36,6 +36,8 @@ pgweasel tries to:
 
 `pgweasel system $LOG` - Show instance lifecycle events only, i.e. Postgres internal processes, replication, extensions
 
+`pgweasel grep $REGEX $LOG` - Show full log entries of matching search fragments
+
 
 # Quickstart
 
