@@ -704,16 +704,16 @@ func (sa *StatsAggregator) ShowStats() {
 	fmt.Println("Query durations records:", sa.SlowQueries, fmt.Sprintf("(%.2f slow queries/minute)", slowQueriesPerMinute))
 	fmt.Println("Checkpoints timed:", sa.CheckpointsTimed)
 	fmt.Println("Checkpoints forced:", sa.CheckpointsForced)
-	fmt.Printf("Longest checkpoint duration: %.3f s\n", sa.LongestCheckpointSeconds) // TODO show duration "as is" ?
+	fmt.Printf("Longest checkpoint duration: %.1f s\n", sa.LongestCheckpointSeconds) // TODO show duration "as is" ?
 	fmt.Println("Autovacuums:", sa.Autovacuums)
-	fmt.Printf("Longest autovacuum duration: %.3f s (on \"%s\")\n", sa.AutovacuumMaxDurationSeconds, sa.AutovacuumMaxDurationTable)
+	fmt.Printf("Longest autovacuum duration: %.1f s (on \"%s\")\n", sa.AutovacuumMaxDurationSeconds, sa.AutovacuumMaxDurationTable)
 	if len(sa.AutovacuumReadRates) > 0 {
 		var sum float64
 		for _, rate := range sa.AutovacuumReadRates {
 			sum += rate
 		}
 		avgReadRate := sum / float64(len(sa.AutovacuumReadRates))
-		fmt.Printf("Autovacuum avg read rate: %.3f MB/s\n", avgReadRate)
+		fmt.Printf("Autovacuum avg read rate: %.1f MB/s\n", avgReadRate)
 	}
 	if len(sa.AutovacuumWriteRates) > 0 {
 		var sum float64
@@ -721,10 +721,10 @@ func (sa *StatsAggregator) ShowStats() {
 			sum += rate
 		}
 		avgWriteRate := sum / float64(len(sa.AutovacuumWriteRates))
-		fmt.Printf("Autovacuum avg write rate: %.3f MB/s\n", avgWriteRate)
+		fmt.Printf("Autovacuum avg write rate: %.1f MB/s\n", avgWriteRate)
 	}
 	fmt.Println("Autoanalyzes:", sa.Autoanalyzes)
-	fmt.Printf("Longest autoanalyze duration: %.3f s (on \"%s\")\n", sa.AutoanalyzeMaxDurationSeconds, sa.AutoanalyzeMaxDurationTable)
+	fmt.Printf("Longest autoanalyze duration: %.1f s (on \"%s\")\n", sa.AutoanalyzeMaxDurationSeconds, sa.AutoanalyzeMaxDurationTable)
 }
 
 func (h *HistogramBucket) Init(bucketWith time.Duration) {
