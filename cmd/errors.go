@@ -163,60 +163,62 @@ func showErrors(cmd *cobra.Command, args []string) {
 			}
 		}
 
-		for rec := range logparser.GetLogRecordsFromFile(logFile, cfg.LogLineRegex, cfg.ForceCsvInput) {
-			if rec.ErrorSeverity == "" {
-				log.Error().Msgf("Got invalid entry: %+v", rec)
-				continue
-			}
-			log.Debug().Msgf("Processing log entry: %+v", rec)
-
-			if cfg.ErrorsHistogram {
-				histoBuckets.Add(rec, cfg.HistogramBucketDuration, cfg.MinErrLvlNum)
-				continue
-			}
-
-			if cfg.SlowTopNOnly {
-				if rec.ErrorSeverity != "LOG" {
+		for batch := range logparser.GetLogRecordsBatchFromFile(logFile, cfg.LogLineRegex, cfg.ForceCsvInput) {
+			for _, rec := range batch {
+				if rec.ErrorSeverity == "" {
+					log.Error().Msgf("Got invalid entry: %+v", rec)
 					continue
 				}
-				duration := util.ExtractDurationMillisFromLogMessage(rec.Message)
-				if duration == 0.0 {
+				log.Debug().Msgf("Processing log entry: %+v", rec)
+
+				if cfg.ErrorsHistogram {
+					histoBuckets.Add(rec, cfg.HistogramBucketDuration, cfg.MinErrLvlNum)
 					continue
 				}
-				slowTopNCollector.Add(pglog.TopNSlowLogEntry{Rec: &rec, DurationMs: duration})
-				continue
-			}
 
-			if cfg.StatsOnly {
-				statsAggregator.AddEvent(rec)
-				continue
-			}
+				if cfg.SlowTopNOnly {
+					if rec.ErrorSeverity != "LOG" {
+						continue
+					}
+					duration := util.ExtractDurationMillisFromLogMessage(rec.Message)
+					if duration == 0.0 {
+						continue
+					}
+					slowTopNCollector.Add(pglog.TopNSlowLogEntry{Rec: &rec, DurationMs: duration})
+					continue
+				}
 
-			if cfg.LocksOnly {
-				if rec.IsLockingRelatedEntry() {
-					OutputLogRecord(rec, w, cfg.Oneline)
-					w.WriteByte('\n')
+				if cfg.StatsOnly {
+					statsAggregator.AddEvent(rec)
+					continue
+				}
+
+				if cfg.LocksOnly {
+					if rec.IsLockingRelatedEntry() {
+						OutputLogRecord(rec, w, cfg.Oneline)
+						w.WriteByte('\n')
+						if Verbose {
+							w.Flush()
+						}
+					}
+					continue
+				}
+
+				if cfg.PeaksOnly {
+					peaksBucket.AddEvent(rec, PeakBucketDuration)
+					continue
+				}
+
+				if TopNErrorsOnly && rec.SeverityNum() >= minErrLvlSeverityNum {
+					topErrors.AddError(rec.ErrorSeverity, rec.Message)
+				} else {
+					if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly, cfg.GrepRegex) { // TODO pass cfg
+						OutputLogRecord(rec, w, cfg.Oneline)
+						w.WriteByte('\n')
+					}
 					if Verbose {
 						w.Flush()
 					}
-				}
-				continue
-			}
-
-			if cfg.PeaksOnly {
-				peaksBucket.AddEvent(rec, PeakBucketDuration)
-				continue
-			}
-
-			if TopNErrorsOnly && rec.SeverityNum() >= minErrLvlSeverityNum {
-				topErrors.AddError(rec.ErrorSeverity, rec.Message)
-			} else {
-				if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly, cfg.GrepRegex) { // TODO pass cfg
-					OutputLogRecord(rec, w, cfg.Oneline)
-					w.WriteByte('\n')
-				}
-				if Verbose {
-					w.Flush()
 				}
 			}
 		}

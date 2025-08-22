@@ -12,9 +12,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
+func GetLogRecordsFromCsvFile(filePath string) <-chan []pglog.LogEntry {
 	log.Debug().Msgf("Looking for log entries from CSV file: %s", filePath)
-	ch := make(chan pglog.LogEntry)
+	ch := make(chan []pglog.LogEntry)
 
 	go func() {
 		defer close(ch)
@@ -48,10 +48,16 @@ func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
 		r := csv.NewReader(reader)
 		r.FieldsPerRecord = -1 // Allow variable fields
 
+		batch := make([]pglog.LogEntry, 0, 10)
+
 		for {
 			record, err := r.Read()
 
 			if err == io.EOF {
+				// Send remaining entries in batch if any
+				if len(batch) > 0 {
+					ch <- batch
+				}
 				break
 			}
 			if err != nil {
@@ -104,8 +110,14 @@ func GetLogRecordsFromCsvFile(filePath string) <-chan pglog.LogEntry {
 				e.CsvColumns.LeaderPid = record[24]
 				e.CsvColumns.QueryId = record[25]
 			}
-			ch <- e
 
+			batch = append(batch, e)
+
+			// Send batch when it reaches 10 entries
+			if len(batch) == 10 {
+				ch <- batch
+				batch = make([]pglog.LogEntry, 0, 10)
+			}
 		}
 	}()
 	return ch

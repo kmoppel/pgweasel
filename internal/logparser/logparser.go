@@ -58,9 +58,9 @@ func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp, filename string) (
 }
 
 // Handle multi-line entries, collect all lines until a new entry starts and then parse
-func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regexp) <-chan pglog.LogEntry {
+func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regexp) <-chan []pglog.LogEntry {
 	log.Debug().Msgf("Looking for log entries from plain text log file: %s", filePath)
-	ch := make(chan pglog.LogEntry)
+	ch := make(chan []pglog.LogEntry)
 	var scanner *bufio.Scanner
 
 	go func() {
@@ -97,6 +97,7 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 			logLineParsingRegex = DEFAULT_REGEX
 		}
 
+		batch := make([]pglog.LogEntry, 0, 10)
 		firstCompleteEntryFound := false
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -112,7 +113,14 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 					log.Debug().Msgf("Capture OK. severity:%s lines: %d len(lines): %d", e.ErrorSeverity, len(lines), len(strings.Join(lines, " ")))
 					lines = make([]string, 0)
 					lines = append(lines, line)
-					ch <- e
+
+					batch = append(batch, e)
+
+					// Send batch when it reaches 10 entries
+					if len(batch) == 10 {
+						ch <- batch
+						batch = make([]pglog.LogEntry, 0, 10)
+					}
 					continue
 				}
 				firstCompleteEntryFound = true
@@ -125,7 +133,12 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 			if err != nil {
 				log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
 			}
-			ch <- e
+			batch = append(batch, e)
+		}
+
+		// Send remaining entries in batch if any
+		if len(batch) > 0 {
+			ch <- batch
 		}
 	}()
 	return ch
@@ -189,17 +202,17 @@ func HasTimestampPrefix(line string) bool {
 	return REGEX_HAS_TIMESTAMP_PREFIX.MatchString(line)
 }
 
-func GetLogRecordsFromFile(filePath string, r *regexp.Regexp, useCsvFormat bool) <-chan pglog.LogEntry {
-	ch := make(chan pglog.LogEntry)
+func GetLogRecordsBatchFromFile(filePath string, r *regexp.Regexp, useCsvFormat bool) <-chan []pglog.LogEntry {
+	ch := make(chan []pglog.LogEntry)
 	go func() {
 		defer close(ch)
 		if strings.Contains(filePath, ".csv") || useCsvFormat {
-			for rec := range GetLogRecordsFromCsvFile(filePath) {
-				ch <- rec
+			for batch := range GetLogRecordsFromCsvFile(filePath) {
+				ch <- batch
 			}
 		} else {
-			for rec := range GetLogRecordsFromLogFile(filePath, r) {
-				ch <- rec
+			for batch := range GetLogRecordsFromLogFile(filePath, r) {
+				ch <- batch
 			}
 		}
 	}()
