@@ -9,7 +9,7 @@ pgweasel tries to:
 * focus on CLI interactions - no html / json
 * more cloud-friendly - no deps, a single binary
 * zero config - not dependent on Postgres `log_line_prefix`
-* be more user-friendly - handle relative time inputs, auto-detect the latest log file location if not, subcommand short aliases
+* be more user-friendly - handle relative time inputs, auto-detect the latest log file location if not specified, subcommand aliases
 
 
 # Operating modes
@@ -44,7 +44,7 @@ pgweasel tries to:
 ```
 git clone https://github.com/kmoppel/pgweasel.git
 
-cd pgweasel && go build
+cd pgweasel && go build -ldflags "-s -w"
 
 ./pgweasel -h
 
@@ -56,6 +56,7 @@ Usage:
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
   errors      Shows WARNING and higher entries by default
+  grep        Show matching log entries only, e.g.: pgweasel grep 'Seq Scan.*tblX' mylogfile.log
   help        Help about any command
   locks       Only show locking related entries
   peaks       Identify periods where most log entries are emitted, per severity level
