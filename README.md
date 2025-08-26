@@ -89,3 +89,29 @@ All kinds of feedback and help (PR-s, co-maintainer) would be much appreciated -
 ## Have sample log files ?
 
 I've scraped the Postgres mailing archives for *.log attachements (in [testdata](https://github.com/kmoppel/pgweasel/tree/main/testdata) folder), but they are not much sadly...so if you have some real-life logs from busy or somehow "troublesome" instances, not containing secrets - please add one one via PR or proide some S3 etc link under issues. Thank you!
+
+# Perf difference indication
+
+Let's say the goal here is the very common task of finding out the slowest query runtimes from logs (330M uncompressed, not large by any means)...which firstly is very unconvenient with pgbadger as it does a lot of things and doesn't have feature flags for all of the common things. One can speed things up though with disabling some features / summaries.
+
+## pgbadger
+
+```
+time pgbadger testdata/pgbench_large.log.gz -j 2 --disable-error --disable-hourly --disable-type --disable-session --disable-connection --disable-lock --disable-temporary --disable-checkpoint --disable-autovacuum --no-progressbar
+...
+real	2m4.786s
+user	2m2.201s
+sys	  0m0.656s
+```
+
+Note the added `--jobs=2` as pgweasel by default uses an additional thread as well
+
+## pgweasel
+
+```
+time ./pgweasel slow top testdata/pgbench_large.log.gz
+...
+real	0m9.168s
+user	0m11.517s
+sys	  0m0.683s
+```
