@@ -50,24 +50,25 @@ func init() {
 }
 
 type WeaselConfig struct {
-	FromTime                time.Time
-	ToTime                  time.Time
-	LogLineRegex            *regexp.Regexp
-	MinErrLvl               string
-	MinErrLvlNum            int
-	SystemOnly              bool
-	MinSlowDurationMs       int
-	SlowTopN                int
-	SlowTopNOnly            bool
-	ForceCsvInput           bool
-	Oneline                 bool
-	PeaksOnly               bool
-	LocksOnly               bool
-	StatsOnly               bool
-	ErrorsHistogram         bool
-	HistogramBucketDuration time.Duration
-	GrepString              string
-	GrepRegex               *regexp.Regexp
+	FromTime                  time.Time
+	ToTime                    time.Time
+	LogLineRegex              *regexp.Regexp
+	MinErrLvl                 string
+	MinErrLvlNum              int
+	SystemOnly                bool
+	MinSlowDurationMs         int
+	SlowTopN                  int
+	SlowTopNOnly              bool
+	ForceCsvInput             bool
+	Oneline                   bool
+	PeaksOnly                 bool
+	LocksOnly                 bool
+	StatsOnly                 bool
+	ErrorsHistogram           bool
+	HistogramBucketDuration   time.Duration
+	GrepString                string
+	GrepRegex                 *regexp.Regexp
+	SystemIncludeCheckpointer bool
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -114,23 +115,24 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		}
 	}
 	return WeaselConfig{
-		FromTime:                fromTime,
-		ToTime:                  toTime,
-		LogLineRegex:            logLineRegex,
-		MinErrLvl:               minErrLvl,
-		MinErrLvlNum:            pglog.SeverityToNum(minErrLvl),
-		MinSlowDurationMs:       MinSlowDurationMs,
-		SystemOnly:              SystemOnly,
-		ForceCsvInput:           Csv,
-		Oneline:                 Oneline,
-		PeaksOnly:               Peaks,
-		LocksOnly:               LocksOnly,
-		StatsOnly:               Stats,
-		SlowTopNOnly:            SlowTopNOnly,
-		SlowTopN:                SlowTopN,
-		ErrorsHistogram:         ErrorsShowHistogram,
-		HistogramBucketDuration: PeakBucketDuration,
-		GrepRegex:               GrepRegex,
-		GrepString:              GrepString,
+		FromTime:                  fromTime,
+		ToTime:                    toTime,
+		LogLineRegex:              logLineRegex,
+		MinErrLvl:                 minErrLvl,
+		MinErrLvlNum:              pglog.SeverityToNum(minErrLvl),
+		MinSlowDurationMs:         MinSlowDurationMs,
+		SystemOnly:                SystemOnly,
+		ForceCsvInput:             Csv,
+		Oneline:                   Oneline,
+		PeaksOnly:                 Peaks,
+		LocksOnly:                 LocksOnly,
+		StatsOnly:                 Stats,
+		SlowTopNOnly:              SlowTopNOnly,
+		SlowTopN:                  SlowTopN,
+		ErrorsHistogram:           ErrorsShowHistogram,
+		HistogramBucketDuration:   PeakBucketDuration,
+		GrepRegex:                 GrepRegex,
+		GrepString:                GrepString,
+		SystemIncludeCheckpointer: SystemIncludeCheckpointer,
 	}
 }

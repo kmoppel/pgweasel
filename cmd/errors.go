@@ -111,8 +111,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	cfg := PreProcessArgs(cmd, args)
 
-	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, SlowTopNOnly=%t, SlowTopN=%d, From=%s, To=%s, SystemOnly=%v, TopNErrorsOnly=%t, PeaksOnly=%t, StatsOnly=%t, GrepString=%s",
-		cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.SlowTopNOnly, cfg.SlowTopN, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, TopNErrorsOnly, cfg.PeaksOnly, cfg.StatsOnly, cfg.GrepString)
+	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, SlowTopNOnly=%t, SlowTopN=%d, From=%s, To=%s, SystemOnly=%v, SystemIncludeCheckpointer=%v, TopNErrorsOnly=%t, PeaksOnly=%t, StatsOnly=%t, GrepString=%s",
+		cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.SlowTopNOnly, cfg.SlowTopN, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, cfg.SystemIncludeCheckpointer, TopNErrorsOnly, cfg.PeaksOnly, cfg.StatsOnly, cfg.GrepString)
 
 	if len(args) == 0 && util.CheckStdinAvailable() {
 		logFiles = []string{"stdin"}
@@ -212,7 +212,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 				if TopNErrorsOnly && rec.SeverityNum() >= minErrLvlSeverityNum {
 					topErrors.AddError(rec.ErrorSeverity, rec.Message)
 				} else {
-					if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly, cfg.GrepRegex) { // TODO pass cfg
+					if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly, cfg.SystemIncludeCheckpointer, cfg.GrepRegex) { // TODO pass cfg
 						OutputLogRecord(rec, w, cfg.Oneline)
 						w.WriteByte('\n')
 					}

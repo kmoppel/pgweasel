@@ -284,8 +284,7 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"parameter ",
 	"automatic ", // vacuum / analyze
 	"autovacuum: ",
-	"checkpoint ",
-	"Checkpoint ",
+	"checkpoints ", // are occurring too frequently
 	"sending ",
 	"TimescaleDB ",
 	"redo ",
@@ -322,6 +321,12 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"restartpoint ",
 	"was at log time",
 	"recovery ",
+}
+
+var POSTGRES_SYSTEM_MESSAGES_CHECKPOINTER_PREFIXES = []string{
+	"checkpoint ", // checkpoint starting: time
+	// checkpoint complete: wrote 29126 buffers
+
 }
 
 // Case sensitive
@@ -388,7 +393,7 @@ var LOCKING_RELATED_MESSAGE_REGEXES = []*regexp.Regexp{
 	regexp.MustCompile(`^process [0-9]+ acquired`),
 }
 
-func (e LogEntry) IsSystemEntry() bool {
+func (e LogEntry) IsSystemEntry(systemIncludeCheckpointer bool) bool {
 	if e.ErrorSeverity == "PANIC" {
 		return true
 	}
@@ -407,6 +412,21 @@ func (e LogEntry) IsSystemEntry() bool {
 			}
 		}
 		return true
+	}
+
+	if systemIncludeCheckpointer {
+		for _, prefix := range POSTGRES_SYSTEM_MESSAGES_CHECKPOINTER_PREFIXES {
+			if strings.HasPrefix(e.Message, prefix) {
+				return true
+			}
+		}
+	} else {
+		// When systemIncludeCheckpointer is false, checkpoint messages should not be considered system entries
+		for _, prefix := range POSTGRES_SYSTEM_MESSAGES_CHECKPOINTER_PREFIXES {
+			if strings.HasPrefix(e.Message, prefix) {
+				return false
+			}
+		}
 	}
 
 	for _, regex := range NON_SYSTEM_REGEXES {

@@ -5,6 +5,7 @@ import (
 )
 
 var SystemOnly bool
+var SystemIncludeCheckpointer bool
 
 var systemCmd = &cobra.Command{
 	Use:   "system",
@@ -17,5 +18,7 @@ var systemCmd = &cobra.Command{
 }
 
 func init() {
+	systemCmd.Flags().BoolVarP(&SystemIncludeCheckpointer, "checkpointer", "c", false, "Include checkpointer events as well")
+
 	rootCmd.AddCommand(systemCmd)
 }

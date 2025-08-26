@@ -144,14 +144,13 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 	return ch
 }
 
-// Handle multi-line entries, collect all lines until a new entry starts and then parse
-func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvlNum int, extraRegexFilters []string, fromTime time.Time, toTime time.Time, minSlowDurationMs int, systemOnly bool, grepRegex *regexp.Regexp) bool {
+func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvlNum int, extraRegexFilters []string, fromTime time.Time, toTime time.Time, minSlowDurationMs int, systemOnly bool, systemIncludeCheckpointer bool, grepRegex *regexp.Regexp) bool {
 	if grepRegex != nil {
 		return grepRegex.MatchString(rec.Message)
 	}
 
 	if systemOnly {
-		return rec.IsSystemEntry()
+		return rec.IsSystemEntry(systemIncludeCheckpointer)
 	}
 
 	if rec.SeverityNum() < minLvlNum {
