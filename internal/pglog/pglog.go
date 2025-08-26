@@ -332,13 +332,16 @@ var POSTGRES_SYSTEM_MESSAGES_CHECKPOINTER_PREFIXES = []string{
 // Case sensitive
 var POSTGRES_SYSTEM_MESSAGES_IDENT_CONTAINS = []string{
 	" XID",
+	"must be vacuumed",
 	" corruption ",
 	" wraparound ",
+	" data loss ",
 	" postmaster ",
 	" configuration file ",
 	" relfrozenxid ",
 	"multixact",
 	"MultiXact",
+	"replication slot",
 }
 
 var POSTGRES_LOG_LVL_NON_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
