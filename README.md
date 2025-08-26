@@ -11,6 +11,9 @@ pgweasel tries to:
 * zero config - not dependent on Postgres `log_line_prefix`
 * be more user-friendly - handle relative time inputs, auto-detect the latest log file location if not specified, subcommand aliases
 
+## Project status
+
+BETA. Command / subcommands "API" might change.
 
 # Operating modes
 
@@ -81,13 +84,8 @@ Use "pgweasel [command] --help" for more information about a command.
 
 # Contributing
 
-All kinds of feedback and help would be much appreciated - especially as I'm not a developer per se. Hopefully pgweasel will grow into a community project with rock solid quality.
+All kinds of feedback and help (PR-s, co-maintainer) would be much appreciated - especially as I'm not a developer per se. Hopefully pgweasel will grow into a community project with rock solid quality.
 
+## Have sample log files ?
 
-# TODO
-
-* jsonlog support
-* goreleaser support
-* more test & refactoring
-* temp files mode
-* perf optimizations, no effort so far
+I've scraped the Postgres mailing archives for *.log attachements (in [testdata](https://github.com/kmoppel/pgweasel/tree/main/testdata) folder), but they are not much sadly...so if you have some real-life logs from busy or somehow "troublesome" instances, not containing secrets - please add one one via PR or proide some S3 etc link under issues. Thank you!
