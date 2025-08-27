@@ -1,0 +1,325 @@
+2025-08-26 15:22:27.899 EEST [3478762] krl@postgres FATAL:  terminating connection due to administrator command
+2025-08-26 15:22:27.899 EEST [3379143] krl@postgres FATAL:  terminating connection due to administrator command
+2025-08-26 15:22:27.899 EEST [4189737] monitor@bench FATAL:  terminating connection due to administrator command
+2025-08-26 15:22:28.750 EEST [3479537] LOG:  database system is ready to accept connections
+	        SELECT count(*) FILTER( WHERE backend_type = 'client backend' and state = 'active') AS active_connections,
+	               current_setting('max_connections')::int AS max_connections,
+	        SELECT count(*) FILTER( WHERE backend_type = 'client backend' and state = 'active') AS active_connections,
+	               current_setting('max_connections')::int AS max_connections,
+	        SELECT count(*) FILTER( WHERE backend_type = 'client backend' and state = 'active') AS active_connections,
+	               current_setting('max_connections')::int AS max_connections,
+	        SELECT count(*) FILTER( WHERE backend_type = 'client backend' and state = 'active') AS active_connections,
+	               current_setting('max_connections')::int AS max_connections,
+	        SELECT count(*) FILTER( WHERE backend_type = 'client backend' and state = 'active') AS active_connections,
+	               current_setting('max_connections')::int AS max_connections,
+	        SELECT count(*) FILTER( WHERE backend_type = 'client backend' and state = 'active') AS active_connections,
+	               current_setting('max_connections')::int AS max_connections,
+	        SELECT count(*) FILTER( WHERE backend_type = 'client backend' and state = 'active') AS active_connections,
+	               current_setting('max_connections')::int AS max_connections,
+2025-08-27 12:45:38.633 EEST [87927] krl@postgres LOG:  unexpected EOF on client connection with an open transaction
+	        SELECT count(*) FILTER( WHERE backend_type = 'client backend' and state = 'active') AS active_connections,
+	               current_setting('max_connections')::int AS max_connections,
+2025-08-27 17:13:16.911 EEST [99990] krl@postgres LOG:  statement: alter system set log_connections to on ;
+2025-08-27 17:13:18.917 EEST [3479537] LOG:  parameter "log_connections" changed to "on"
+2025-08-27 17:13:21.772 EEST [257839] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=44410
+2025-08-27 17:13:21.772 EEST [257839] krl@postgres LOG:  connection authenticated: user="krl" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:13:21.772 EEST [257839] krl@postgres LOG:  connection authorized: user=krl database=postgres application_name=psql
+2025-08-27 17:13:25.438 EEST [257861] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=44416
+2025-08-27 17:13:25.440 EEST [257861] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:13:25.440 EEST [257861] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:13:55.438 EEST [259567] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=60338
+2025-08-27 17:13:55.441 EEST [259567] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:13:55.441 EEST [259567] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:14:25.438 EEST [260052] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=48436
+2025-08-27 17:14:25.440 EEST [260052] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:14:25.440 EEST [260052] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:14:55.439 EEST [260356] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=34336
+2025-08-27 17:14:55.441 EEST [260356] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:14:55.441 EEST [260356] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:15:25.438 EEST [260641] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=43862
+2025-08-27 17:15:25.440 EEST [260641] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:15:25.440 EEST [260641] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:15:55.438 EEST [260853] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=59554
+2025-08-27 17:15:55.441 EEST [260853] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:15:55.441 EEST [260853] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:16:25.438 EEST [261214] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=35910
+2025-08-27 17:16:25.440 EEST [261214] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:16:25.440 EEST [261214] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:16:55.439 EEST [261570] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=56256
+2025-08-27 17:16:55.441 EEST [261570] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:16:55.441 EEST [261570] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:17:25.439 EEST [261867] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=41302
+2025-08-27 17:17:25.441 EEST [261867] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:17:25.441 EEST [261867] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:17:55.438 EEST [262063] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=44128
+2025-08-27 17:17:55.440 EEST [262063] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:17:55.440 EEST [262063] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:18:25.438 EEST [262433] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=50392
+2025-08-27 17:18:25.441 EEST [262433] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:18:25.441 EEST [262433] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:18:55.438 EEST [262611] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=49170
+2025-08-27 17:18:55.440 EEST [262611] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:18:55.440 EEST [262611] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:19:25.438 EEST [262831] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=37570
+2025-08-27 17:19:25.440 EEST [262831] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:19:25.440 EEST [262831] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:19:55.438 EEST [263048] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=50962
+2025-08-27 17:19:55.440 EEST [263048] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:19:55.440 EEST [263048] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:20:25.439 EEST [263542] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=55492
+2025-08-27 17:20:25.441 EEST [263542] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:20:25.441 EEST [263542] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:20:55.439 EEST [263719] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=40300
+2025-08-27 17:20:55.441 EEST [263719] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:20:55.441 EEST [263719] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:21:25.437 EEST [264019] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=54478
+2025-08-27 17:21:25.440 EEST [264019] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:21:25.440 EEST [264019] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:21:55.438 EEST [264229] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=60418
+2025-08-27 17:21:55.441 EEST [264229] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:21:55.441 EEST [264229] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:22:25.438 EEST [264574] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=57516
+2025-08-27 17:22:25.440 EEST [264574] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:22:25.440 EEST [264574] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:22:55.438 EEST [264779] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=52308
+2025-08-27 17:22:55.440 EEST [264779] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:22:55.440 EEST [264779] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:23:25.438 EEST [265004] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=51770
+2025-08-27 17:23:25.440 EEST [265004] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:23:25.440 EEST [265004] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:23:55.438 EEST [265217] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=45066
+2025-08-27 17:23:55.440 EEST [265217] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:23:55.440 EEST [265217] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:24:25.439 EEST [265593] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=48108
+2025-08-27 17:24:25.441 EEST [265593] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:24:25.441 EEST [265593] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:24:26.670 EEST [265595] [unknown]@[unknown] LOG:  connection received: host=[local]
+2025-08-27 17:24:26.671 EEST [265595] krl@postgres LOG:  connection authenticated: user="krl" method=trust (/etc/postgresql/17/main/pg_hba.conf:123)
+2025-08-27 17:24:26.671 EEST [265595] krl@postgres LOG:  connection authorized: user=krl database=postgres application_name=psql
+2025-08-27 17:24:55.438 EEST [265876] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=48202
+2025-08-27 17:24:55.441 EEST [265876] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:24:55.441 EEST [265876] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:25:25.437 EEST [267023] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=54554
+2025-08-27 17:25:25.440 EEST [267023] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:25:25.440 EEST [267023] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:25:55.438 EEST [267237] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=39496
+2025-08-27 17:25:55.441 EEST [267237] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:25:55.441 EEST [267237] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:26:25.438 EEST [267720] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=55916
+2025-08-27 17:26:25.440 EEST [267720] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:26:25.440 EEST [267720] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:26:55.439 EEST [268128] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=42800
+2025-08-27 17:26:55.441 EEST [268128] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:26:55.441 EEST [268128] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:27:25.438 EEST [268351] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=42734
+2025-08-27 17:27:25.440 EEST [268351] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:27:25.440 EEST [268351] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:27:55.438 EEST [268535] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=46188
+2025-08-27 17:27:55.440 EEST [268535] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:27:55.440 EEST [268535] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:28:25.438 EEST [269232] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=47660
+2025-08-27 17:28:25.440 EEST [269232] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:28:25.440 EEST [269232] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:28:55.438 EEST [271191] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=45254
+2025-08-27 17:28:55.440 EEST [271191] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:28:55.440 EEST [271191] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:29:25.438 EEST [271416] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=33522
+2025-08-27 17:29:25.440 EEST [271416] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:29:25.440 EEST [271416] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:29:55.438 EEST [271935] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=40384
+2025-08-27 17:29:55.440 EEST [271935] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:29:55.440 EEST [271935] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:30:25.439 EEST [272592] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=45740
+2025-08-27 17:30:25.441 EEST [272592] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:30:25.441 EEST [272592] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:30:55.438 EEST [272909] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=60928
+2025-08-27 17:30:55.440 EEST [272909] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:30:55.440 EEST [272909] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:31:25.438 EEST [273338] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=43798
+2025-08-27 17:31:25.441 EEST [273338] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:31:25.441 EEST [273338] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:31:28.533 EEST [273360] [unknown]@[unknown] LOG:  connection received: host=[local]
+2025-08-27 17:31:28.533 EEST [273360] monitor@postgres LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:123)
+2025-08-27 17:31:28.533 EEST [273360] monitor@postgres LOG:  connection authorized: user=monitor database=postgres application_name=psql
+2025-08-27 17:31:47.152 EEST [273470] [unknown]@[unknown] LOG:  connection received: host=[local]
+2025-08-27 17:31:47.152 EEST [273470] krl@postgres LOG:  connection authenticated: user="krl" method=trust (/etc/postgresql/17/main/pg_hba.conf:123)
+2025-08-27 17:31:47.152 EEST [273470] krl@postgres LOG:  connection authorized: user=krl database=postgres application_name=psql
+2025-08-27 17:31:55.438 EEST [273550] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=47174
+2025-08-27 17:31:55.440 EEST [273550] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:31:55.440 EEST [273550] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:32:07.501 EEST [273807] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=49124
+2025-08-27 17:32:07.501 EEST [273807] sitt@postgres LOG:  connection authenticated: user="sitt" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:32:07.501 EEST [273807] sitt@postgres LOG:  connection authorized: user=sitt database=postgres application_name=psql
+2025-08-27 17:32:07.501 EEST [273807] sitt@postgres FATAL:  role "sitt" is not permitted to log in
+2025-08-27 17:32:25.438 EEST [273918] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=43988
+2025-08-27 17:32:25.441 EEST [273918] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:32:25.441 EEST [273918] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:32:55.437 EEST [274308] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=38718
+2025-08-27 17:32:55.440 EEST [274308] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:32:55.440 EEST [274308] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:33:05.948 EEST [274390] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=54876
+2025-08-27 17:33:05.949 EEST [274390] sitt@postgres LOG:  connection authenticated: user="sitt" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:33:05.949 EEST [274390] sitt@postgres LOG:  connection authorized: user=sitt database=postgres application_name=psql
+2025-08-27 17:33:25.438 EEST [274495] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=42488
+2025-08-27 17:33:25.441 EEST [274495] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+2025-08-27 17:33:25.441 EEST [274495] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:33:55.438 EEST [274712] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=43276
+2025-08-27 17:33:55.441 EEST [274712] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:33:55.441 EEST [274712] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:33:57.125 EEST [274731] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=43282
+2025-08-27 17:33:57.126 EEST [274731] sitt@postgres LOG:  connection authenticated: user="sitt" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:33:57.126 EEST [274731] sitt@postgres LOG:  connection authorized: user=sitt database=postgres application_name=psql
+2025-08-27 17:34:25.438 EEST [275075] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=37314
+2025-08-27 17:34:25.440 EEST [275075] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:34:25.440 EEST [275075] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:34:55.439 EEST [275258] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=41020
+2025-08-27 17:34:55.441 EEST [275258] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:34:55.441 EEST [275258] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:35:25.438 EEST [275487] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=42748
+2025-08-27 17:35:25.440 EEST [275487] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:35:25.440 EEST [275487] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:35:28.614 EEST [275518] [unknown]@[unknown] LOG:  connection received: host=[local]
+2025-08-27 17:35:28.619 EEST [275518] sitt@postgres FATAL:  password authentication failed for user "sitt"
+2025-08-27 17:35:55.438 EEST [275826] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=38446
+2025-08-27 17:35:55.441 EEST [275826] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:35:55.441 EEST [275826] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:36:25.438 EEST [276406] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=42854
+2025-08-27 17:36:25.441 EEST [276406] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:36:25.441 EEST [276406] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:36:55.437 EEST [276585] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=52808
+2025-08-27 17:36:55.440 EEST [276585] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:36:55.440 EEST [276585] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:37:25.438 EEST [276957] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=56380
+2025-08-27 17:37:25.440 EEST [276957] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:37:25.440 EEST [276957] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:37:55.438 EEST [277442] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=54836
+2025-08-27 17:37:55.440 EEST [277442] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:37:55.440 EEST [277442] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:38:25.439 EEST [277807] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=42414
+2025-08-27 17:38:25.441 EEST [277807] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:38:25.441 EEST [277807] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:38:55.438 EEST [278179] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=56826
+2025-08-27 17:38:55.441 EEST [278179] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:38:55.441 EEST [278179] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:39:25.438 EEST [278515] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=50398
+2025-08-27 17:39:25.441 EEST [278515] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:39:25.441 EEST [278515] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:39:55.438 EEST [278757] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=52240
+2025-08-27 17:39:55.440 EEST [278757] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:39:55.440 EEST [278757] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:40:25.438 EEST [279136] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=40740
+2025-08-27 17:40:25.441 EEST [279136] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:40:25.441 EEST [279136] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:40:55.438 EEST [279444] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=43360
+2025-08-27 17:40:55.441 EEST [279444] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:40:55.441 EEST [279444] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:41:25.438 EEST [280086] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=59050
+2025-08-27 17:41:25.441 EEST [280086] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:41:25.441 EEST [280086] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:41:55.438 EEST [280460] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=35960
+2025-08-27 17:41:55.440 EEST [280460] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:41:55.440 EEST [280460] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:42:25.437 EEST [281083] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=38276
+2025-08-27 17:42:25.440 EEST [281083] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:42:25.440 EEST [281083] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:42:55.438 EEST [281575] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=36442
+2025-08-27 17:42:55.440 EEST [281575] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:42:55.440 EEST [281575] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:43:25.437 EEST [281800] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=38686
+2025-08-27 17:43:25.440 EEST [281800] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:43:25.440 EEST [281800] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:43:55.438 EEST [283645] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=44450
+2025-08-27 17:43:55.440 EEST [283645] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:43:55.440 EEST [283645] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:44:25.438 EEST [284015] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=34566
+2025-08-27 17:44:25.440 EEST [284015] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:44:25.440 EEST [284015] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:44:55.439 EEST [284626] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=36882
+2025-08-27 17:44:55.441 EEST [284626] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:44:55.441 EEST [284626] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:45:25.437 EEST [285111] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=58966
+2025-08-27 17:45:25.440 EEST [285111] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:45:25.440 EEST [285111] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:45:55.438 EEST [285473] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=44020
+2025-08-27 17:45:55.440 EEST [285473] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:45:55.440 EEST [285473] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:46:25.438 EEST [285936] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=48876
+2025-08-27 17:46:25.440 EEST [285936] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:46:25.440 EEST [285936] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:46:55.438 EEST [286115] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=45244
+2025-08-27 17:46:55.440 EEST [286115] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:46:55.440 EEST [286115] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:47:25.438 EEST [286332] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=55584
+2025-08-27 17:47:25.440 EEST [286332] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:47:25.440 EEST [286332] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:47:55.437 EEST [286998] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=50694
+2025-08-27 17:47:55.440 EEST [286998] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:47:55.440 EEST [286998] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:48:25.438 EEST [287849] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=37538
+2025-08-27 17:48:25.441 EEST [287849] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:48:25.441 EEST [287849] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:48:55.437 EEST [288120] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=58190
+2025-08-27 17:48:55.440 EEST [288120] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:48:55.440 EEST [288120] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:49:25.438 EEST [288382] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=54468
+2025-08-27 17:49:25.440 EEST [288382] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:49:25.440 EEST [288382] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:49:55.438 EEST [288973] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=51454
+2025-08-27 17:49:55.441 EEST [288973] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:49:55.441 EEST [288973] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:50:25.438 EEST [289925] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=33898
+2025-08-27 17:50:25.441 EEST [289925] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:50:25.441 EEST [289925] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:50:55.438 EEST [290096] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=60376
+2025-08-27 17:50:55.440 EEST [290096] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:50:55.440 EEST [290096] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:51:25.438 EEST [290363] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=42568
+2025-08-27 17:51:25.440 EEST [290363] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:51:25.440 EEST [290363] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:51:55.438 EEST [290552] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=58246
+2025-08-27 17:51:55.440 EEST [290552] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:51:55.440 EEST [290552] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:52:25.439 EEST [290924] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=33664
+2025-08-27 17:52:25.441 EEST [290924] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:52:25.441 EEST [290924] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:52:55.438 EEST [291218] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=38630
+2025-08-27 17:52:55.441 EEST [291218] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:52:55.441 EEST [291218] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:53:25.438 EEST [291905] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=40460
+2025-08-27 17:53:25.440 EEST [291905] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:53:25.440 EEST [291905] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:53:55.438 EEST [292226] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=53648
+2025-08-27 17:53:55.440 EEST [292226] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:53:55.440 EEST [292226] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:54:25.438 EEST [292677] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=40712
+2025-08-27 17:54:25.440 EEST [292677] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:54:25.440 EEST [292677] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:54:55.438 EEST [292852] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=60290
+2025-08-27 17:54:55.441 EEST [292852] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:54:55.441 EEST [292852] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:55:25.438 EEST [293741] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=36228
+2025-08-27 17:55:25.440 EEST [293741] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:55:25.440 EEST [293741] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:55:55.438 EEST [294123] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=35366
+2025-08-27 17:55:55.441 EEST [294123] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:55:55.441 EEST [294123] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:56:25.439 EEST [294493] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=51328
+2025-08-27 17:56:25.441 EEST [294493] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:56:25.441 EEST [294493] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:56:55.439 EEST [294661] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=36710
+2025-08-27 17:56:55.441 EEST [294661] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:56:55.441 EEST [294661] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:57:25.438 EEST [294876] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=48600
+2025-08-27 17:57:25.440 EEST [294876] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:57:25.440 EEST [294876] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:57:55.438 EEST [295076] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=52394
+2025-08-27 17:57:55.441 EEST [295076] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:57:55.441 EEST [295076] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:58:25.438 EEST [295969] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=42888
+2025-08-27 17:58:25.440 EEST [295969] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:58:25.440 EEST [295969] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:58:54.684 EEST [3854424] krl@postgres LOG:  statement: alter system set log_connections to off ;
+2025-08-27 17:58:55.438 EEST [297670] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=38268
+2025-08-27 17:58:55.440 EEST [297670] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:126)
+2025-08-27 17:58:55.440 EEST [297670] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+2025-08-27 17:59:05.365 EEST [3479537] LOG:  parameter "log_connections" changed to "off"
