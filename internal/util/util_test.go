@@ -239,3 +239,97 @@ func TestExtractAutovacuumReadWriteRatesFromLogMessage(t *testing.T) {
 		assert.Equal(t, tt.writeRate, writeRate, "write rate should match for message: %s", tt.message)
 	}
 }
+func TestExtractConnectHostFromLogMessage(t *testing.T) {
+	tests := []struct {
+		message      string
+		expectedHost string
+	}{
+		{
+			message:      "connection received: host=127.0.0.1 port=44410",
+			expectedHost: "127.0.0.1",
+		},
+		{
+			message:      "connection received: host=[local]",
+			expectedHost: "local",
+		},
+		{
+			message:      "connection received: host=192.168.1.100 port=5432",
+			expectedHost: "192.168.1.100",
+		},
+		{
+			message:      "connection received: host=localhost port=5432",
+			expectedHost: "localhost",
+		},
+		{
+			message:      "connection received: host=example.com port=5432",
+			expectedHost: "example.com",
+		},
+		{
+			message:      "connection received: host=10.0.0.1",
+			expectedHost: "10.0.0.1",
+		},
+		{
+			message:      "some other log message without host",
+			expectedHost: "",
+		},
+		{
+			message:      "connection received: port=5432",
+			expectedHost: "",
+		},
+		{
+			message:      "",
+			expectedHost: "",
+		},
+	}
+
+	for _, tt := range tests {
+		host := util.ExtractConnectHostFromLogMessage(tt.message)
+		assert.Equal(t, tt.expectedHost, host, "host should match for message: %s", tt.message)
+	}
+}
+func TestExtractConnectUserDbAppnameSslFromLogMessage(t *testing.T) {
+	tests := []struct {
+		message         string
+		expectedUser    string
+		expectedDb      string
+		expectedAppname string
+		expectedSsl     bool
+	}{
+		{
+			message:         "connection authorized: user=krl database=postgres application_name=psql",
+			expectedUser:    "krl",
+			expectedDb:      "postgres",
+			expectedAppname: "psql",
+			expectedSsl:     false,
+		},
+		{
+			message:         "connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)",
+			expectedUser:    "monitor",
+			expectedDb:      "bench",
+			expectedAppname: "",
+			expectedSsl:     true,
+		},
+		{
+			message:         "connection authorized: user=admin database=testdb application_name=pgAdmin SSL enabled",
+			expectedUser:    "admin",
+			expectedDb:      "testdb",
+			expectedAppname: "pgAdmin",
+			expectedSsl:     true,
+		},
+		{
+			message:         "some other log message without connection info",
+			expectedUser:    "",
+			expectedDb:      "",
+			expectedAppname: "",
+			expectedSsl:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		user, db, appname, ssl := util.ExtractConnectUserDbAppnameSslFromLogMessage(tt.message)
+		assert.Equal(t, tt.expectedUser, user, "user should match for message: %s", tt.message)
+		assert.Equal(t, tt.expectedDb, db, "database should match for message: %s", tt.message)
+		assert.Equal(t, tt.expectedAppname, appname, "application name should match for message: %s", tt.message)
+		assert.Equal(t, tt.expectedSsl, ssl, "SSL flag should match for message: %s", tt.message)
+	}
+}

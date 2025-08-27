@@ -41,6 +41,8 @@ BETA. Command / subcommands "API" might change.
 
 `pgweasel grep $REGEX $LOG` - Show full log entries of matching search fragments
 
+`pgweasel connections $LOG` - Show connections counts by total, db, user, application name. Assumes log_connections enabled
+
 
 # Quickstart
 
@@ -58,6 +60,7 @@ Usage:
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
+  connections Show connections summary
   errors      Shows WARNING and higher entries by default
   grep        Show matching log entries only, e.g.: pgweasel grep 'Seq Scan.*tblX' mylogfile.log
   help        Help about any command

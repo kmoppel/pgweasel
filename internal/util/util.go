@@ -380,3 +380,69 @@ func ExtractAutovacuumReadWriteRatesFromLogMessage(message string) (float64, flo
 
 	return readRate, writeRate
 }
+
+func ExtractConnectHostFromLogMessage(message string) string {
+	// Example: "connection received: host=127.0.0.1 port=44410"
+	// Example: "connection received: host=[local]"
+	host := ""
+	if hostStart := strings.Index(message, "host="); hostStart != -1 {
+		hostStart += 5 // Skip "host="
+		hostEnd := strings.Index(message[hostStart:], " ")
+		if hostEnd == -1 {
+			host = message[hostStart:]
+		} else {
+			host = message[hostStart : hostStart+hostEnd]
+		}
+
+		// Handle [local] case
+		if host == "[local]" {
+			host = "local"
+		}
+	}
+	return host
+}
+
+func ExtractConnectUserDbAppnameSslFromLogMessage(message string) (string, string, string, bool) {
+	// connection authorized: user=krl database=postgres application_name=psql
+	// connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+	user := ""
+	db := ""
+	appname := ""
+	ssl := false
+
+	if userStart := strings.Index(message, "user="); userStart != -1 {
+		userStart += 5 // Skip "user="
+		userEnd := strings.Index(message[userStart:], " ")
+		if userEnd == -1 {
+			user = message[userStart:]
+		} else {
+			user = message[userStart : userStart+userEnd]
+		}
+	}
+
+	if dbStart := strings.Index(message, "database="); dbStart != -1 {
+		dbStart += 9 // Skip "database="
+		dbEnd := strings.Index(message[dbStart:], " ")
+		if dbEnd == -1 {
+			db = message[dbStart:]
+		} else {
+			db = message[dbStart : dbStart+dbEnd]
+		}
+	}
+
+	if appnameStart := strings.Index(message, "application_name="); appnameStart != -1 {
+		appnameStart += 17 // Skip "application_name="
+		appnameEnd := strings.Index(message[appnameStart:], " ")
+		if appnameEnd == -1 {
+			appname = message[appnameStart:]
+		} else {
+			appname = message[appnameStart : appnameStart+appnameEnd]
+		}
+	}
+
+	if strings.Contains(message, "SSL enabled") {
+		ssl = true
+	}
+
+	return user, db, appname, ssl
+}

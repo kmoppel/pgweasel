@@ -148,6 +148,11 @@ func showErrors(cmd *cobra.Command, args []string) {
 		histoBuckets.Init(cfg.HistogramBucketDuration)
 	}
 
+	connectionsAggregator := pglog.ConnsAggregator{}
+	if cfg.ConnectionsSummary {
+		connectionsAggregator.Init()
+	}
+
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 		if !cfg.ToTime.IsZero() && logFile != "stdin" {
@@ -170,6 +175,11 @@ func showErrors(cmd *cobra.Command, args []string) {
 					continue
 				}
 				log.Debug().Msgf("Processing log entry: %+v", rec)
+
+				if cfg.ConnectionsSummary {
+					connectionsAggregator.AddEvent(rec)
+					continue
+				}
 
 				if cfg.ErrorsHistogram {
 					histoBuckets.Add(rec, cfg.HistogramBucketDuration, cfg.MinErrLvlNum)
@@ -248,6 +258,10 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	if cfg.StatsOnly {
 		statsAggregator.ShowStats()
+	}
+
+	if cfg.ConnectionsSummary {
+		connectionsAggregator.ShowStats()
 	}
 
 	if cfg.SlowTopNOnly {

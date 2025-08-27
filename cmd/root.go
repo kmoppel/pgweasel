@@ -69,6 +69,7 @@ type WeaselConfig struct {
 	GrepString                string
 	GrepRegex                 *regexp.Regexp
 	SystemIncludeCheckpointer bool
+	ConnectionsSummary        bool
 }
 
 func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
@@ -134,5 +135,6 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 		GrepRegex:                 GrepRegex,
 		GrepString:                GrepString,
 		SystemIncludeCheckpointer: SystemIncludeCheckpointer,
+		ConnectionsSummary:        ConnectionsSummary,
 	}
 }

@@ -817,3 +817,135 @@ func (h HistogramBucket) GetSortedBuckets() []TimeBucket {
 
 	return result
 }
+
+type ConnsAggregator struct {
+	TotalConnectionAttempts        int
+	TotalAuthenticated             int
+	TotalAuthenticatedSSL          int
+	ConnectionFailures             int
+	ConnectionsByHost              map[string]int
+	ConnectionsByDatabase          map[string]int
+	ConnectionsByUser              map[string]int
+	ConnectionsByAppname           map[string]int
+	ConnectionAttemptsByTimeBucket map[time.Time]int
+	BucketInterval                 time.Duration
+}
+
+func (ca *ConnsAggregator) Init() {
+	ca.ConnectionsByHost = make(map[string]int)
+	ca.ConnectionsByDatabase = make(map[string]int)
+	ca.ConnectionsByUser = make(map[string]int)
+	ca.ConnectionsByAppname = make(map[string]int)
+	ca.ConnectionAttemptsByTimeBucket = make(map[time.Time]int)
+	ca.BucketInterval = time.Duration(10 * time.Minute) // Add as flag ?
+}
+
+func (ca *ConnsAggregator) AddEvent(e LogEntry) {
+	// 2025-08-27 17:13:21.772 EEST [257839] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=44410
+	// 2025-08-27 17:13:21.772 EEST [257839] krl@postgres LOG:  connection authorized: user=krl database=postgres application_name=psql
+	// 2025-08-27 17:13:25.438 EEST [257861] [unknown]@[unknown] LOG:  connection received: host=127.0.0.1 port=44416
+	// 2025-08-27 17:13:25.440 EEST [257861] monitor@bench LOG:  connection authenticated: user="monitor" method=trust (/etc/postgresql/17/main/pg_hba.conf:125)
+	// 2025-08-27 17:13:25.440 EEST [257861] monitor@bench LOG:  connection authorized: user=monitor database=bench SSL enabled (protocol=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384, bits=256)
+	// 2025-08-27 17:24:26.670 EEST [265595] [unknown]@[unknown] LOG:  connection received: host=[local]
+	// 2025-08-27 17:24:26.671 EEST [265595] krl@postgres LOG:  connection authenticated: user="krl" method=trust (/etc/postgresql/17/main/pg_hba.conf:123)
+	// 2025-08-27 17:24:26.671 EEST [265595] krl@postgres LOG:  connection authorized: user=krl database=postgres application_name=psql
+	// 2025-08-27 17:32:07.501 EEST [273807] sitt@postgres FATAL:  role "sitt" is not permitted to log in
+	// 2025-08-27 17:35:28.614 EEST [275518] [unknown]@[unknown] LOG:  connection received: host=[local]
+	// 2025-08-27 17:35:28.619 EEST [275518] sitt@postgres FATAL:  password authentication failed for user "sitt"
+
+	if e.ErrorSeverity == "FATAL" && (strings.HasPrefix(e.Message, "password authentication failed") || strings.Contains(e.Message, "is not permitted to log in")) {
+		ca.ConnectionFailures++
+		return
+	}
+
+	if e.ErrorSeverity != "LOG" {
+		return
+	}
+
+	if strings.HasPrefix(e.Message, "connection received:") {
+		ca.TotalConnectionAttempts++
+		bucketTime := e.GetTime().Truncate(ca.BucketInterval)
+		ca.ConnectionAttemptsByTimeBucket[bucketTime]++
+		host := util.ExtractConnectHostFromLogMessage(e.Message)
+		if host != "" {
+			ca.ConnectionsByHost[host]++
+		}
+		return
+	}
+
+	if strings.HasPrefix(e.Message, "connection authorized:") {
+		ca.TotalAuthenticated++
+		user, db, appname, ssl := util.ExtractConnectUserDbAppnameSslFromLogMessage(e.Message)
+		if user != "" {
+			ca.ConnectionsByUser[user]++
+		}
+		if db != "" {
+			ca.ConnectionsByDatabase[db]++
+		}
+		if appname != "" {
+			ca.ConnectionsByAppname[appname]++
+		} else {
+			ca.ConnectionsByAppname["(none)"]++
+		}
+		if ssl {
+			ca.TotalAuthenticatedSSL++
+		}
+	}
+}
+
+func (ca *ConnsAggregator) ShowStats() {
+	fmt.Println("=== Connection Statistics ===")
+	fmt.Println("Total connection attempts:", ca.TotalConnectionAttempts)
+	fmt.Println("Total authenticated:", ca.TotalAuthenticated)
+	fmt.Println("Total authenticated with SSL:", ca.TotalAuthenticatedSSL)
+	fmt.Println("Connection failures:", ca.ConnectionFailures)
+
+	if ca.TotalConnectionAttempts > 0 {
+		successRate := float64(ca.TotalAuthenticated) / float64(ca.TotalConnectionAttempts) * 100
+		fmt.Printf("Success rate: %.1f%%\n", successRate)
+
+		if ca.TotalAuthenticated > 0 {
+			sslRate := float64(ca.TotalAuthenticatedSSL) / float64(ca.TotalAuthenticated) * 100
+			fmt.Printf("SSL usage: %.1f%%\n", sslRate)
+		}
+	}
+
+	if len(ca.ConnectionsByHost) > 0 {
+		fmt.Println("\nConnections by host:")
+		for host, count := range ca.ConnectionsByHost {
+			percentage := float64(count) / float64(ca.TotalConnectionAttempts) * 100
+			fmt.Printf("  %s: %d (%.1f%%)\n", host, count, percentage)
+		}
+	}
+
+	if len(ca.ConnectionsByDatabase) > 0 {
+		fmt.Println("\nConnections by database:")
+		for db, count := range ca.ConnectionsByDatabase {
+			percentage := float64(count) / float64(ca.TotalAuthenticated) * 100
+			fmt.Printf("  %s: %d (%.1f%%)\n", db, count, percentage)
+		}
+	}
+
+	if len(ca.ConnectionsByUser) > 0 {
+		fmt.Println("\nConnections by user:")
+		for user, count := range ca.ConnectionsByUser {
+			percentage := float64(count) / float64(ca.TotalAuthenticated) * 100
+			fmt.Printf("  %s: %d (%.1f%%)\n", user, count, percentage)
+		}
+	}
+
+	if len(ca.ConnectionsByAppname) > 0 {
+		fmt.Println("\nConnections by application:")
+		for appname, count := range ca.ConnectionsByAppname {
+			percentage := float64(count) / float64(ca.TotalAuthenticated) * 100
+			fmt.Printf("  %s: %d (%.1f%%)\n", appname, count, percentage)
+		}
+	}
+
+	if len(ca.ConnectionAttemptsByTimeBucket) > 0 {
+		fmt.Printf("\nConnection attempts by time bucket (%v intervals):\n", ca.BucketInterval)
+		for bucket, count := range ca.ConnectionAttemptsByTimeBucket {
+			fmt.Printf("  %s: %d\n", bucket.Format("2006-01-02 15:04:05"), count)
+		}
+	}
+}
