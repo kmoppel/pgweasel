@@ -943,9 +943,31 @@ func (ca *ConnsAggregator) ShowStats() {
 	}
 
 	if len(ca.ConnectionAttemptsByTimeBucket) > 0 {
-		fmt.Printf("\nConnection attempts by time bucket (%v intervals):\n", ca.BucketInterval)
+		fmt.Printf("\nTop 3 busiest connection attempt buckets (%v interval):\n", ca.BucketInterval)
+		type bucketCount struct {
+			Time  time.Time
+			Count int
+		}
+		var buckets []bucketCount
 		for bucket, count := range ca.ConnectionAttemptsByTimeBucket {
-			fmt.Printf("  %s: %d\n", bucket.Format("2006-01-02 15:04:05"), count)
+			buckets = append(buckets, bucketCount{Time: bucket, Count: count})
+		}
+
+		// Sort by count descending
+		for i := 0; i < len(buckets); i++ {
+			for j := i + 1; j < len(buckets); j++ {
+				if buckets[j].Count > buckets[i].Count {
+					buckets[i], buckets[j] = buckets[j], buckets[i]
+				}
+			}
+		}
+
+		maxShow := 3
+		if len(buckets) < maxShow {
+			maxShow = len(buckets)
+		}
+		for i := 0; i < maxShow; i++ {
+			fmt.Printf("  %s: %d\n", buckets[i].Time.Format("2006-01-02 15:04:05"), buckets[i].Count)
 		}
 	}
 }
