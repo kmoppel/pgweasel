@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/kmoppel/pgweasel/internal/pglog"
+	"github.com/kmoppel/pgweasel/internal/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -266,4 +267,12 @@ func TestHistogramBucketAddMinErrorLevel(t *testing.T) {
 	}
 
 	assert.Equal(t, 2, h.TotalEvents, "TotalEvents count doesn't match expected value")
+}
+func TestExtractConnectUserDbAppnameSslFromLogMessage(t *testing.T) {
+	msg := "connection authorized: user=postgres database=postgres application_name=x\nERR:"
+	user, db, app, ssl := util.ExtractConnectUserDbAppnameSslFromLogMessage(msg)
+	assert.Equal(t, "postgres", user, "User mismatch")
+	assert.Equal(t, "postgres", db, "Database mismatch")
+	assert.Equal(t, "x", app, "Application name mismatch")
+	assert.Equal(t, false, ssl, "SSL flag mismatch")
 }
