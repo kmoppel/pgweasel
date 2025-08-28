@@ -77,7 +77,6 @@ Flags:
   -h, --help                 help for pgweasel
   -1, --oneline              Compact multiline entries
       --peaks                Show only event counts per log level for peak load periods
-      --regex string         Use a custom regex instead of: (default "(?s)^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \\[[0-9\\-]+\\] )?(?P<log_time>[\\d\\-:\\. ]{19,23} [A-Z0-9\\-\\+]{2,5}|[0-9\\.]{14})[\\s:\\-].*?[\\s:\\-]?(?P<error_severity>[A-Z12345]{3,12}):\\s*(?P<message>(?s:.*))$")
       --to string            Log entries up to $time
   -v, --verbose              More chat
 

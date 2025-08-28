@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kmoppel/pgweasel/internal/logparser"
 	"github.com/kmoppel/pgweasel/internal/pglog"
 	"github.com/kmoppel/pgweasel/internal/util"
 	"github.com/rs/zerolog"
@@ -44,7 +43,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Oneline, "oneline", "1", false, "Compact multiline entries")
 	rootCmd.PersistentFlags().StringArrayVarP(&Filters, "filter", "f", nil, "Add extra line match conditions (regex)")
 	// rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
-	rootCmd.PersistentFlags().StringVarP(&LogLineRegex, "regex", "", logparser.DEFAULT_REGEX_STR, "Use a custom regex instead of:")
 	rootCmd.PersistentFlags().BoolVarP(&Csv, "csv", "", false, "Specify that input file or stdin is actually CSV regardless of file extension")
 	rootCmd.PersistentFlags().BoolVarP(&Peaks, "peaks", "", false, "Show only event counts per log level for peak load periods")
 }
@@ -83,17 +81,6 @@ func PreProcessArgs(cmd *cobra.Command, args []string) WeaselConfig {
 	}
 
 	minErrLvl := strings.ToUpper(MinErrLvl)
-
-	if LogLineRegex != "" {
-		log.Debug().Msgf("Using regex to parse plain text entries: %s", LogLineRegex)
-		if !strings.Contains(LogLineRegex, "<log_time>") || !strings.Contains(LogLineRegex, "<error_severity>") || !strings.Contains(LogLineRegex, "<message>") {
-			log.Fatal().Msgf("Custom regex needs to have groups: log_time, error_severity, message. Default regex: %s", logparser.DEFAULT_REGEX_STR)
-		}
-		logLineRegex, err = regexp.Compile(LogLineRegex)
-		if err != nil {
-			log.Fatal().Msgf("Failed to compile provided regex: %s", LogLineRegex)
-		}
-	}
 
 	if From != "" {
 		fromTime, err = util.HumanTimeOrDeltaStringToTime(From, time.Time{})
