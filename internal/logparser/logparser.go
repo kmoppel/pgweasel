@@ -21,7 +21,7 @@ const DEFAULT_REGEX_STR = `(?s)^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?:
 
 var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
 var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})`)
-var REGEX_LOG_TIME = regexp.MustCompile(`^(?P<log_time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})[\s:\-]`)
+var REGEX_LOG_TIME = regexp.MustCompile(`^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<log_time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})[\s:\-]`)
 var REGEX_LOG_LEVEL_MESSAGE = regexp.MustCompile(`^.*?[\s:\-](?P<log_level>[A-Z12345]{3,12}):  (?P<message>.*)$`)
 
 // func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp, filename string) (pglog.LogEntry, error) {
