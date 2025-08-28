@@ -9,9 +9,7 @@ import (
 )
 
 var log1 = []string{`2025-05-02 12:27:52.634 EEST [2380404] krl@pgwatch2_metrics ERROR:  column "asdasd" does not exist at character 8`}
-var log2 = []string{`2025-05-02 18:25:51.151 EEST [2698052] krl@postgres STATEMENT:  select dadasdas
-	dasda
-	adsdas;`}
+var log2 = []string{`2025-05-02 18:25:51.151 EEST [2698052] krl@postgres STATEMENT:  select dadasdas`, `dasda`, `adsdas;`}
 var log3 = []string{`2025-05-02 18:18:26.523 EEST [2240722] LOG:  listening on IPv4 address "0.0.0.0", port 5432`}
 var log4 = []string{`2025-05-02 18:18:26.533 EEST [2240726] LOG:  database system was shut down at 2025-05-01 18:18:26 EEST`}
 
@@ -25,12 +23,11 @@ func TestFileLogger(t *testing.T) {
 
 func TestFileLogger2(t *testing.T) {
 	e, err := logparser.EventLinesToPgLogEntry(log2, logparser.DEFAULT_REGEX, "")
+	// fmt.Printf("LogTime: %s, ErrorSeverity: %s, Message: %s\n", e.LogTime, e.ErrorSeverity, e.Message)
 	assert.NoError(t, err)
 	assert.Equal(t, e.LogTime, "2025-05-02 18:25:51.151 EEST")
 	assert.Equal(t, e.ErrorSeverity, "STATEMENT")
-	assert.Equal(t, e.Message, `select dadasdas
-	dasda
-	adsdas;`)
+	assert.Equal(t, e.Message, "select dadasdas\ndasda\nadsdas;")
 }
 
 func TestFileLogger3(t *testing.T) {
@@ -117,4 +114,24 @@ func TestPeekRecord(t *testing.T) {
 	entry, err = logparser.PeekRecordFromFile("non-existent-file.log", nil, false)
 	assert.Error(t, err)
 	assert.Nil(t, entry)
+}
+
+func TestEventLinesToPgLogEntryTimestampSeverityMessage(t *testing.T) {
+	// Test LOG entry
+	logLines1 := []string{"2025-05-02 18:18:26.544 EEST [2240722] LOG:  database system is ready to accept connections"}
+	entry1, err := logparser.EventLinesToPgLogEntry(logLines1, logparser.DEFAULT_REGEX, "")
+	assert.NoError(t, err)
+	assert.Equal(t, "2025-05-02 18:18:26.544 EEST", entry1.LogTime)
+	assert.Equal(t, "LOG", entry1.ErrorSeverity)
+	assert.Equal(t, "database system is ready to accept connections", entry1.Message)
+	assert.Equal(t, logLines1, entry1.Lines)
+
+	// Test ERROR entry
+	logLines2 := []string{"2025-05-02 18:18:26.555 EEST [2698052] krl@postgres ERROR:  column \"xxxx\" does not exist at character 8"}
+	entry2, err := logparser.EventLinesToPgLogEntry(logLines2, logparser.DEFAULT_REGEX, "")
+	assert.NoError(t, err)
+	assert.Equal(t, "2025-05-02 18:18:26.555 EEST", entry2.LogTime)
+	assert.Equal(t, "ERROR", entry2.ErrorSeverity)
+	assert.Equal(t, "column \"xxxx\" does not exist at character 8", entry2.Message)
+	assert.Equal(t, logLines2, entry2.Lines)
 }

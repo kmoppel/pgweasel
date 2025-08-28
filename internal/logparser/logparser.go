@@ -21,36 +21,79 @@ const DEFAULT_REGEX_STR = `(?s)^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?:
 
 var DEFAULT_REGEX = regexp.MustCompile(DEFAULT_REGEX_STR)
 var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})`)
-var REGEX_LOG_LEVEL = regexp.MustCompile(`^[A-Z12345]{3,12}$`)
+var REGEX_LOG_TIME = regexp.MustCompile(`^(?P<log_time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})[\s:\-]`)
+var REGEX_LOG_LEVEL_MESSAGE = regexp.MustCompile(`^.*?[\s:\-](?P<log_level>[A-Z12345]{3,12}):  (?P<message>.*)$`)
+
+// func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp, filename string) (pglog.LogEntry, error) {
+// 	e := pglog.LogEntry{}
+// 	if len(lines) == 0 {
+// 		return e, errors.New("empty log line")
+// 	}
+// 	line := strings.Join(lines, "\n")
+// 	match := r.FindStringSubmatch(line)
+// 	if match == nil {
+// 		return e, errors.New("failed to parse log line regex for file: " + filename)
+// 	}
+// 	// log.Debug().Msgf("Regex match: %+v", match)
+
+// 	result := make(map[string]string)
+// 	for i, name := range r.SubexpNames() {
+// 		if i > 0 && name != "" {
+// 			result[name] = match[i]
+// 		}
+// 	}
+
+// 	e.LogTime = result["log_time"]
+
+// 	e.ErrorSeverity = result["error_severity"]
+
+// 	if !REGEX_LOG_LEVEL_MESSAGE.MatchString(e.ErrorSeverity) {
+// 		return e, errors.New("invalid log level: " + e.ErrorSeverity)
+// 	}
+
+// 	e.Message = result["message"]
+
+// 	e.Lines = lines
+
+// 	return e, nil
+// }
 
 func EventLinesToPgLogEntry(lines []string, r *regexp.Regexp, filename string) (pglog.LogEntry, error) {
 	e := pglog.LogEntry{}
 	if len(lines) == 0 {
 		return e, errors.New("empty log line")
 	}
-	line := strings.Join(lines, "\n")
-	match := r.FindStringSubmatch(line)
+
+	match := REGEX_LOG_TIME.FindStringSubmatch(lines[0])
 	if match == nil {
-		return e, errors.New("failed to parse log line regex for file: " + filename)
+		return e, errors.New("failed to parse REGEX_LOG_TIME regex for line: " + lines[0])
 	}
 	// log.Debug().Msgf("Regex match: %+v", match)
-
 	result := make(map[string]string)
-	for i, name := range r.SubexpNames() {
+	for i, name := range REGEX_LOG_TIME.SubexpNames() {
 		if i > 0 && name != "" {
 			result[name] = match[i]
 		}
 	}
-
 	e.LogTime = result["log_time"]
 
-	e.ErrorSeverity = result["error_severity"]
-
-	if !REGEX_LOG_LEVEL.MatchString(e.ErrorSeverity) {
-		return e, errors.New("invalid log level: " + e.ErrorSeverity)
+	match = REGEX_LOG_LEVEL_MESSAGE.FindStringSubmatch(lines[0])
+	if match == nil {
+		return e, errors.New("failed to parse REGEX_LOG_LEVEL_MESSAGE regex for line: " + lines[0])
 	}
+	// log.Debug().Msgf("Regex match: %+v", match)
+	result = make(map[string]string)
+	for i, name := range REGEX_LOG_LEVEL_MESSAGE.SubexpNames() {
+		if i > 0 && name != "" {
+			result[name] = match[i]
+		}
+	}
+	e.ErrorSeverity = result["log_level"]
 
 	e.Message = result["message"]
+	if len(lines) > 1 {
+		e.Message += "\n" + strings.Join(lines[1:], "\n")
+	}
 
 	e.Lines = lines
 
@@ -106,6 +149,7 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 			// If the line does not have a timestamp, it is a continuation of the previous entry
 			if HasTimestampPrefix(line) {
 				if firstCompleteEntryFound {
+					// e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex, filePath)
 					e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex, filePath)
 					if err != nil {
 						log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
@@ -129,6 +173,7 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 		}
 		// Special handling for the last line
 		if firstCompleteEntryFound && len(lines) > 0 {
+			// e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex, filePath)
 			e, err := EventLinesToPgLogEntry(lines, logLineParsingRegex, filePath)
 			if err != nil {
 				log.Fatal().Err(err).Msgf("Log line regex parse error. Line: %s", strings.Join(lines, "\n"))
