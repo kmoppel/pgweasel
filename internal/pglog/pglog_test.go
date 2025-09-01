@@ -276,3 +276,74 @@ func TestExtractConnectUserDbAppnameSslFromLogMessage(t *testing.T) {
 	assert.Equal(t, "x", app, "Application name mismatch")
 	assert.Equal(t, false, ssl, "SSL flag mismatch")
 }
+
+func TestGetCommandTag(t *testing.T) {
+	tests := []struct {
+		name     string
+		entry    pglog.LogEntry
+		expected string
+	}{
+		{
+			name: "CSV entry with CommandTag",
+			entry: pglog.LogEntry{
+				CsvColumns: &pglog.CsvEntry{
+					CommandTag: "SELECT",
+				},
+			},
+			expected: "SELECT",
+		},
+		{
+			name: "Statement command pattern",
+			entry: pglog.LogEntry{
+				Message: "statement: UPDATE pgbench_accounts SET balance = 123",
+			},
+			expected: "UPDATE",
+		},
+		{
+			name: "Duration execute command pattern",
+			entry: pglog.LogEntry{
+				Message: "duration: 41147.417 ms execute <unnamed>: SELECT id, name FROM users",
+			},
+			expected: "SELECT",
+		},
+		{
+			name: "Execute command pattern",
+			entry: pglog.LogEntry{
+				Message: "execute P_1: UPDATE pgbench_accounts SET balance = 456",
+			},
+			expected: "UPDATE",
+		},
+		{
+			name: "Multi-line with Query Text on next line",
+			entry: pglog.LogEntry{
+				Message: "duration: 7621.082 ms  plan:",
+				Lines: []string{
+					"duration: 7621.082 ms  plan:",
+					"\tQuery Text: SELECT xxx",
+				},
+			},
+			expected: "SELECT",
+		},
+		{
+			name: "No command found",
+			entry: pglog.LogEntry{
+				Message: "some random log message",
+			},
+			expected: "",
+		},
+		{
+			name: "ANALYZE entry",
+			entry: pglog.LogEntry{
+				Message: "duration: 113351.741 ms  statement: ANALYZE VERBOSE",
+			},
+			expected: "ANALYZE",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.entry.GetCommandTag()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

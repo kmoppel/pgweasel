@@ -104,28 +104,34 @@ func TestExtractDurationMillisFromLogMessage(t *testing.T) {
 	tests := []struct {
 		message        string
 		expectedMillis float64
+		expectedStr    string
 	}{
 		{
 			message:        "duration: 123 ms statement: SELECT * FROM table",
 			expectedMillis: 123,
+			expectedStr:    "123",
 		},
 		{
 			message:        "2025-05-16 14:26:01.872 UTC [3076] LOG:  duration: 18.237 ms",
 			expectedMillis: 18.237,
+			expectedStr:    "18.237",
 		},
 		{
 			message:        "LOG: statement executed, duration: 5.678 ms",
 			expectedMillis: 5.678,
+			expectedStr:    "5.678",
 		},
 		{
 			message:        "LOG: statement executed without timing info",
 			expectedMillis: 0,
+			expectedStr:    "",
 		},
 	}
 
 	for _, tt := range tests {
-		millis := util.ExtractDurationMillisFromLogMessage(tt.message)
+		millis, durationStr := util.ExtractDurationMillisFromLogMessage(tt.message)
 		assert.InDelta(t, tt.expectedMillis, millis, 0.1, "Duration should be within 0.1ms of expected value")
+		assert.Equal(t, tt.expectedStr, durationStr, "Duration string should match expected value")
 	}
 }
 func TestExtractCheckpointDurationSecondsFromLogMessage(t *testing.T) {

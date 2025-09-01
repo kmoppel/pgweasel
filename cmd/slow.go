@@ -28,6 +28,7 @@ var slowCmd = &cobra.Command{
 
 var SlowTopN int
 var SlowTopNOnly bool
+var SlowStatsOnly bool
 
 var slowTopCmd = &cobra.Command{
 	Use:   "top",
@@ -38,10 +39,22 @@ var slowTopCmd = &cobra.Command{
 	},
 }
 
+var slowAvgCmd = &cobra.Command{
+	Use:   "stat",
+	Short: "Show slow query log averages, total + per statement type",
+	Run: func(cmd *cobra.Command, args []string) {
+		SlowStatsOnly = true
+		showErrors(cmd, args)
+	},
+	Aliases: []string{"avg", "stat", "stats"},
+}
+
 func init() {
 	slowTopCmd.Flags().IntVarP(&SlowTopN, "top", "", 10, "Top slowest queries to show")
 
 	slowCmd.AddCommand(slowTopCmd)
+
+	slowCmd.AddCommand(slowAvgCmd)
 
 	rootCmd.AddCommand(slowCmd)
 }

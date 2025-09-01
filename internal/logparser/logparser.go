@@ -181,7 +181,7 @@ func DoesLogRecordSatisfyUserFilters(rec pglog.LogEntry, minLvlNum int, extraReg
 	}
 
 	if minSlowDurationMs > 0 {
-		duration := util.ExtractDurationMillisFromLogMessage(rec.Message)
+		duration, _ := util.ExtractDurationMillisFromLogMessage(rec.Message)
 		log.Debug().Msgf("Extracted duration: %f, message: %s", duration, rec.Message)
 		if duration < float64(minSlowDurationMs) {
 			return false

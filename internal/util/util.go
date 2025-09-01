@@ -299,20 +299,20 @@ func TruncateString(s string, maxChars int) string {
 	return s
 }
 
-// Returns 0 if no match or error
-func ExtractDurationMillisFromLogMessage(message string) float64 {
+// Returns (0, "") if no match or error
+func ExtractDurationMillisFromLogMessage(message string) (float64, string) {
 	// Example message: "duration: 0.211 ms"
 	match := REGEX_DURATION_MILLIS.FindStringSubmatch(message)
 	if match == nil {
-		return 0.0
+		return 0.0, ""
 	}
 
 	durationStr := match[1]
 	duration, err := strconv.ParseFloat(durationStr, 64)
 	if err != nil {
-		return 0.0
+		return 0.0, ""
 	}
-	return duration
+	return duration, durationStr
 }
 
 // Returns 0 if no match or error

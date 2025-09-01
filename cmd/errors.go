@@ -111,8 +111,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	cfg := PreProcessArgs(cmd, args)
 
-	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, SlowTopNOnly=%t, SlowTopN=%d, From=%s, To=%s, SystemOnly=%v, SystemIncludeCheckpointer=%v, TopNErrorsOnly=%t, PeaksOnly=%t, StatsOnly=%t, GrepString=%s",
-		cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.SlowTopNOnly, cfg.SlowTopN, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, cfg.SystemIncludeCheckpointer, TopNErrorsOnly, cfg.PeaksOnly, cfg.StatsOnly, cfg.GrepString)
+	log.Debug().Msgf("Running in debug mode. MinErrLvl=%s, MinSlowDurationMs=%d, SlowTopNOnly=%t, SlowTopN=%d, SlowStatsOnly=%t, From=%s, To=%s, SystemOnly=%v, SystemIncludeCheckpointer=%v, TopNErrorsOnly=%t, PeaksOnly=%t, StatsOnly=%t, GrepString=%s",
+		cfg.MinErrLvl, cfg.MinSlowDurationMs, cfg.SlowTopNOnly, cfg.SlowTopN, cfg.SlowStatsOnly, cfg.FromTime, cfg.ToTime, cfg.SystemOnly, cfg.SystemIncludeCheckpointer, TopNErrorsOnly, cfg.PeaksOnly, cfg.StatsOnly, cfg.GrepString)
 
 	if len(args) == 0 && util.CheckStdinAvailable() {
 		logFiles = []string{"stdin"}
@@ -142,6 +142,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	slowTopNCollector := pglog.NewTopN(cfg.SlowTopN)
+
+	slowStmtStatsCollector := pglog.NewSlowLogAggregator()
 
 	histoBuckets := pglog.HistogramBucket{}
 	if cfg.ErrorsHistogram {
@@ -186,11 +188,19 @@ func showErrors(cmd *cobra.Command, args []string) {
 					continue
 				}
 
+				if cfg.SlowStatsOnly {
+					if rec.ErrorSeverity != "LOG" {
+						continue
+					}
+					slowStmtStatsCollector.Add(rec)
+					continue
+				}
+
 				if cfg.SlowTopNOnly {
 					if rec.ErrorSeverity != "LOG" {
 						continue
 					}
-					duration := util.ExtractDurationMillisFromLogMessage(rec.Message)
+					duration, _ := util.ExtractDurationMillisFromLogMessage(rec.Message)
 					if duration == 0.0 {
 						continue
 					}
@@ -258,6 +268,10 @@ func showErrors(cmd *cobra.Command, args []string) {
 
 	if cfg.StatsOnly {
 		statsAggregator.ShowStats()
+	}
+
+	if cfg.SlowStatsOnly {
+		slowStmtStatsCollector.ShowStats()
 	}
 
 	if cfg.ConnectionsSummary {

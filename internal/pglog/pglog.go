@@ -109,6 +109,12 @@ type StatsAggregator struct {
 
 var REGEX_USER_AT_DB = regexp.MustCompile(`(?s)^(?P<log_time>[\d\-:\. ]{19,23} [A-Z]{2,5})[:\s\-]+.*?(?P<user_name>[A-Za-z0-9_\-]+)@(?P<database_name>[A-Za-z0-9_\-]+)[:\s\-]+.*?(?P<error_severity>[A-Z12345]{3,12})[:\s]+.*$`)
 
+// Regex patterns for extracting command tags from PostgreSQL log messages
+var REGEX_STATEMENT_COMMAND = regexp.MustCompile(`^statement:\s+([A-Z][A-Z0-9_]*)\b`)
+var REGEX_EXECUTE_COMMAND = regexp.MustCompile(`execute\s+[^:]*:\s+([A-Z][A-Z0-9_]*)\b`)
+var REGEX_DURATION_EXECUTE_COMMAND = regexp.MustCompile(`^duration:.*?\b(?:execute\s+[^:]*:|statement):\s+([A-Z][A-Z0-9_]*)\b`)
+var REGEX_QUERY_TEXT_COMMAND = regexp.MustCompile(`Query\s+Text:\s+([A-Z][A-Z0-9_]*)\b`)
+
 func (e CsvEntry) String() string {
 	if e.CsvColumnCount == 23 {
 		return strings.Join([]string{
@@ -271,6 +277,52 @@ func SeverityToNum(severity string) int {
 // for example if we are only looking for errors and have no time range set by the user
 func (e LogEntry) GetTime() time.Time {
 	return util.TimestringToTime(e.LogTime)
+}
+
+// GetCommandTag extracts the SQL command tag from log entries
+// For CSV logs, returns the CommandTag field directly
+// For plain text logs, extracts from messages like:
+//
+//	"statement: UPDATE pgbench_accounts..." -> "UPDATE"
+//	"duration: 41147.417 ms execute <unnamed>: SELECT id,..." -> "SELECT"
+//	"execute P_1: UPDATE pgbench_accounts..." -> "UPDATE"
+//	Multi-line with "Query Text: SELECT ..." -> "SELECT"
+func (e LogEntry) GetCommandTag() string {
+	// For CSV logs, use the CommandTag field directly
+	if e.CsvColumns != nil {
+		return e.CsvColumns.CommandTag
+	}
+
+	// For plain text logs, extract from the message
+	if e.Message == "" {
+		return ""
+	}
+
+	// Try "statement: COMMAND" pattern first
+	if match := REGEX_STATEMENT_COMMAND.FindStringSubmatch(e.Message); match != nil {
+		return match[1]
+	}
+
+	// Try "duration: ... execute ...: COMMAND" pattern
+	if match := REGEX_DURATION_EXECUTE_COMMAND.FindStringSubmatch(e.Message); match != nil {
+		return match[1]
+	}
+
+	// Try "execute ...: COMMAND" pattern
+	if match := REGEX_EXECUTE_COMMAND.FindStringSubmatch(e.Message); match != nil {
+		return match[1]
+	}
+
+	// Try multi-line pattern with "Query Text: COMMAND" in subsequent lines
+	if e.Lines != nil {
+		for _, line := range e.Lines {
+			if match := REGEX_QUERY_TEXT_COMMAND.FindStringSubmatch(line); match != nil {
+				return match[1]
+			}
+		}
+	}
+
+	return ""
 }
 
 // Simplistic approach. Adding severity could help a bit
@@ -640,7 +692,7 @@ func (sa *StatsAggregator) AddEvent(e LogEntry) {
 	if e.ErrorSeverity == "LOG" {
 		// Query durations / quantiles
 		if strings.Contains(e.Message, "duration: ") && strings.Contains(e.Message, " ms") && !(strings.Contains(e.Message, " bind ") || strings.Contains(e.Message, " parse ")) {
-			durMs := util.ExtractDurationMillisFromLogMessage(e.Message)
+			durMs, _ := util.ExtractDurationMillisFromLogMessage(e.Message)
 			if durMs > 0 {
 				sa.QueryTimesHistogram.Insert(durMs)
 				sa.SlowQueries++
