@@ -447,3 +447,25 @@ func ExtractConnectUserDbAppnameSslFromLogMessage(message string) (string, strin
 
 	return user, db, appname, ssl
 }
+
+// CalculatePercentile calculates the percentile value from a sorted slice of float64 values
+func CalculatePercentile(sortedData []float64, percentile float64) float64 {
+	if len(sortedData) == 0 {
+		return 0
+	}
+	if len(sortedData) == 1 {
+		return sortedData[0]
+	}
+
+	n := float64(len(sortedData))
+	rank := (percentile / 100.0) * (n - 1)
+	lowerIndex := int(rank)
+	upperIndex := lowerIndex + 1
+
+	if upperIndex >= len(sortedData) {
+		return sortedData[len(sortedData)-1]
+	}
+
+	weight := rank - float64(lowerIndex)
+	return sortedData[lowerIndex]*(1-weight) + sortedData[upperIndex]*weight
+}

@@ -8,7 +8,7 @@ import (
 
 func TestSlowLogAggregator(t *testing.T) {
 	aggregator := SlowLogStatsAggregator{
-		StmtTagDurations: make(map[string][]SlowLogDurEntry),
+		CommandTagDurations: make(map[string][]SlowLogDurEntry),
 	}
 
 	// Test entries with durations - using realistic PostgreSQL log message patterns
@@ -33,17 +33,17 @@ func TestSlowLogAggregator(t *testing.T) {
 	aggregator.Add(entry3) // This should be skipped (no duration)
 
 	// Check that SELECT was recorded
-	assert.Contains(t, aggregator.StmtTagDurations, "SELECT")
-	assert.Len(t, aggregator.StmtTagDurations["SELECT"], 1)
-	assert.InDelta(t, 123.45, aggregator.StmtTagDurations["SELECT"][0].Duration, 0.01)
+	assert.Contains(t, aggregator.CommandTagDurations, "SELECT")
+	assert.Len(t, aggregator.CommandTagDurations["SELECT"], 1)
+	assert.InDelta(t, 123.45, aggregator.CommandTagDurations["SELECT"][0].Duration, 0.01)
 
 	// Check that UPDATE was recorded
-	assert.Contains(t, aggregator.StmtTagDurations, "UPDATE")
-	assert.Len(t, aggregator.StmtTagDurations["UPDATE"], 1)
-	assert.InDelta(t, 456.78, aggregator.StmtTagDurations["UPDATE"][0].Duration, 0.01)
+	assert.Contains(t, aggregator.CommandTagDurations, "UPDATE")
+	assert.Len(t, aggregator.CommandTagDurations["UPDATE"], 1)
+	assert.InDelta(t, 456.78, aggregator.CommandTagDurations["UPDATE"][0].Duration, 0.01)
 
 	// Check that INSERT was not recorded (no duration)
-	assert.NotContains(t, aggregator.StmtTagDurations, "INSERT")
+	assert.NotContains(t, aggregator.CommandTagDurations, "INSERT")
 
 	// Test ShowStats (should not panic)
 	aggregator.ShowStats()

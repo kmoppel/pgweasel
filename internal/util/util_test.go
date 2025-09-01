@@ -339,3 +339,56 @@ func TestExtractConnectUserDbAppnameSslFromLogMessage(t *testing.T) {
 		assert.Equal(t, tt.expectedSsl, ssl, "SSL flag should match for message: %s", tt.message)
 	}
 }
+
+func TestCalculatePercentile(t *testing.T) {
+	tests := []struct {
+		name       string
+		data       []float64
+		percentile float64
+		expected   float64
+	}{
+		{
+			name:       "Empty slice",
+			data:       []float64{},
+			percentile: 50,
+			expected:   0,
+		},
+		{
+			name:       "Single element",
+			data:       []float64{42.5},
+			percentile: 50,
+			expected:   42.5,
+		},
+		{
+			name:       "Two elements - 50th percentile",
+			data:       []float64{10, 20},
+			percentile: 50,
+			expected:   15,
+		},
+		{
+			name:       "Simple case - 25th percentile",
+			data:       []float64{1, 2, 3, 4, 5},
+			percentile: 25,
+			expected:   2,
+		},
+		{
+			name:       "Simple case - 75th percentile",
+			data:       []float64{1, 2, 3, 4, 5},
+			percentile: 75,
+			expected:   4,
+		},
+		{
+			name:       "Larger dataset - 95th percentile",
+			data:       []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			percentile: 95,
+			expected:   9.55,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := util.CalculatePercentile(tt.data, tt.percentile)
+			assert.InDelta(t, tt.expected, result, 0.01, "percentile calculation should be accurate")
+		})
+	}
+}
