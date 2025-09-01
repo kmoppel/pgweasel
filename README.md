@@ -35,6 +35,8 @@ BETA. Command / subcommands "API" might change.
 
 `pgweasel slow top $LOG` - Show top 10 (by default) slowest queries
 
+`pgweasel slow stat $LOG` - Show avg slow log exec times per query type
+
 `pgweasel stats $LOG` - Summary of log events - counts / frequency of errors, connections, checkpoints, autovacuums
 
 `pgweasel system $LOG` - Show instance lifecycle events only, i.e. Postgres internal processes, replication, extensions
