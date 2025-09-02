@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var Peaks bool
 var PeakBucketIntervalStr string = "10m" // Default bucket interval as a string
 var PeakBucketDuration time.Duration
 

@@ -34,7 +34,6 @@ var Connstr string
 var Tail bool
 var LogLineRegex string
 var Csv bool
-var Peaks bool
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "More chat")
@@ -44,7 +43,6 @@ func init() {
 	rootCmd.PersistentFlags().StringArrayVarP(&Filters, "filter", "f", nil, "Add extra line match conditions (regex)")
 	// rootCmd.PersistentFlags().BoolVarP(&Tail, "tail", "t", false, "Keep watching the log file for new entries")
 	rootCmd.PersistentFlags().BoolVarP(&Csv, "csv", "", false, "Specify that input file or stdin is actually CSV regardless of file extension")
-	rootCmd.PersistentFlags().BoolVarP(&Peaks, "peaks", "", false, "Show only event counts per log level for peak load periods")
 }
 
 type WeaselConfig struct {

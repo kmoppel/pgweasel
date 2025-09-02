@@ -39,7 +39,7 @@ BETA. Command / subcommands "API" might change.
 
 `pgweasel stats $LOG` - Summary of log events - counts / frequency of errors, connections, checkpoints, autovacuums
 
-`pgweasel system $LOG` - Show instance lifecycle events only, i.e. Postgres internal processes, replication, extensions
+`pgweasel system $LOG` - Show lifecycle / Postgres internal events, i.e. autovacuum, replication, extensions, config changes etc
 
 `pgweasel grep $REGEX $LOG` - Show full log entries of matching search fragments
 
