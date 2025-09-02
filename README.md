@@ -23,9 +23,9 @@ BETA. Command / subcommands "API" might change.
 
 `pgweasel errors top $LOG` - Show the most frequent error messages with counts
 
-`pgweasel errors --hist $LOG` - Show a basic vertical histogram of error counts. Default --bucket=1h
+`pgweasel errors --histo $LOG` - Show a basic vertical histogram of error counts. Default --bucket=1h
 
-`pgweasel errors --hist -l debug5 $LOG` - Show a histogram for all events, not only errors
+`pgweasel errors --histo -l debug5 $LOG` - Show a histogram for all events, not only errors
 
 `pgweasel locks $LOG` - Only show locking (incl. deadlocks, recovery conflicts) entries
 
@@ -49,6 +49,11 @@ BETA. Command / subcommands "API" might change.
 # Quickstart
 
 ```
+go install github.com/kmoppel/pgweasel@latest
+$HOME/go/bin/pgweasel -h
+
+OR
+
 git clone https://github.com/kmoppel/pgweasel.git
 
 cd pgweasel && go build -ldflags "-s -w"
