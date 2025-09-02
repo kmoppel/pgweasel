@@ -17,6 +17,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const LOG_ENTRIES_PER_BATCH = 10
+
 var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})`)
 var REGEX_LOG_TIME = regexp.MustCompile(`^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<log_time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})[\s:\-]`)
 var REGEX_LOG_LEVEL_MESSAGE = regexp.MustCompile(`^.*?[\s:\-](?P<log_level>[A-Z12345]{3,12}):  (?P<message>.*)$`)
@@ -100,7 +102,7 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 
 		var lines = make([]string, 0)
 
-		batch := make([]pglog.LogEntry, 0, 10)
+		batch := make([]pglog.LogEntry, 0, LOG_ENTRIES_PER_BATCH)
 		firstCompleteEntryFound := false
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -120,10 +122,10 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 
 					batch = append(batch, e)
 
-					// Send batch when it reaches 10 entries
-					if len(batch) == 10 {
+					// Send batch when it reaches newConst entries
+					if len(batch) == LOG_ENTRIES_PER_BATCH {
 						ch <- batch
-						batch = make([]pglog.LogEntry, 0, 10)
+						batch = make([]pglog.LogEntry, 0, LOG_ENTRIES_PER_BATCH)
 					}
 					continue
 				}
@@ -207,7 +209,7 @@ func HasTimestampPrefix(line string) bool {
 }
 
 func GetLogRecordsBatchFromFile(filePath string, r *regexp.Regexp, useCsvFormat bool) <-chan []pglog.LogEntry {
-	ch := make(chan []pglog.LogEntry)
+	ch := make(chan []pglog.LogEntry, 3)
 	go func() {
 		defer close(ch)
 		if strings.Contains(filePath, ".csv") || useCsvFormat {
