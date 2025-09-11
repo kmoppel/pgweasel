@@ -1,15 +1,15 @@
 # pgweasel
 
-A simple CLI / interactive use oriented PostgreSQL log parser, to complement [pgBadger](https://github.com/darold/pgbadger).
+A simple CLI usage oriented PostgreSQL log parser, to complement [pgBadger](https://github.com/darold/pgbadger).
 
 pgweasel tries to:
 
-* be way faster than pgBadger (~10x)
-* way simpler, with less flags and operation modes - concentrating on the Pareto DBA flow
-* focus on CLI interactions - no html / json
+* be an order of magnitude faster than pgBadger
+* way simpler, with less flags, operating rather via commands and sub-commands
+* focus on CLI interactions only - no html / json
 * more cloud-friendly - no deps, a single binary
 * zero config - not dependent on Postgres `log_line_prefix`
-* be more user-friendly - handle relative time inputs, auto-detect the latest log file location if not specified, subcommand aliases
+* be more user-friendly - handle relative time inputs, auto-detect log files, subcommand aliases
 
 ## Project status
 
@@ -83,7 +83,6 @@ Flags:
       --from string          Log entries from $time, e.g.: -1h
   -h, --help                 help for pgweasel
   -1, --oneline              Compact multiline entries
-      --peaks                Show only event counts per log level for peak load periods
       --to string            Log entries up to $time
   -v, --verbose              More chat
 
@@ -93,15 +92,21 @@ Use "pgweasel [command] --help" for more information about a command.
 
 # Contributing
 
-All kinds of feedback and help (PR-s, co-maintainer) would be much appreciated - especially as I'm not a developer per se. Hopefully pgweasel will grow into a community project with rock solid quality.
+All kinds of feedback and help (PR-s, co-maintainer) would be much appreciated - especially as I'm not a
+developer per se. Hopefully pgweasel will grow into a community project with rock solid quality.
 
 ## Have sample log files ?
 
-I've scraped the Postgres mailing archives for *.log attachements (in [testdata](https://github.com/kmoppel/pgweasel/tree/main/testdata) folder), but they are not much sadly...so if you have some real-life logs from busy or somehow "troublesome" instances, not containing secrets - please add one one via PR or proide some S3 etc link under issues. Thank you!
+I've scraped the Postgres mailing archives for *.log attachements (in [testdata](https://github.com/kmoppel/pgweasel/tree/main/testdata) folder), but they
+are not much sadly...so if you have some real-life logs from busy or somehow "troublesome" instances, not
+containing secrets - please add one one via PR or proide some S3 etc link under issues. Thank you!
 
 # Perf difference indication
 
-Let's say the goal here is the very common task of finding out the slowest query runtimes from logs (330M uncompressed, not large by any means)...which firstly is very unconvenient with pgbadger as it does a lot of things and doesn't have feature flags for all of the common things. One can speed things up though with disabling some features / summaries.
+Let's say the goal here is the very common task of finding out the slowest query runtimes from logs
+(330M uncompressed, not large by any means)...which firstly is very unconvenient with pgbadger as it
+does a lot of things and doesn't have feature flags for all the common things. One can speed things
+up though with disabling some features / summaries.
 
 ## pgbadger
 
