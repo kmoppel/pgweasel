@@ -16,8 +16,10 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Error command for testing
-    #[command(alias = "err")]
-    Error,
+    #[command(visible_alias = "err")]
+    #[command(visible_alias = "errs")]
+    #[command(visible_alias = "error")]
+    Errors,
 }
 
 fn main() {
@@ -25,7 +27,7 @@ fn main() {
     println!("{cli:?}");
 
     match cli.command {
-        Commands::Error {} => {
+        Commands::Errors {} => {
             println!("Parsing file: {}", cli.filename);
         }
     }
