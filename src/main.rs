@@ -5,6 +5,7 @@ use clap::{Parser, Subcommand};
 
 mod errors;
 mod logreader;
+mod logparser;
 mod util;
 
 /// A PostgreSQL log parser

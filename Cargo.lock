@@ -301,6 +301,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "clap",
+ "once_cell",
  "regex",
  "tempfile",
 ]
