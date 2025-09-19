@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 
 mod logreader;
+mod util;
 
 /// A PostgreSQL log parser
 #[derive(Parser, Debug)]
@@ -47,6 +48,21 @@ fn main() {
     let cli = Cli::parse();
     if cli.verbose {
         println!("{cli:?}");
+    }
+    
+    // Test the time parsing function if begin parameter is provided
+    if cli.begin.is_some() {
+        if let Some(begin_str) = &cli.begin {
+            match util::time_or_interval_string_to_time(begin_str, None) {
+                Ok(datetime) => {
+                    println!("Parsed begin time: {}", datetime.format("%Y-%m-%d %H:%M:%S %Z"));
+                },
+                Err(e) => {
+                    eprintln!("Error parsing begin time '{}': {}", begin_str, e);
+                    std::process::exit(1);
+                }
+            }
+        }
     }
 
     match cli.command {
