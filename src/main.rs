@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 
+mod errors;
 mod logreader;
 mod util;
 
@@ -49,14 +50,17 @@ fn main() {
     if cli.verbose {
         println!("{cli:?}");
     }
-    
+
     // Test the time parsing function if begin parameter is provided
     if cli.begin.is_some() {
         if let Some(begin_str) = &cli.begin {
             match util::time_or_interval_string_to_time(begin_str, None) {
                 Ok(datetime) => {
-                    println!("Parsed begin time: {}", datetime.format("%Y-%m-%d %H:%M:%S %Z"));
-                },
+                    println!(
+                        "Parsed begin time: {}",
+                        datetime.format("%Y-%m-%d %H:%M:%S %Z")
+                    );
+                }
                 Err(e) => {
                     eprintln!("Error parsing begin time '{}': {}", begin_str, e);
                     std::process::exit(1);
@@ -76,26 +80,7 @@ fn main() {
                 }
             };
 
-            if cli.verbose {
-                println!("Parsing file: {}", filename);
-            }
-
-            // Use the logreader module to read the file line by line
-            match logreader::getlines(filename) {
-                Ok(lines) => {
-                    for (line_number, line_result) in lines.enumerate() {
-                        match line_result {
-                            Ok(line) => {
-                                if line.contains("ERROR: ") {
-                                    println!("{}", line);
-                                }
-                            }
-                            Err(e) => eprintln!("Error reading line {}: {}", line_number + 1, e),
-                        }
-                    }
-                }
-                Err(e) => eprintln!("Error opening file '{}': {}", filename, e),
-            }
+            errors::process_errors(filename, cli.verbose);
         }
     }
 }
