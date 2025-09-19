@@ -1,6 +1,18 @@
+use crate::Cli;
+use crate::ConvertedArgs;
 use crate::logreader;
 
-pub fn process_errors(filename: Option<&str>, verbose: bool) {
+pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
+    let filename = cli.filename.as_deref();
+    let verbose = cli.verbose;
+
+    if converted_args.begin.is_some() && cli.verbose {
+        println!(
+            "Filtering logs from begin time: {}",
+            converted_args.begin.unwrap()
+        ); // TODO
+    }
+
     match filename {
         Some(file) => {
             if verbose {

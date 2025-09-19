@@ -3,6 +3,8 @@ use regex::Regex;
 use std::error::Error;
 use std::fmt;
 
+use crate::{Cli, ConvertedArgs};
+
 #[derive(Debug)]
 pub enum TimeParseError {
     InvalidFormat(String),
@@ -259,4 +261,25 @@ mod tests {
         let result = time_or_interval_string_to_time("", None);
         assert!(result.is_err());
     }
+}
+
+pub fn convert_args(cli: &Cli) -> Result<ConvertedArgs, Box<dyn Error>> {
+    let begin = if let Some(begin_str) = &cli.begin {
+        match time_or_interval_string_to_time(begin_str, None) {
+            Ok(datetime) => {
+                println!(
+                    "Parsed begin time: {}",
+                    datetime.format("%Y-%m-%d %H:%M:%S %Z")
+                );
+                Some(datetime)
+            }
+            Err(e) => {
+                return Err(Box::new(e));
+            }
+        }
+    } else {
+        None
+    };
+
+    Ok(ConvertedArgs { begin })
 }
