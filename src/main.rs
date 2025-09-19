@@ -48,7 +48,7 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
     if cli.verbose {
-        println!("{cli:?}");
+        println!("Running in debug mode. Cmdline input: {cli:?}");
     }
 
     // Test the time parsing function if begin parameter is provided
@@ -71,16 +71,9 @@ fn main() {
 
     match cli.command {
         Commands::Errors {} => {
-            // Check if filename was provided
-            let filename = match &cli.filename {
-                Some(f) => f,
-                None => {
-                    eprintln!("Error: filename is required for the errors command");
-                    std::process::exit(1);
-                }
-            };
-
-            errors::process_errors(filename, cli.verbose);
+            // Pass the filename as Option<&str>
+            let filename_ref = cli.filename.as_deref();
+            errors::process_errors(filename_ref, cli.verbose);
         }
     }
 }

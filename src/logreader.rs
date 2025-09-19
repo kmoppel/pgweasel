@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufRead, BufReader, Result};
+use std::io::{self, BufRead, BufReader, Result};
 
 /// Reads a file line by line and returns an iterator over the lines
 ///
@@ -27,6 +27,29 @@ pub fn getlines(filepath: &str) -> Result<impl Iterator<Item = Result<String>>> 
     let file = File::open(filepath)?;
     let reader = BufReader::new(file);
     Ok(reader.lines())
+}
+
+/// Reads from stdin line by line and returns an iterator over the lines
+///
+/// # Returns
+///
+/// * `impl Iterator<Item = Result<String>>` - An iterator that yields each line as a Result<String>
+///
+/// # Examples
+///
+/// ```
+/// use pgweasel_rust::logreader::getlines_from_stdin;
+///
+/// for line_result in getlines_from_stdin() {
+///     match line_result {
+///         Ok(line) => println!("{}", line),
+///         Err(e) => eprintln!("Error reading line: {}", e),
+///     }
+/// }
+/// ```
+pub fn getlines_from_stdin() -> impl Iterator<Item = Result<String>> {
+    let stdin = io::stdin();
+    stdin.lock().lines()
 }
 
 #[cfg(test)]
