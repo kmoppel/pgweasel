@@ -1,0 +1,38 @@
+2025-05-21 15:48:08.507 EEST [3313166] LOG:  starting PostgreSQL 17.5 (Ubuntu 17.5-1.pgdg24.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, 64-bit
+2025-05-21 15:48:08.507 EEST [3313166] LOG:  listening on IPv4 address "127.0.0.1", port 54317
+2025-05-21 15:48:08.519 EEST [3313166] LOG:  listening on Unix socket "/tmp/.s.PGSQL.54317"
+2025-05-21 15:48:08.537 EEST [3313170] LOG:  database system was shut down at 2025-05-21 15:48:08 EEST
+2025-05-21 15:48:08.552 EEST [3313166] LOG:  database system is ready to accept connections
+2025-05-21 15:48:17.876 EEST [3313231] LOG:  AUDIT: SESSION,1,1,READ,SELECT,,,select 'search_path = ' || current_setting('search_path'),<not logged>
+2025-05-21 15:48:17.880 EEST [3313231] LOG:  AUDIT: SESSION,2,1,READ,SELECT,,,"select pid, usename,  now() - query_start as query_age, now() - xact_start as xact_age, wait_event_type, wait_event, query::varchar(100) from pg_stat_activity where state != 'idle' and pid != pg_backend_pid() and (datname = current_database() or datname is null) order by now() - query_start desc limit 5",<not logged>
+2025-05-21 15:48:20.258 EEST [3313231] LOG:  AUDIT: SESSION,3,1,READ,SELECT,,,"SELECT name    FROM pg_catalog.pg_available_extensions   WHERE name LIKE 'pg%' AND installed_version IS NULL
+	LIMIT 1000",<not logged>
+2025-05-21 15:48:21.104 EEST [3313231] LOG:  AUDIT: SESSION,4,1,READ,SELECT,,,"SELECT name    FROM pg_catalog.pg_available_extensions   WHERE name LIKE 'pga%' AND installed_version IS NULL
+	LIMIT 1000",<not logged>
+2025-05-21 15:48:21.679 EEST [3313231] LOG:  AUDIT: SESSION,5,1,DDL,CREATE EXTENSION,,,create extension pgaudit,<not logged>
+2025-05-21 15:48:32.229 EEST [3313307] LOG:  AUDIT: SESSION,1,1,DDL,DROP TABLE,,,"drop table if exists pgbench_accounts, pgbench_branches, pgbench_history, pgbench_tellers",<not logged>
+2025-05-21 15:48:32.232 EEST [3313307] LOG:  AUDIT: SESSION,2,1,DDL,CREATE TABLE,TABLE,public.pgbench_history,"create unlogged table pgbench_history(tid int,bid int,aid    int,delta int,mtime timestamp,filler char(22))",<not logged>
+2025-05-21 15:48:32.236 EEST [3313307] LOG:  AUDIT: SESSION,3,1,DDL,CREATE TABLE,TABLE,public.pgbench_tellers,"create unlogged table pgbench_tellers(tid int not null,bid int,tbalance int,filler char(84)) with (fillfactor=100)",<not logged>
+2025-05-21 15:48:32.240 EEST [3313307] LOG:  AUDIT: SESSION,4,1,DDL,CREATE TABLE,TABLE,public.pgbench_accounts,"create unlogged table pgbench_accounts(aid    int not null,bid int,abalance int,filler char(84)) with (fillfactor=100)",<not logged>
+2025-05-21 15:48:32.243 EEST [3313307] LOG:  AUDIT: SESSION,5,1,DDL,CREATE TABLE,TABLE,public.pgbench_branches,"create unlogged table pgbench_branches(bid int not null,bbalance int,filler char(88)) with (fillfactor=100)",<not logged>
+2025-05-21 15:48:32.246 EEST [3313307] LOG:  AUDIT: SESSION,6,1,MISC,BEGIN,,,begin,<not logged>
+2025-05-21 15:48:32.247 EEST [3313307] LOG:  AUDIT: SESSION,7,1,WRITE,TRUNCATE TABLE,,,"truncate table pgbench_accounts, pgbench_branches, pgbench_history, pgbench_tellers",<not logged>
+2025-05-21 15:48:32.247 EEST [3313307] LOG:  AUDIT: SESSION,8,1,WRITE,COPY,,,copy pgbench_branches from stdin with (freeze on),<not logged>
+2025-05-21 15:48:32.247 EEST [3313307] LOG:  AUDIT: SESSION,9,1,WRITE,COPY,,,copy pgbench_tellers from stdin with (freeze on),<not logged>
+2025-05-21 15:48:32.248 EEST [3313307] LOG:  AUDIT: SESSION,10,1,WRITE,COPY,,,copy pgbench_accounts from stdin with (freeze on),<not logged>
+2025-05-21 15:48:32.524 EEST [3313307] LOG:  AUDIT: SESSION,11,1,MISC,COMMIT,,,commit,<not logged>
+2025-05-21 15:48:39.979 EEST [3313359] LOG:  AUDIT: SESSION,1,1,READ,SELECT,,,select count(*) from pgbench_branches,<not logged>
+2025-05-21 15:48:39.983 EEST [3313359] LOG:  AUDIT: SESSION,2,1,READ,SELECT,,,"select o.n, p.partstrat, pg_catalog.count(i.inhparent) from pg_catalog.pg_class as c join pg_catalog.pg_namespace as n on (n.oid = c.relnamespace) cross join lateral (select pg_catalog.array_position(pg_catalog.current_schemas(true), n.nspname)) as o(n) left join pg_catalog.pg_partitioned_table as p on (p.partrelid = c.oid) left join pg_catalog.pg_inherits as i on (c.oid = i.inhparent) where c.relname = 'pgbench_accounts' and o.n is not null group by 1, 2 order by 1 asc limit 1",<not logged>
+2025-05-21 15:48:39.991 EEST [3313360] LOG:  AUDIT: SESSION,1,1,MISC,BEGIN,,,BEGIN,<not logged>
+2025-05-21 15:48:39.993 EEST [3313360] LOG:  AUDIT: SESSION,2,1,WRITE,UPDATE,,,UPDATE pgbench_accounts SET abalance = abalance + $1 WHERE aid = $2,<not logged>
+2025-05-21 15:48:40.044 EEST [3313360] LOG:  AUDIT: SESSION,3,1,READ,SELECT,,,SELECT abalance FROM pgbench_accounts WHERE aid = $1,<not logged>
+2025-05-21 15:48:40.047 EEST [3313362] LOG:  AUDIT: SESSION,1,1,READ,SELECT,,,SELECT abalance FROM pgbench_accounts WHERE aid = $1;,<not logged>
+2025-05-21 15:48:40.047 EEST [3313361] LOG:  AUDIT: SESSION,1,1,READ,SELECT,,,SELECT abalance FROM pgbench_accounts WHERE aid = $1;,<not logged>
+2025-05-21 15:48:40.063 EEST [3313360] LOG:  AUDIT: SESSION,4,1,WRITE,INSERT,,,"INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)",<not logged>
+2025-05-21 15:48:40.063 EEST [3313360] LOG:  AUDIT: SESSION,5,1,MISC,COMMIT,,,END,<not logged>
+2025-05-21 15:49:02.639 EEST [3313519] LOG:  AUDIT: SESSION,1,1,READ,SELECT,,,select 'search_path = ' || current_setting('search_path'),<not logged>
+2025-05-21 15:49:02.644 EEST [3313519] LOG:  AUDIT: SESSION,2,1,READ,SELECT,,,"select pid, usename,  now() - query_start as query_age, now() - xact_start as xact_age, wait_event_type, wait_event, query::varchar(100) from pg_stat_activity where state != 'idle' and pid != pg_backend_pid() and (datname = current_database() or datname is null) order by now() - query_start desc limit 5",<not logged>
+2025-05-21 15:49:02.646 EEST [3313519] ERROR:  syntax error at or near "asdasdasd" at character 1
+2025-05-21 15:49:02.646 EEST [3313519] STATEMENT:  asdasdasd
+2025-05-21 15:49:39.861 EEST [3313764] LOG:  AUDIT: SESSION,1,1,READ,SELECT,,,select pg_sleep(1),<not logged>
+2025-05-21 15:49:40.862 EEST [3313764] LOG:  duration: 1002.475 ms  statement: select pg_sleep(1)

@@ -1,0 +1,73 @@
+2025-05-18 13:43:19.315 EEST [3745] LOG:  starting PostgreSQL 17.5 (Ubuntu 17.5-1.pgdg24.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, 64-bit
+2025-05-18 13:43:19.315 EEST [3745] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-05-18 13:43:19.316 EEST [3745] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-05-18 13:43:19.324 EEST [3809] LOG:  database system was shut down at 2025-05-17 17:16:15 EEST
+2025-05-18 13:43:19.332 EEST [3745] LOG:  database system is ready to accept connections
+2025-05-18 14:43:19.424 EEST [3807] LOG:  checkpoint starting: time
+2025-05-18 14:43:19.470 EEST [3807] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.007 s, sync=0.002 s, total=0.047 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/1CDE420, redo lsn=0/1CDE3C8
+2025-05-19 09:27:35.204 EEST [3707] LOG:  starting PostgreSQL 17.5 (Ubuntu 17.5-1.pgdg24.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, 64-bit
+2025-05-19 09:27:35.204 EEST [3707] LOG:  listening on IPv4 address "127.0.0.1", port 5432
+2025-05-19 09:27:35.205 EEST [3707] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-05-19 09:27:35.213 EEST [3775] LOG:  database system was interrupted; last known up at 2025-05-18 14:43:19 EEST
+2025-05-19 09:27:35.644 EEST [3775] LOG:  database system was not properly shut down; automatic recovery in progress
+2025-05-19 09:27:35.912 EEST [3775] LOG:  redo starts at 0/1CDE3C8
+2025-05-19 09:27:35.912 EEST [3775] LOG:  invalid record length at 0/1CDE4D0: expected at least 24, got 0
+2025-05-19 09:27:35.912 EEST [3775] LOG:  redo done at 0/1CDE498 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.00 s
+2025-05-19 09:27:35.931 EEST [3773] LOG:  checkpoint starting: end-of-recovery immediate wait
+2025-05-19 09:27:35.944 EEST [3773] LOG:  checkpoint complete: wrote 3 buffers (0.0%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.007 s, sync=0.001 s, total=0.015 s; sync files=2, longest=0.001 s, average=0.001 s; distance=0 kB, estimate=0 kB; lsn=0/1CDE4D0, redo lsn=0/1CDE4D0
+2025-05-19 09:27:35.948 EEST [3707] LOG:  database system is ready to accept connections
+2025-05-22 15:15:09.392 EEST [3239131] krl@postgres ERROR:  new row for relation "pgbench_accounts" violates check constraint "posbal"
+2025-05-22 15:15:09.392 EEST [3239131] krl@postgres DETAIL:  Failing row contains (1319414, 14, -1783,                                                                 ...).
+2025-05-22 15:15:09.392 EEST [3239131] krl@postgres STATEMENT:  UPDATE pgbench_accounts SET abalance = abalance + -1783 WHERE aid = 1319414;
+2025-05-22 15:15:51.119 EEST [3239914] krl@postgres ERROR:  new row for relation "pgbench_accounts" violates check constraint "posbal"
+2025-05-22 15:15:51.119 EEST [3239914] krl@postgres DETAIL:  Failing row contains (2727121, 28, -1671,                                                                 ...).
+2025-05-22 15:15:51.119 EEST [3239914] krl@postgres STATEMENT:  UPDATE pgbench_accounts SET abalance = abalance + -1671 WHERE aid = 2727121;
+2025-05-22 15:15:52.039 EEST [3239935] krl@postgres ERROR:  new row for relation "pgbench_accounts" violates check constraint "posbal"
+2025-05-22 15:15:52.039 EEST [3239935] krl@postgres DETAIL:  Failing row contains (1767330, 18, -733,                                                                 ...).
+2025-05-22 15:15:52.039 EEST [3239935] krl@postgres STATEMENT:  UPDATE pgbench_accounts SET abalance = abalance + -733 WHERE aid = 1767330;
+2025-05-22 15:17:25.556 EEST [3243192] krl@postgres ERROR:  new row for relation "pgbench_accounts" violates check constraint "posbal"
+2025-05-22 15:17:25.556 EEST [3243192] krl@postgres DETAIL:  Failing row contains (1237575, 13, -2118,                                                                 ...).
+2025-05-22 15:17:25.556 EEST [3243192] krl@postgres STATEMENT:  UPDATE pgbench_accounts SET abalance = abalance + $1 WHERE aid = $2;
+2025-05-22 15:17:31.566 EEST [3243302] krl@postgres ERROR:  new row for relation "pgbench_accounts" violates check constraint "posbal"
+2025-05-22 15:17:31.566 EEST [3243302] krl@postgres DETAIL:  Failing row contains (6498590, 65, -4305,                                                                 ...).
+2025-05-22 15:17:31.566 EEST [3243302] krl@postgres STATEMENT:  UPDATE pgbench_accounts SET abalance = abalance + $1 WHERE aid = $2;
+2025-05-22 15:17:32.794 EEST [3243323] krl@postgres ERROR:  new row for relation "pgbench_accounts" violates check constraint "posbal"
+2025-05-22 15:17:32.794 EEST [3243323] krl@postgres DETAIL:  Failing row contains (382558, 4, -808,                                                                 ...).
+2025-05-22 15:17:32.794 EEST [3243323] krl@postgres STATEMENT:  UPDATE pgbench_accounts SET abalance = abalance + $1 WHERE aid = $2;
+2025-05-22 15:18:09.924 EEST [3244032] krl@postgres LOG:  statement: select count(*) from pgbench_branches
+2025-05-22 15:18:09.924 EEST [3244032] krl@postgres LOG:  statement: select o.n, p.partstrat, pg_catalog.count(i.inhparent) from pg_catalog.pg_class as c join pg_catalog.pg_namespace as n on (n.oid = c.relnamespace) cross join lateral (select pg_catalog.array_position(pg_catalog.current_schemas(true), n.nspname)) as o(n) left join pg_catalog.pg_partitioned_table as p on (p.partrelid = c.oid) left join pg_catalog.pg_inherits as i on (c.oid = i.inhparent) where c.relname = 'pgbench_accounts' and o.n is not null group by 1, 2 order by 1 asc limit 1
+2025-05-22 15:18:09.928 EEST [3244033] krl@postgres LOG:  execute <unnamed>: BEGIN;
+2025-05-22 15:18:09.928 EEST [3244033] krl@postgres LOG:  execute <unnamed>: UPDATE pgbench_accounts SET abalance = abalance + $1 WHERE aid = $2;
+2025-05-22 15:18:09.928 EEST [3244033] krl@postgres DETAIL:  Parameters: $1 = '3677', $2 = '7939011'
+2025-05-22 15:18:10.227 EEST [3244033] krl@postgres LOG:  execute <unnamed>: SELECT abalance FROM pgbench_accounts WHERE aid = $1;
+2025-05-22 15:18:10.227 EEST [3244033] krl@postgres DETAIL:  Parameters: $1 = '7939011'
+2025-05-22 15:18:10.313 EEST [3244033] krl@postgres LOG:  execute <unnamed>: INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP);
+2025-05-22 15:18:10.313 EEST [3244033] krl@postgres DETAIL:  Parameters: $1 = '734', $2 = '46', $3 = '7939011', $4 = '3677'
+2025-05-22 15:18:10.313 EEST [3244033] krl@postgres LOG:  execute <unnamed>: END;
+2025-05-22 15:18:10.313 EEST [3244033] krl@postgres LOG:  execute <unnamed>: BEGIN;
+2025-05-22 15:18:10.313 EEST [3244033] krl@postgres LOG:  execute <unnamed>: UPDATE pgbench_accounts SET abalance = abalance + $1 WHERE aid = $2;
+2025-05-22 15:18:10.313 EEST [3244033] krl@postgres DETAIL:  Parameters: $1 = '-1099', $2 = '4870354'
+2025-05-22 15:18:10.473 EEST [3244033] krl@postgres ERROR:  new row for relation "pgbench_accounts" violates check constraint "posbal"
+2025-05-22 15:18:10.473 EEST [3244033] krl@postgres DETAIL:  Failing row contains (4870354, 49, -1099,                                                                 ...).
+2025-05-22 15:18:10.473 EEST [3244033] krl@postgres STATEMENT:  UPDATE pgbench_accounts SET abalance = abalance + $1 WHERE aid = $2;
+2025-05-22 15:18:16.227 EEST [3244159] krl@postgres LOG:  statement: select count(*) from pgbench_branches
+2025-05-22 15:18:16.228 EEST [3244159] krl@postgres LOG:  statement: select o.n, p.partstrat, pg_catalog.count(i.inhparent) from pg_catalog.pg_class as c join pg_catalog.pg_namespace as n on (n.oid = c.relnamespace) cross join lateral (select pg_catalog.array_position(pg_catalog.current_schemas(true), n.nspname)) as o(n) left join pg_catalog.pg_partitioned_table as p on (p.partrelid = c.oid) left join pg_catalog.pg_inherits as i on (c.oid = i.inhparent) where c.relname = 'pgbench_accounts' and o.n is not null group by 1, 2 order by 1 asc limit 1
+2025-05-22 15:18:16.232 EEST [3244160] krl@postgres LOG:  execute P_0: BEGIN;
+2025-05-22 15:18:16.232 EEST [3244160] krl@postgres LOG:  execute P_1: UPDATE pgbench_accounts SET abalance = abalance + $1 WHERE aid = $2;
+2025-05-22 15:18:16.232 EEST [3244160] krl@postgres DETAIL:  Parameters: $1 = '4954', $2 = '2685697'
+2025-05-22 15:18:16.520 EEST [3244160] krl@postgres LOG:  execute P_2: SELECT abalance FROM pgbench_accounts WHERE aid = $1;
+2025-05-22 15:18:16.520 EEST [3244160] krl@postgres DETAIL:  Parameters: $1 = '2685697'
+2025-05-22 15:18:16.607 EEST [3244160] krl@postgres LOG:  execute P_3: INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP);
+2025-05-22 15:18:16.607 EEST [3244160] krl@postgres DETAIL:  Parameters: $1 = '723', $2 = '39', $3 = '2685697', $4 = '4954'
+2025-05-22 15:18:16.608 EEST [3244160] krl@postgres LOG:  execute P_4: END;
+2025-05-22 15:18:16.608 EEST [3244160] krl@postgres LOG:  execute P_0: BEGIN;
+2025-05-22 15:18:16.608 EEST [3244160] krl@postgres LOG:  execute P_1: UPDATE pgbench_accounts SET abalance = abalance + $1 WHERE aid = $2;
+2025-05-22 15:18:16.608 EEST [3244160] krl@postgres DETAIL:  Parameters: $1 = '-576', $2 = '3818811'
+2025-05-22 15:18:16.848 EEST [3244160] krl@postgres ERROR:  new row for relation "pgbench_accounts" violates check constraint "posbal"
+2025-05-22 15:18:16.848 EEST [3244160] krl@postgres DETAIL:  Failing row contains (3818811, 39, -576,                                                                 ...).
+2025-05-22 15:18:16.848 EEST [3244160] krl@postgres STATEMENT:  UPDATE pgbench_accounts SET abalance = abalance + $1 WHERE aid = $2;
+2025-05-22 15:19:11.345 EEST [3244729] krl@postgres ERROR:  canceling statement due to user request
+2025-05-22 15:19:11.345 EEST [3244729] krl@postgres STATEMENT:  select pg_sleep(333);
+2025-05-22 15:19:19.513 EEST [3244729] krl@postgres FATAL:  terminating connection due to administrator command
+2025-05-22 15:19:19.513 EEST [3244729] krl@postgres STATEMENT:  select pg_sleep(333);
+2025-05-22 15:19:38.520 EEST [3244880] krl@postgres LOG:  statement: vacuum pgbench_accounts ;
