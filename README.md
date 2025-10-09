@@ -15,6 +15,9 @@ pgweasel tries to:
 
 BETA. Command / subcommands "API" might change.
 
+PS - A rewrite experiment to Rust is in progress in the [rust-rewrite](https://github.com/kmoppel/pgweasel/tree/rust-rewrite)
+branch. Mainly for heavy performance reasons of up to 2-3x.
+
 # Operating modes
 
 `pgweasel errors $LOGFILE(S)_OR_FOLDER` - Show WARN+ log entries "as is"
