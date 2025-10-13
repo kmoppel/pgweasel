@@ -9,7 +9,7 @@ use std::io::{self, BufRead, BufReader, Result};
 ///
 /// # Returns
 ///
-/// * `Result<impl Iterator<Item = Result<String>>>` - An iterator that yields each line as a Result<String>
+/// * `Result<Box<dyn Iterator<Item = Result<String>>>>` - A boxed iterator that yields each line as a Result<String>
 ///
 /// # Examples
 ///
@@ -23,33 +23,33 @@ use std::io::{self, BufRead, BufReader, Result};
 ///     }
 /// }
 /// ```
-pub fn getlines(filepath: &str) -> Result<impl Iterator<Item = Result<String>>> {
+pub fn getlines(filepath: &str) -> Result<Box<dyn Iterator<Item = Result<String>>>> {
     let file = File::open(filepath)?;
     let reader = BufReader::new(file);
-    Ok(reader.lines())
+    Ok(Box::new(reader.lines()))
 }
 
 /// Reads from stdin line by line and returns an iterator over the lines
 ///
 /// # Returns
 ///
-/// * `impl Iterator<Item = Result<String>>` - An iterator that yields each line as a Result<String>
+/// * `Result<Box<dyn Iterator<Item = Result<String>>>>` - A boxed iterator that yields each line as a Result<String>
 ///
 /// # Examples
 ///
 /// ```
 /// use pgweasel_rust::logreader::getlines_from_stdin;
 ///
-/// for line_result in getlines_from_stdin() {
+/// for line_result in getlines_from_stdin()? {
 ///     match line_result {
 ///         Ok(line) => println!("{}", line),
 ///         Err(e) => eprintln!("Error reading line: {}", e),
 ///     }
 /// }
 /// ```
-pub fn getlines_from_stdin() -> impl Iterator<Item = Result<String>> {
+pub fn getlines_from_stdin() -> Result<Box<dyn Iterator<Item = Result<String>>>> {
     let stdin = io::stdin();
-    stdin.lock().lines()
+    Ok(Box::new(stdin.lock().lines()))
 }
 
 #[cfg(test)]
