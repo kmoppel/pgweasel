@@ -1,6 +1,10 @@
+use crate::logparser::LOG_ENTRY_START_REGEX;
+use crate::logparser::SEVERITY_REGEX;
+use crate::util::parse_timestamp_from_string;
 use crate::Cli;
 use crate::ConvertedArgs;
 use crate::logreader;
+use crate::logparser::TIMESTAMP_REGEX;
 
 pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
     let filename = cli.filename.as_deref();
@@ -10,7 +14,7 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
         println!(
             "Filtering logs from begin time: {}",
             converted_args.begin.unwrap()
-        ); // TODO
+        );
     }
 
     let lines_result = match filename {
@@ -33,8 +37,23 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
             for (line_number, line_result) in lines.enumerate() {
                 match line_result {
                     Ok(line) => {
-                        if line.contains("ERROR: ") {
-                            println!("{}", line);
+                        if LOG_ENTRY_START_REGEX.is_match(&line) {
+                            if let Some(caps) = LOG_ENTRY_START_REGEX.captures(&line) {
+                                if &caps["log_level"] != "ERROR" && &caps["log_level"] != "FATAL" && &caps["log_level"] != "PANIC" {
+                                    continue;
+                                }
+                                if cli.begin.is_some() {
+                                    if let Ok(tz) = parse_timestamp_from_string(&caps["time"]) {
+                                        if tz < converted_args.begin.unwrap() {
+                                            if verbose {
+                                                println!("Skipping log line as before begin time: {}", &caps["time"]);
+                                            }
+                                            continue;
+                                        }
+                                    }
+                                }
+                            }
+                            println!("{}", line);   // TODO is sync / flushed ?
                         }
                     }
                     Err(e) => eprintln!("Error reading line {}: {}", line_number + 1, e),

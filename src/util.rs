@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, NaiveDate, TimeZone};
+use chrono::{DateTime, Local, NaiveDate, NaiveDateTime, TimeZone};
 use regex::Regex;
 use std::error::Error;
 use std::fmt;
@@ -168,10 +168,43 @@ fn parse_timestamp(
     )))
 }
 
+pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, String> {
+    let input = input.trim();
+
+    // Common formats to try
+    let formats = vec![
+        "%Y-%m-%d %H:%M:%S%.3f %Z",     // 2025-08-24 00:05:48.870 CEST
+        "%Y-%m-%d %H:%M:%S%.f %Z",       // with any fractional seconds
+        "%Y-%m-%d %H:%M:%S %Z",          // without fractional seconds
+        "%Y-%m-%d %H:%M:%S%.3f",         // without timezone
+        "%Y-%m-%d %H:%M:%S%.f",          // without timezone, any fractional
+        "%Y-%m-%d %H:%M:%S",             // without timezone and fractional
+        "%Y-%m-%d %H:%M",                // without seconds
+    ];
+
+    // Try parsing with timezone first
+    for format in formats.iter() {
+        if let Ok(dt) = DateTime::parse_from_str(input, format) {
+            return Ok(dt.with_timezone(&Local));
+        }
+    }
+
+    // Try parsing as naive datetime and convert to local
+    for format in formats.iter() {
+        if let Ok(naive_dt) = NaiveDateTime::parse_from_str(input, format) {
+            if let Some(local_dt) = Local.from_local_datetime(&naive_dt).single() {
+                return Ok(local_dt);
+            }
+        }
+    }
+
+    Err(format!("Unable to parse timestamp: '{}'", input))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::{Local, TimeZone};
+    use chrono::{Datelike, Local, TimeZone};
 
     #[test]
     fn test_today() {
@@ -293,6 +326,12 @@ mod tests {
             assert!(extracted_time.is_none(), "Expected extracted time to be None for: {}", test_case);
             println!("✓ Correctly identified no timestamp in: {}", test_case);
         }
+    }
+
+    #[test]
+    fn test_parse_timestamp_from_string() {
+        let result = parse_timestamp_from_string("2025-05-02 18:25:51.151 EEST").unwrap();
+        assert_eq!(result.month(), 5);
     }
 }
 

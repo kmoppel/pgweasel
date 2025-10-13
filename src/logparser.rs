@@ -5,13 +5,18 @@ use regex::Regex;
 use once_cell::sync::Lazy;
 use crate::logreader;
 
-static TIMESTAMP_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})").unwrap()
+pub static TIMESTAMP_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})").unwrap()
 });
 
-static SEVERITY_REGEX: Lazy<Regex> = Lazy::new(|| {
+pub static SEVERITY_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^.*?[\s:\-](?P<log_level>[A-Z12345]{3,12}):  (?P<message>.*)$").unwrap()
 });
+
+pub static LOG_ENTRY_START_REGEX: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})[\s:\-].*?[\s:\-]?(?P<log_level>[A-Z12345]{3,12}):  ").unwrap()
+});
+
 
 pub struct LogEntry {
 	pub log_time: String,
