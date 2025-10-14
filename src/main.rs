@@ -100,15 +100,16 @@ fn main() {
     };
 
     match &cli.command {
-        Commands::Errors { min_severity, subcommand } => {
-            match subcommand {
-                Some(ErrorsSubcommands::Top) => {
-                    println!("hello top errors. min_severity = {}", min_severity);
-                }
-                None => {
-                    errors::process_errors(&cli, &converted_args);
-                }
+        Commands::Errors {
+            min_severity,
+            subcommand,
+        } => match subcommand {
+            Some(ErrorsSubcommands::Top) => {
+                println!("hello top errors. min_severity = {}", min_severity);
             }
-        }
+            None => {
+                errors::process_errors(&cli, &converted_args, min_severity);
+            }
+        },
     }
 }
