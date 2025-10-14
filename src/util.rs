@@ -176,8 +176,8 @@ pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, Strin
     // %m	Time stamp with milliseconds 2006-01-02 15:04:05 MST
     // %n	Time stamp with milliseconds (as a Unix epoch)  TODO
     let formats = vec![
-        "%Y-%m-%d %H:%M:%S%.3f %Z",     // 2025-08-24 00:05:48.870 CEST
-        "%Y-%m-%d %H:%M:%S% %Z",       // with any fractional seconds
+        "%Y-%m-%d %H:%M:%S%.3f %Z", // 2025-08-24 00:05:48.870 CEST
+        "%Y-%m-%d %H:%M:%S% %Z",    // with any fractional seconds
     ];
 
     // Try parsing with timezone first
@@ -306,9 +306,20 @@ mod tests {
 
         for test_case in test_cases {
             let (has_timestamp, extracted_time) = line_has_timestamp_prefix(test_case);
-            assert!(has_timestamp, "Expected timestamp to be found in: {}", test_case);
-            assert!(extracted_time.is_some(), "Expected extracted time to be Some for: {}", test_case);
-            println!("✓ Found timestamp in: {} -> {:?}", test_case, extracted_time);
+            assert!(
+                has_timestamp,
+                "Expected timestamp to be found in: {}",
+                test_case
+            );
+            assert!(
+                extracted_time.is_some(),
+                "Expected extracted time to be Some for: {}",
+                test_case
+            );
+            println!(
+                "✓ Found timestamp in: {} -> {:?}",
+                test_case, extracted_time
+            );
         }
 
         // Test lines that should NOT match
@@ -321,7 +332,11 @@ mod tests {
         for test_case in negative_test_cases {
             let (has_timestamp, extracted_time) = line_has_timestamp_prefix(test_case);
             assert!(!has_timestamp, "Expected no timestamp in: {}", test_case);
-            assert!(extracted_time.is_none(), "Expected extracted time to be None for: {}", test_case);
+            assert!(
+                extracted_time.is_none(),
+                "Expected extracted time to be None for: {}",
+                test_case
+            );
             println!("✓ Correctly identified no timestamp in: {}", test_case);
         }
     }

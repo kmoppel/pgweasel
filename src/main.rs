@@ -4,8 +4,8 @@ use chrono::{DateTime, Local};
 use clap::{Parser, Subcommand};
 
 mod errors;
-mod logreader;
 mod logparser;
+mod logreader;
 mod util;
 
 /// A PostgreSQL log parser
