@@ -2,8 +2,23 @@ use crate::Cli;
 use crate::ConvertedArgs;
 use crate::logparser::LOG_ENTRY_START_REGEX;
 use crate::logreader;
+use crate::postgres::VALID_SEVERITIES;
 use crate::util::parse_timestamp_from_string;
 use log::{debug, error};
+
+/// Validate that a severity level string is valid
+pub fn validate_severity(severity: &str) -> Result<(), String> {
+    VALID_SEVERITIES
+        .contains(&severity.to_uppercase().as_str())
+        .then_some(())
+        .ok_or_else(|| {
+            format!(
+                "Invalid severity level: '{}'. Valid values are: {}",
+                severity,
+                VALID_SEVERITIES.join(", ")
+            )
+        })
+}
 
 /// Convert PostgreSQL log severity level to a numeric priority
 fn log_entry_severity_to_num(severity: &str) -> i32 {

@@ -7,6 +7,7 @@ use log::{debug, error};
 mod errors;
 mod logparser;
 mod logreader;
+mod postgres;
 mod util;
 
 /// A PostgreSQL log parser
@@ -103,13 +104,21 @@ fn main() {
         Commands::Errors {
             min_severity,
             subcommand,
-        } => match subcommand {
-            Some(ErrorsSubcommands::Top) => {
-                println!("hello top errors. min_severity = {}", min_severity);
+        } => {
+            // Validate min_severity early
+            if let Err(e) = errors::validate_severity(min_severity) {
+                error!("{}", e);
+                std::process::exit(1);
             }
-            None => {
-                errors::process_errors(&cli, &converted_args, min_severity);
+
+            match subcommand {
+                Some(ErrorsSubcommands::Top) => {
+                    println!("hello top errors. min_severity = {}", min_severity);
+                }
+                None => {
+                    errors::process_errors(&cli, &converted_args, min_severity);
+                }
             }
-        },
+        }
     }
 }
