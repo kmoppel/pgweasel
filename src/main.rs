@@ -52,11 +52,20 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Error command for testing
+    /// Show or summarize error messages
     #[command(visible_alias = "err")]
     #[command(visible_alias = "errs")]
     #[command(visible_alias = "error")]
-    Errors,
+    Errors {
+        #[command(subcommand)]
+        subcommand: Option<ErrorsSubcommands>,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+enum ErrorsSubcommands {
+    /// Show the most frequent error messages with counts
+    Top,
 }
 
 struct ConvertedArgs {
@@ -86,9 +95,16 @@ fn main() {
         }
     };
 
-    match cli.command {
-        Commands::Errors {} => {
-            errors::process_errors(&cli, &converted_args);
+    match &cli.command {
+        Commands::Errors { subcommand } => {
+            match subcommand {
+                Some(ErrorsSubcommands::Top) => {
+                    println!("hello top errors");
+                }
+                None => {
+                    errors::process_errors(&cli, &converted_args);
+                }
+            }
         }
     }
 }
