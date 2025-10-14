@@ -31,12 +31,18 @@ impl Error for TimeParseError {}
 /// - Special keywords: "today"
 /// - ISO timestamps: "2025-09-19 15:30:00", "2025-09-19T15:30:00Z"
 /// - Date only: "2025-09-19" (uses local timezone)
+/// - 2006-01-02 15:04:05.000 MST
+/// - 2006-01-02 15:04:05 MST
 pub fn time_or_interval_string_to_time(
     human_input: &str,
     reference_time: Option<DateTime<Local>>,
 ) -> Result<DateTime<Local>, TimeParseError> {
     if human_input.is_empty() {
         return Err(TimeParseError::InvalidFormat("Empty input".to_string()));
+    }
+    let parsed_time = parse_timestamp_from_string(human_input);
+    if parsed_time.is_ok() {
+        return Ok(parsed_time.unwrap());
     }
 
     let reference_time = reference_time.unwrap_or_else(|| Local::now());
