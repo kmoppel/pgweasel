@@ -57,6 +57,10 @@ enum Commands {
     #[command(visible_alias = "errs")]
     #[command(visible_alias = "error")]
     Errors {
+        /// Postgres log levels are DEBUG[5-1], INFO, NOTICE, WARNING, ERROR, LOG, FATAL, PANIC
+        #[arg(short = 'l', long = "min-severity", default_value = "WARNING")]
+        min_severity: String,
+
         #[command(subcommand)]
         subcommand: Option<ErrorsSubcommands>,
     },
@@ -96,10 +100,10 @@ fn main() {
     };
 
     match &cli.command {
-        Commands::Errors { subcommand } => {
+        Commands::Errors { min_severity, subcommand } => {
             match subcommand {
                 Some(ErrorsSubcommands::Top) => {
-                    println!("hello top errors");
+                    println!("hello top errors. min_severity = {}", min_severity);
                 }
                 None => {
                     errors::process_errors(&cli, &converted_args);
