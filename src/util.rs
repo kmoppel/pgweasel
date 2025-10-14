@@ -373,7 +373,24 @@ pub fn convert_args(cli: &Cli) -> Result<ConvertedArgs, Box<dyn Error>> {
         None
     };
 
-    Ok(ConvertedArgs { begin })
+    let end = if let Some(end_str) = &cli.end {
+        match time_or_interval_string_to_time(end_str, None) {
+            Ok(datetime) => {
+                debug!(
+                    "Parsed end time: {}",
+                    datetime.format("%Y-%m-%d %H:%M:%S %Z")
+                );
+                Some(datetime)
+            }
+            Err(e) => {
+                return Err(Box::new(e));
+            }
+        }
+    } else {
+        None
+    };
+
+    Ok(ConvertedArgs { begin, end })
 }
 
 #[allow(dead_code)]

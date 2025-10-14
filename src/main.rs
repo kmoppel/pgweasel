@@ -37,6 +37,15 @@ pub struct Cli {
     )]
     begin: Option<String>,
 
+    #[arg(
+        global = true,
+        short = 'e',
+        long = "end",
+        required = false,
+        value_name = "[ 10min | '2025-09-02 13:00' ]"
+    )]
+    end: Option<String>,
+
     #[command(subcommand)]
     command: Commands,
 }
@@ -52,7 +61,7 @@ enum Commands {
 
 struct ConvertedArgs {
     begin: Option<DateTime<Local>>,
-    //    end: Option<DateTime<Local>>,
+    end: Option<DateTime<Local>>,
 }
 
 fn main() {

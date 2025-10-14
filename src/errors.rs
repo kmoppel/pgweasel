@@ -16,6 +16,13 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
         );
     }
 
+    if converted_args.end.is_some() && cli.verbose {
+        debug!(
+            "Filtering logs until end time: {}",
+            converted_args.end.unwrap()
+        );
+    }
+
     let lines_result = match filename {
         Some(file) => {
             if verbose {
@@ -44,12 +51,26 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
                                 {
                                     continue;
                                 }
+
                                 if cli.begin.is_some() {
                                     if let Ok(tz) = parse_timestamp_from_string(&caps["time"]) {
                                         if tz < converted_args.begin.unwrap() {
                                             if verbose {
                                                 debug!(
                                                     "Skipping log line as before begin time: {}",
+                                                    &caps["time"]
+                                                );
+                                            }
+                                            continue;
+                                        }
+                                    }
+                                }
+                                if cli.end.is_some() {
+                                    if let Ok(tz) = parse_timestamp_from_string(&caps["time"]) {
+                                        if tz > converted_args.end.unwrap() {
+                                            if verbose {
+                                                debug!(
+                                                    "Skipping log line as after end time: {}",
                                                     &caps["time"]
                                                 );
                                             }
