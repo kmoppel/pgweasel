@@ -1,14 +1,15 @@
-use crate::logreader;
 use once_cell::sync::Lazy;
 use regex::Regex;
 /// Turns input log lines into structured log entries
 use std::io::Result;
 
-pub static TIMESTAMP_REGEX: Lazy<Regex> = Lazy::new(|| {
+#[allow(dead_code)]
+static TIMESTAMP_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})").unwrap()
 });
 
-pub static SEVERITY_REGEX: Lazy<Regex> = Lazy::new(|| {
+#[allow(dead_code)]
+static SEVERITY_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^.*?[\s:\-](?P<log_level>[A-Z12345]{3,12}):  (?P<message>.*)$").unwrap()
 });
 
@@ -16,7 +17,8 @@ pub static LOG_ENTRY_START_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"^(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})[\s:\-].*?[\s:\-]?(?P<log_level>[A-Z12345]{3,12}):  ").unwrap()
 });
 
-pub struct LogEntry {
+#[allow(dead_code)]
+struct LogEntry {
     pub log_time: String,
     pub severity: String,
     pub message: String,
@@ -47,7 +49,8 @@ pub struct LogEntry {
 ///              entry.log_time, entry.severity, entry.message);
 /// }
 /// ```
-pub fn getentries(filepath: &str) -> Result<Vec<LogEntry>> {
+#[allow(dead_code)]
+fn getentries(filepath: &str) -> Result<Vec<LogEntry>> {
     let file = std::fs::File::open(filepath)?;
     let lines = std::io::BufRead::lines(std::io::BufReader::new(file));
     let mut entries = Vec::new();
@@ -96,6 +99,7 @@ pub fn getentries(filepath: &str) -> Result<Vec<LogEntry>> {
 }
 
 /// Extracts the severity level from a log line
+#[allow(dead_code)]
 fn extract_severity(line: &str, severity_regex: &Regex) -> String {
     if let Some(captures) = severity_regex.captures(line) {
         captures.get(1).unwrap().as_str().to_string()
@@ -119,6 +123,7 @@ fn extract_severity(line: &str, severity_regex: &Regex) -> String {
 }
 
 /// Extracts the message content from log entry lines
+#[allow(dead_code)]
 fn extract_message(lines: &[String]) -> String {
     if lines.is_empty() {
         return String::new();

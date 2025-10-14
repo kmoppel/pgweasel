@@ -1,8 +1,6 @@
 use crate::Cli;
 use crate::ConvertedArgs;
 use crate::logparser::LOG_ENTRY_START_REGEX;
-use crate::logparser::SEVERITY_REGEX;
-use crate::logparser::TIMESTAMP_REGEX;
 use crate::logreader;
 use crate::util::parse_timestamp_from_string;
 
