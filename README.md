@@ -5,3 +5,6 @@
 `pgweasel errors $LOG` - Show WARN+ (by default) log entries "as is"
 
 `pgweasel errors --begin 10m $LOG` - Show entries from last 10min
+
+`pgweasel errors -l error $LOG` - Show ERROR+ entries
+
