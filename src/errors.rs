@@ -53,7 +53,7 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
                                     }
                                 }
                             }
-                            println!("{}", line);   // TODO is sync / flushed ?
+                            println!("{}", line);   // TODO is println sync / flushed i.e. slow ?
                         }
                     }
                     Err(e) => eprintln!("Error reading line {}: {}", line_number + 1, e),

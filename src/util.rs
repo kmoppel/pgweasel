@@ -171,15 +171,13 @@ fn parse_timestamp(
 pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, String> {
     let input = input.trim();
 
-    // Common formats to try
+    // log_line_prefix formats to try
+    // %t	Time stamp without milliseconds 2006-01-02 15:04:05.000 MST
+    // %m	Time stamp with milliseconds 2006-01-02 15:04:05 MST
+    // %n	Time stamp with milliseconds (as a Unix epoch)  TODO
     let formats = vec![
         "%Y-%m-%d %H:%M:%S%.3f %Z",     // 2025-08-24 00:05:48.870 CEST
-        "%Y-%m-%d %H:%M:%S%.f %Z",       // with any fractional seconds
-        "%Y-%m-%d %H:%M:%S %Z",          // without fractional seconds
-        "%Y-%m-%d %H:%M:%S%.3f",         // without timezone
-        "%Y-%m-%d %H:%M:%S%.f",          // without timezone, any fractional
-        "%Y-%m-%d %H:%M:%S",             // without timezone and fractional
-        "%Y-%m-%d %H:%M",                // without seconds
+        "%Y-%m-%d %H:%M:%S% %Z",       // with any fractional seconds
     ];
 
     // Try parsing with timezone first
@@ -331,7 +329,13 @@ mod tests {
     #[test]
     fn test_parse_timestamp_from_string() {
         let result = parse_timestamp_from_string("2025-05-02 18:25:51.151 EEST").unwrap();
+        // println!("Result: {}", result);
+        assert_eq!(result.year(), 2025);
         assert_eq!(result.month(), 5);
+        let result_no_millis = parse_timestamp_from_string("2025-05-02 18:25:51 EEST").unwrap();
+        // println!("Result no millis: {}", result_no_millis);
+        assert_eq!(result_no_millis.year(), 2025);
+        assert_eq!(result_no_millis.month(), 5);
     }
 }
 
@@ -359,7 +363,7 @@ pub fn convert_args(cli: &Cli) -> Result<ConvertedArgs, Box<dyn Error>> {
 pub fn line_has_timestamp_prefix(line: &str) -> (bool, Option<String>) {
     // Check if the line starts with a timestamp pattern
     let timestamp_regex = Regex::new(r"^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})").unwrap();
-    
+
     if let Some(captures) = timestamp_regex.captures(line) {
         let time_match = captures.name("time").map(|m| m.as_str().to_string());
         (true, time_match)
