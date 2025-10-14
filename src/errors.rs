@@ -3,13 +3,14 @@ use crate::ConvertedArgs;
 use crate::logparser::LOG_ENTRY_START_REGEX;
 use crate::logreader;
 use crate::util::parse_timestamp_from_string;
+use log::{debug, error};
 
 pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
     let filename = cli.filename.as_deref();
     let verbose = cli.verbose;
 
     if converted_args.begin.is_some() && cli.verbose {
-        println!(
+        debug!(
             "Filtering logs from begin time: {}",
             converted_args.begin.unwrap()
         );
@@ -18,13 +19,13 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
     let lines_result = match filename {
         Some(file) => {
             if verbose {
-                println!("Parsing file: {}", file);
+                debug!("Parsing file: {}", file);
             }
             logreader::getlines(file)
         }
         None => {
             if verbose {
-                println!("Reading from stdin...");
+                debug!("Reading from stdin...");
             }
             logreader::getlines_from_stdin()
         }
@@ -47,7 +48,7 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
                                     if let Ok(tz) = parse_timestamp_from_string(&caps["time"]) {
                                         if tz < converted_args.begin.unwrap() {
                                             if verbose {
-                                                println!(
+                                                debug!(
                                                     "Skipping log line as before begin time: {}",
                                                     &caps["time"]
                                                 );
@@ -60,15 +61,15 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs) {
                             println!("{}", line); // TODO is println sync / flushed i.e. slow ?
                         }
                     }
-                    Err(e) => eprintln!("Error reading line {}: {}", line_number + 1, e),
+                    Err(e) => error!("Error reading line {}: {}", line_number + 1, e),
                 }
             }
         }
         Err(e) => {
             if let Some(file) = filename {
-                eprintln!("Error opening file '{}': {}", file, e);
+                error!("Error opening file '{}': {}", file, e);
             } else {
-                eprintln!("Error reading from stdin: {}", e);
+                error!("Error reading from stdin: {}", e);
             }
         }
     }

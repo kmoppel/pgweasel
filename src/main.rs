@@ -2,6 +2,7 @@ use core::str;
 
 use chrono::{DateTime, Local};
 use clap::{Parser, Subcommand};
+use log::{debug, error};
 
 mod errors;
 mod logparser;
@@ -56,14 +57,22 @@ struct ConvertedArgs {
 
 fn main() {
     let cli = Cli::parse();
-    if cli.verbose {
-        println!("Running in debug mode. Cmdline input: {cli:?}");
-    }
+
+    // Initialize logger based on verbose flag
+    env_logger::Builder::from_default_env()
+        .filter_level(if cli.verbose {
+            log::LevelFilter::Debug
+        } else {
+            log::LevelFilter::Info
+        })
+        .init();
+
+    debug!("Running in debug mode. Cmdline input: {cli:?}");
 
     let converted_args = match util::convert_args(&cli) {
         Ok(args) => args,
         Err(e) => {
-            eprintln!("Error processing arguments: {}", e);
+            error!("Error processing arguments: {}", e);
             std::process::exit(1);
         }
     };

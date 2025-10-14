@@ -1,3 +1,4 @@
+use log::debug;
 use once_cell::sync::Lazy;
 use regex::Regex;
 /// Turns input log lines into structured log entries
@@ -60,7 +61,7 @@ fn getentries(filepath: &str) -> Result<Vec<LogEntry>> {
 
     for line_result in lines {
         let line = line_result?;
-        println!("***Processing line: {}", line);
+        debug!("***Processing line: {}", line);
         // Check if this line starts with a timestamp
         if let Some(captures) = TIMESTAMP_REGEX.captures(&line) {
             // If we have accumulated lines for a previous entry, save it

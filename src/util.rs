@@ -1,4 +1,5 @@
 use chrono::{DateTime, Local, NaiveDate, NaiveDateTime, TimeZone};
+use log::debug;
 use regex::Regex;
 use std::error::Error;
 use std::fmt;
@@ -358,7 +359,7 @@ pub fn convert_args(cli: &Cli) -> Result<ConvertedArgs, Box<dyn Error>> {
     let begin = if let Some(begin_str) = &cli.begin {
         match time_or_interval_string_to_time(begin_str, None) {
             Ok(datetime) => {
-                println!(
+                debug!(
                     "Parsed begin time: {}",
                     datetime.format("%Y-%m-%d %H:%M:%S %Z")
                 );
