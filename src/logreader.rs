@@ -1,3 +1,4 @@
+use flate2::read::GzDecoder;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Result};
 
@@ -26,6 +27,35 @@ use std::io::{self, BufRead, BufReader, Result};
 pub fn getlines(filepath: &str) -> Result<Box<dyn Iterator<Item = Result<String>>>> {
     let file = File::open(filepath)?;
     let reader = BufReader::new(file);
+    Ok(Box::new(reader.lines()))
+}
+
+/// Reads a gzip-compressed file line by line and returns an iterator over the lines
+///
+/// # Arguments
+///
+/// * `filepath` - A string slice that holds the path to the gzipped file
+///
+/// # Returns
+///
+/// * `Result<Box<dyn Iterator<Item = Result<String>>>>` - A boxed iterator that yields each line as a Result<String>
+///
+/// # Examples
+///
+/// ```
+/// use pgweasel_rust::logreader::getlines_gzip;
+///
+/// for line_result in getlines_gzip("path/to/logfile.log.gz")? {
+///     match line_result {
+///         Ok(line) => println!("{}", line),
+///         Err(e) => eprintln!("Error reading line: {}", e),
+///     }
+/// }
+/// ```
+pub fn getlines_gzip(filepath: &str) -> Result<Box<dyn Iterator<Item = Result<String>>>> {
+    let file = File::open(filepath)?;
+    let decoder = GzDecoder::new(file);
+    let reader = BufReader::new(decoder);
     Ok(Box::new(reader.lines()))
 }
 
