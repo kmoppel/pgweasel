@@ -1,7 +1,7 @@
 use crate::Cli;
 use crate::ConvertedArgs;
+use crate::files;
 use crate::logparser::LOG_ENTRY_START_REGEX;
-use crate::logreader;
 use crate::postgres::VALID_SEVERITIES;
 use crate::util::parse_timestamp_from_string;
 use log::{debug, error};
@@ -57,23 +57,10 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &
         );
     }
 
-    let lines_result = match filename {
-        Some(file) => {
-            if verbose {
-                debug!("Parsing file: {}", file);
-            }
-            logreader::getlines(file)
-        }
-        None => {
-            if verbose {
-                debug!("Reading from stdin...");
-            }
-            logreader::getlines_from_stdin()
-        }
-    };
-    
+    let lines_result = files::get_lines_from_source(filename, verbose);
+
     let min_severity_num = log_entry_severity_to_num(min_severity);
-    
+
     match lines_result {
         Ok(lines) => {
             for (line_number, line_result) in lines.enumerate() {
