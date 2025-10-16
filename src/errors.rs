@@ -4,7 +4,11 @@ use crate::files;
 use crate::logparser::LOG_ENTRY_START_REGEX;
 use crate::postgres::VALID_SEVERITIES;
 use crate::util::parse_timestamp_from_string;
+use csv::ReaderBuilder;
+use flate2::read::GzDecoder;
 use log::{debug, error};
+use std::fs::File;
+use std::io::{BufReader, Read};
 
 /// Validate that a severity level string is valid
 pub fn validate_severity(severity: &str) -> Result<(), String> {
@@ -39,7 +43,156 @@ fn log_entry_severity_to_num(severity: &str) -> i32 {
     }
 }
 
+/// Check if any input file has a CSV extension
+fn has_csv_files(input_files: &[String]) -> bool {
+    input_files
+        .iter()
+        .any(|f| f.ends_with(".csv") || f.ends_with(".csv.gz"))
+}
+
+/// Process CSV format log entries
+fn process_csv_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &str) {
+    let verbose = cli.verbose;
+    let min_severity_num = log_entry_severity_to_num(min_severity);
+
+    if converted_args.begin.is_some() && verbose {
+        debug!(
+            "Filtering logs from begin time: {}",
+            converted_args.begin.unwrap()
+        );
+    }
+
+    if converted_args.end.is_some() && verbose {
+        debug!(
+            "Filtering logs until end time: {}",
+            converted_args.end.unwrap()
+        );
+    }
+
+    // Process each input file separately as CSV
+    for filename in &cli.input_files {
+        if verbose {
+            debug!("Processing CSV file: {}", filename);
+        }
+
+        // Create a reader for the file
+        let reader: Box<dyn Read> = if filename.ends_with(".gz") {
+            match File::open(filename) {
+                Ok(file) => Box::new(GzDecoder::new(file)),
+                Err(e) => {
+                    error!("Error opening file {}: {}", filename, e);
+                    continue;
+                }
+            }
+        } else {
+            match File::open(filename) {
+                Ok(file) => Box::new(file),
+                Err(e) => {
+                    error!("Error opening file {}: {}", filename, e);
+                    continue;
+                }
+            }
+        };
+
+        // Create CSV reader
+        let mut csv_reader = ReaderBuilder::new()
+            .has_headers(false)
+            .flexible(true) // Allow variable number of columns
+            .from_reader(BufReader::new(reader));
+
+        // Process CSV records
+        for (record_number, result) in csv_reader.records().enumerate() {
+            match result {
+                Ok(record) => {
+                    let num_fields = record.len();
+
+                    // Validate column count (23, 24, or 26 columns)
+                    if num_fields != 23 && num_fields != 24 && num_fields != 26 {
+                        if verbose {
+                            debug!(
+                                "Skipping CSV record {} with unexpected column count: {} (expected 23, 24, or 26)",
+                                record_number + 1,
+                                num_fields
+                            );
+                        }
+                        continue;
+                    }
+
+                    // Extract fields (all as strings)
+                    // Column indices based on the provided field list:
+                    // 0: LogTime, 11: ErrorSeverity
+                    let log_time = record.get(0).unwrap_or("");
+                    let error_severity = record.get(11).unwrap_or("");
+
+                    // Filter by severity level
+                    let log_level_num = log_entry_severity_to_num(error_severity);
+                    if log_level_num < min_severity_num {
+                        continue;
+                    }
+
+                    // Filter by begin time
+                    if cli.begin.is_some() {
+                        if let Ok(tz) = parse_timestamp_from_string(log_time) {
+                            if tz < converted_args.begin.unwrap() {
+                                if verbose {
+                                    debug!(
+                                        "Skipping CSV record as before begin time: {}",
+                                        log_time
+                                    );
+                                }
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Filter by end time
+                    if cli.end.is_some() {
+                        if let Ok(tz) = parse_timestamp_from_string(log_time) {
+                            if tz > converted_args.end.unwrap() {
+                                if verbose {
+                                    debug!("Skipping CSV record as after end time: {}", log_time);
+                                }
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Print the CSV record
+                    // Reconstruct the CSV line with proper quoting
+                    let fields: Vec<String> = record
+                        .iter()
+                        .map(|field| {
+                            // Quote field if it contains comma, newline, or quote
+                            if field.contains(',') || field.contains('\n') || field.contains('"') {
+                                format!("\"{}\"", field.replace('"', "\"\""))
+                            } else {
+                                field.to_string()
+                            }
+                        })
+                        .collect();
+                    println!("{}", fields.join(","));
+                }
+                Err(e) => {
+                    error!(
+                        "Error parsing CSV record {} in {}: {}",
+                        record_number + 1,
+                        filename,
+                        e
+                    );
+                }
+            }
+        }
+    }
+}
+
 pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &str) {
+    // Check if we're processing CSV files
+    if has_csv_files(&cli.input_files) {
+        process_csv_errors(cli, converted_args, min_severity);
+        return;
+    }
+
+    // Original text log processing
     let verbose = cli.verbose;
 
     if converted_args.begin.is_some() && cli.verbose {
