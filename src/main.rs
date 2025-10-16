@@ -16,9 +16,9 @@ mod util;
 #[command(version, about, long_about = None)]
 #[command(subcommand_precedence_over_arg = false)] // Allow also subcommands before args as well
 pub struct Cli {
-    /// Input logfile path
+    /// Input logfile paths (files or directories)
     #[arg(global = true, required = false)]
-    filename: Option<String>,
+    input_files: Vec<String>,
 
     /// Verbose. Show debug information
     #[arg(

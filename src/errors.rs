@@ -40,7 +40,6 @@ fn log_entry_severity_to_num(severity: &str) -> i32 {
 }
 
 pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &str) {
-    let filename = cli.filename.as_deref();
     let verbose = cli.verbose;
 
     if converted_args.begin.is_some() && cli.verbose {
@@ -57,7 +56,7 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &
         );
     }
 
-    let lines_result = files::get_lines_from_source(filename, verbose);
+    let lines_result = files::get_lines_from_source(&cli.input_files, verbose);
 
     let min_severity_num = log_entry_severity_to_num(min_severity);
 
@@ -111,10 +110,10 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &
             }
         }
         Err(e) => {
-            if let Some(file) = filename {
-                error!("Error opening file '{}': {}", file, e);
-            } else {
+            if cli.input_files.is_empty() {
                 error!("Error reading from stdin: {}", e);
+            } else {
+                error!("Error processing input files: {}", e);
             }
         }
     }
