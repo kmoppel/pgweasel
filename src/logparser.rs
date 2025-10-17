@@ -54,13 +54,14 @@ where
                         // Extract timestamp, severity, and message
                         let log_time = caps["time"].to_string();
                         let error_severity = caps["log_level"].to_string();
-                        
+
                         // Extract the message part (everything after the severity and ":  ")
-                        let message = if let Some(pos) = line.find(&format!("{}:  ", error_severity)) {
-                            line[pos + error_severity.len() + 3..].to_string()
-                        } else {
-                            String::new()
-                        };
+                        let message =
+                            if let Some(pos) = line.find(&format!("{}:  ", error_severity)) {
+                                line[pos + error_severity.len() + 3..].to_string()
+                            } else {
+                                String::new()
+                            };
 
                         // If we already have a current entry being built, return it
                         let completed_entry = self.current_entry.take();
@@ -144,11 +145,14 @@ mod tests {
     fn test_get_log_records_from_line_stream_single_line_entries() {
         // Create test input with single-line log entries
         let lines = vec![
-            Ok("2024-01-15 10:30:45 UTC LOG:  database system is ready to accept connections".to_string()),
+            Ok(
+                "2024-01-15 10:30:45 UTC LOG:  database system is ready to accept connections"
+                    .to_string(),
+            ),
             Ok("2024-01-15 10:30:46 UTC ERROR:  relation \"users\" does not exist".to_string()),
             Ok("2024-01-15 10:30:47 UTC WARNING:  could not open statistics file".to_string()),
         ];
-        
+
         let iter: Box<dyn Iterator<Item = Result<String>>> = Box::new(lines.into_iter());
         let log_entries: Vec<_> = get_log_records_from_line_stream(iter)
             .collect::<std::io::Result<Vec<_>>>()
@@ -156,12 +160,15 @@ mod tests {
 
         assert_eq!(log_entries.len(), 3);
         assert_eq!(log_entries[0].error_severity, "LOG");
-        assert_eq!(log_entries[0].message, "database system is ready to accept connections");
+        assert_eq!(
+            log_entries[0].message,
+            "database system is ready to accept connections"
+        );
         assert_eq!(log_entries[0].lines.len(), 1);
-        
+
         assert_eq!(log_entries[1].error_severity, "ERROR");
         assert_eq!(log_entries[1].message, "relation \"users\" does not exist");
-        
+
         assert_eq!(log_entries[2].error_severity, "WARNING");
         assert_eq!(log_entries[2].message, "could not open statistics file");
     }
@@ -177,25 +184,25 @@ mod tests {
             Ok("2024-01-15 10:30:47 UTC FATAL:  connection terminated".to_string()),
             Ok("CONTEXT:  while processing query".to_string()),
         ];
-        
+
         let iter: Box<dyn Iterator<Item = Result<String>>> = Box::new(lines.into_iter());
         let log_entries: Vec<_> = get_log_records_from_line_stream(iter)
             .collect::<std::io::Result<Vec<_>>>()
             .unwrap();
 
         assert_eq!(log_entries.len(), 3);
-        
+
         // First entry with 3 lines
         assert_eq!(log_entries[0].error_severity, "ERROR");
         assert_eq!(log_entries[0].message, "syntax error at or near \"SELCT\"");
         assert_eq!(log_entries[0].lines.len(), 3);
         assert!(log_entries[0].lines[1].contains("DETAIL:"));
         assert!(log_entries[0].lines[2].contains("HINT:"));
-        
+
         // Second entry with 1 line
         assert_eq!(log_entries[1].error_severity, "LOG");
         assert_eq!(log_entries[1].lines.len(), 1);
-        
+
         // Third entry with 2 lines
         assert_eq!(log_entries[2].error_severity, "FATAL");
         assert_eq!(log_entries[2].lines.len(), 2);
@@ -221,7 +228,7 @@ mod tests {
             Ok("2024-01-15 10:30:45 UTC LOG:  valid log entry".to_string()),
             Ok("CONTEXT:  continuation of valid entry".to_string()),
         ];
-        
+
         let iter: Box<dyn Iterator<Item = Result<String>>> = Box::new(lines.into_iter());
         let log_entries: Vec<_> = get_log_records_from_line_stream(iter)
             .collect::<std::io::Result<Vec<_>>>()

@@ -2,7 +2,7 @@ use crate::Cli;
 use crate::ConvertedArgs;
 use crate::files;
 use crate::logparser::get_log_records_from_line_stream;
-use crate::postgres::VALID_SEVERITIES;
+use crate::postgres::{CsvEntry, LogEntry, VALID_SEVERITIES};
 use crate::util::parse_timestamp_from_string;
 use csv::ReaderBuilder;
 use flate2::read::GzDecoder;
@@ -50,27 +50,14 @@ fn has_csv_files(input_files: &[String]) -> bool {
         .any(|f| f.ends_with(".csv") || f.ends_with(".csv.gz"))
 }
 
-/// Process CSV format log entries
-fn process_csv_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &str) {
-    let verbose = cli.verbose;
-    let min_severity_num = log_entry_severity_to_num(min_severity);
+/// Convert CSV records to LogEntry items
+fn get_csv_log_entries(
+    input_files: &[String],
+    verbose: bool,
+) -> Box<dyn Iterator<Item = std::io::Result<LogEntry>>> {
+    let mut all_entries: Vec<std::io::Result<LogEntry>> = Vec::new();
 
-    if converted_args.begin.is_some() && verbose {
-        debug!(
-            "Filtering logs from begin time: {}",
-            converted_args.begin.unwrap()
-        );
-    }
-
-    if converted_args.end.is_some() && verbose {
-        debug!(
-            "Filtering logs until end time: {}",
-            converted_args.end.unwrap()
-        );
-    }
-
-    // Process each input file separately as CSV
-    for filename in &cli.input_files {
+    for filename in input_files {
         if verbose {
             debug!("Processing CSV file: {}", filename);
         }
@@ -118,46 +105,37 @@ fn process_csv_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &
                         continue;
                     }
 
-                    // Extract fields (all as strings)
-                    // Column indices based on the provided field list:
-                    // 0: LogTime, 11: ErrorSeverity
-                    let log_time = record.get(0).unwrap_or("");
-                    let error_severity = record.get(11).unwrap_or("");
+                    // Extract and build CsvEntry
+                    let csv_entry = CsvEntry {
+                        csv_column_count: num_fields as i32,
+                        log_time: record.get(0).unwrap_or("").to_string(),
+                        user_name: record.get(1).unwrap_or("").to_string(),
+                        database_name: record.get(2).unwrap_or("").to_string(),
+                        process_id: record.get(3).unwrap_or("").to_string(),
+                        connection_from: record.get(4).unwrap_or("").to_string(),
+                        session_id: record.get(5).unwrap_or("").to_string(),
+                        session_line_num: record.get(6).unwrap_or("").to_string(),
+                        command_tag: record.get(7).unwrap_or("").to_string(),
+                        session_start_time: record.get(8).unwrap_or("").to_string(),
+                        virtual_transaction_id: record.get(9).unwrap_or("").to_string(),
+                        transaction_id: record.get(10).unwrap_or("").to_string(),
+                        error_severity: record.get(11).unwrap_or("").to_string(),
+                        sql_state_code: record.get(12).unwrap_or("").to_string(),
+                        message: record.get(13).unwrap_or("").to_string(),
+                        detail: record.get(14).unwrap_or("").to_string(),
+                        hint: record.get(15).unwrap_or("").to_string(),
+                        internal_query: record.get(16).unwrap_or("").to_string(),
+                        internal_query_pos: record.get(17).unwrap_or("").to_string(),
+                        context: record.get(18).unwrap_or("").to_string(),
+                        query: record.get(19).unwrap_or("").to_string(),
+                        query_pos: record.get(20).unwrap_or("").to_string(),
+                        location: record.get(21).unwrap_or("").to_string(),
+                        application_name: record.get(22).unwrap_or("").to_string(),
+                        backend_type: record.get(23).unwrap_or("").to_string(),
+                        leader_pid: record.get(24).unwrap_or("").to_string(),
+                        query_id: record.get(25).unwrap_or("").to_string(),
+                    };
 
-                    // Filter by severity level
-                    let log_level_num = log_entry_severity_to_num(error_severity);
-                    if log_level_num < min_severity_num {
-                        continue;
-                    }
-
-                    // Filter by begin time
-                    if cli.begin.is_some() {
-                        if let Ok(tz) = parse_timestamp_from_string(log_time) {
-                            if tz < converted_args.begin.unwrap() {
-                                if verbose {
-                                    debug!(
-                                        "Skipping CSV record as before begin time: {}",
-                                        log_time
-                                    );
-                                }
-                                continue;
-                            }
-                        }
-                    }
-
-                    // Filter by end time
-                    if cli.end.is_some() {
-                        if let Ok(tz) = parse_timestamp_from_string(log_time) {
-                            if tz > converted_args.end.unwrap() {
-                                if verbose {
-                                    debug!("Skipping CSV record as after end time: {}", log_time);
-                                }
-                                continue;
-                            }
-                        }
-                    }
-
-                    // Print the CSV record
                     // Reconstruct the CSV line with proper quoting
                     let fields: Vec<String> = record
                         .iter()
@@ -170,29 +148,38 @@ fn process_csv_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &
                             }
                         })
                         .collect();
-                    println!("{}", fields.join(","));
+                    let csv_line = fields.join(",");
+
+                    // Create LogEntry from CSV record
+                    let log_entry = LogEntry {
+                        log_time: csv_entry.log_time.clone(),
+                        error_severity: csv_entry.error_severity.clone(),
+                        message: csv_entry.message.clone(),
+                        lines: vec![csv_line],
+                        csv_columns: Some(csv_entry),
+                    };
+
+                    all_entries.push(Ok(log_entry));
                 }
                 Err(e) => {
-                    error!(
-                        "Error parsing CSV record {} in {}: {}",
-                        record_number + 1,
-                        filename,
-                        e
-                    );
+                    all_entries.push(Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidData,
+                        format!(
+                            "Error parsing CSV record {} in {}: {}",
+                            record_number + 1,
+                            filename,
+                            e
+                        ),
+                    )));
                 }
             }
         }
     }
+
+    Box::new(all_entries.into_iter())
 }
 
 pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &str) {
-    // Check if we're processing CSV files
-    if has_csv_files(&cli.input_files) {
-        process_csv_errors(cli, converted_args, min_severity);
-        return;
-    }
-
-    // Text log processing using log record iterator
     let verbose = cli.verbose;
 
     if converted_args.begin.is_some() && verbose {
@@ -209,70 +196,70 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &
         );
     }
 
-    let lines_result = files::get_lines_from_source(&cli.input_files, verbose);
-
     let min_severity_num = log_entry_severity_to_num(min_severity);
 
-    match lines_result {
-        Ok(lines) => {
-            // Use the new iterator to get structured log entries
-            let log_entries = get_log_records_from_line_stream(lines);
-
-            for entry_result in log_entries {
-                match entry_result {
-                    Ok(entry) => {
-                        // Filter by severity level
-                        let log_level_num = log_entry_severity_to_num(&entry.error_severity);
-
-                        if log_level_num < min_severity_num {
-                            continue;
-                        }
-
-                        // Filter by begin time
-                        if cli.begin.is_some() {
-                            if let Ok(tz) = parse_timestamp_from_string(&entry.log_time) {
-                                if tz < converted_args.begin.unwrap() {
-                                    if verbose {
-                                        debug!(
-                                            "Skipping log entry as before begin time: {}",
-                                            &entry.log_time
-                                        );
-                                    }
-                                    continue;
-                                }
-                            }
-                        }
-
-                        // Filter by end time
-                        if cli.end.is_some() {
-                            if let Ok(tz) = parse_timestamp_from_string(&entry.log_time) {
-                                if tz > converted_args.end.unwrap() {
-                                    if verbose {
-                                        debug!(
-                                            "Skipping log entry as after end time: {}",
-                                            &entry.log_time
-                                        );
-                                    }
-                                    continue;
-                                }
-                            }
-                        }
-
-                        // Print all lines of the log entry
-                        for line in &entry.lines {
-                            println!("{}", line);
-                        }
+    // Get log entries - either from CSV files or text logs
+    let log_entries: Box<dyn Iterator<Item = std::io::Result<LogEntry>>> =
+        if has_csv_files(&cli.input_files) {
+            get_csv_log_entries(&cli.input_files, verbose)
+        } else {
+            match files::get_lines_from_source(&cli.input_files, verbose) {
+                Ok(lines) => Box::new(get_log_records_from_line_stream(lines)),
+                Err(e) => {
+                    if cli.input_files.is_empty() {
+                        error!("Error reading from stdin: {}", e);
+                    } else {
+                        error!("Error processing input files: {}", e);
                     }
-                    Err(e) => error!("Error reading log entry: {}", e),
+                    return;
                 }
             }
-        }
-        Err(e) => {
-            if cli.input_files.is_empty() {
-                error!("Error reading from stdin: {}", e);
-            } else {
-                error!("Error processing input files: {}", e);
+        };
+
+    // Process log entries (same logic for both CSV and text logs)
+    for entry_result in log_entries {
+        match entry_result {
+            Ok(entry) => {
+                // Filter by severity level
+                let log_level_num = log_entry_severity_to_num(&entry.error_severity);
+
+                if log_level_num < min_severity_num {
+                    continue;
+                }
+
+                // Filter by begin time
+                if cli.begin.is_some() {
+                    if let Ok(tz) = parse_timestamp_from_string(&entry.log_time) {
+                        if tz < converted_args.begin.unwrap() {
+                            if verbose {
+                                debug!(
+                                    "Skipping log entry as before begin time: {}",
+                                    &entry.log_time
+                                );
+                            }
+                            continue;
+                        }
+                    }
+                }
+
+                // Filter by end time
+                if cli.end.is_some() {
+                    if let Ok(tz) = parse_timestamp_from_string(&entry.log_time) {
+                        if tz > converted_args.end.unwrap() {
+                            if verbose {
+                                debug!("Skipping log entry as after end time: {}", &entry.log_time);
+                            }
+                            continue;
+                        }
+                    }
+                }
+
+                // Print all lines of the log entry
+                for line in &entry.lines {
+                    println!("{}", line);
+                }
             }
+            Err(e) => error!("Error reading log entry: {}", e),
         }
     }
 }
