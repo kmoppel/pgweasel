@@ -1,7 +1,7 @@
 use crate::Cli;
 use crate::ConvertedArgs;
 use crate::files;
-use crate::logparser::LOG_ENTRY_START_REGEX;
+use crate::logparser::get_log_records_from_line_stream;
 use crate::postgres::VALID_SEVERITIES;
 use crate::util::parse_timestamp_from_string;
 use csv::ReaderBuilder;
@@ -192,17 +192,17 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &
         return;
     }
 
-    // Original text log processing
+    // Text log processing using log record iterator
     let verbose = cli.verbose;
 
-    if converted_args.begin.is_some() && cli.verbose {
+    if converted_args.begin.is_some() && verbose {
         debug!(
             "Filtering logs from begin time: {}",
             converted_args.begin.unwrap()
         );
     }
 
-    if converted_args.end.is_some() && cli.verbose {
+    if converted_args.end.is_some() && verbose {
         debug!(
             "Filtering logs until end time: {}",
             converted_args.end.unwrap()
@@ -215,50 +215,55 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &
 
     match lines_result {
         Ok(lines) => {
-            for (line_number, line_result) in lines.enumerate() {
-                match line_result {
-                    Ok(line) => {
-                        if LOG_ENTRY_START_REGEX.is_match(&line) {
-                            if let Some(caps) = LOG_ENTRY_START_REGEX.captures(&line) {
-                                // Filter by severity level
-                                let log_level = &caps["log_level"];
-                                let log_level_num = log_entry_severity_to_num(log_level);
+            // Use the new iterator to get structured log entries
+            let log_entries = get_log_records_from_line_stream(lines);
 
-                                if log_level_num < min_severity_num {
+            for entry_result in log_entries {
+                match entry_result {
+                    Ok(entry) => {
+                        // Filter by severity level
+                        let log_level_num = log_entry_severity_to_num(&entry.error_severity);
+
+                        if log_level_num < min_severity_num {
+                            continue;
+                        }
+
+                        // Filter by begin time
+                        if cli.begin.is_some() {
+                            if let Ok(tz) = parse_timestamp_from_string(&entry.log_time) {
+                                if tz < converted_args.begin.unwrap() {
+                                    if verbose {
+                                        debug!(
+                                            "Skipping log entry as before begin time: {}",
+                                            &entry.log_time
+                                        );
+                                    }
                                     continue;
                                 }
+                            }
+                        }
 
-                                if cli.begin.is_some() {
-                                    if let Ok(tz) = parse_timestamp_from_string(&caps["time"]) {
-                                        if tz < converted_args.begin.unwrap() {
-                                            if verbose {
-                                                debug!(
-                                                    "Skipping log line as before begin time: {}",
-                                                    &caps["time"]
-                                                );
-                                            }
-                                            continue;
-                                        }
+                        // Filter by end time
+                        if cli.end.is_some() {
+                            if let Ok(tz) = parse_timestamp_from_string(&entry.log_time) {
+                                if tz > converted_args.end.unwrap() {
+                                    if verbose {
+                                        debug!(
+                                            "Skipping log entry as after end time: {}",
+                                            &entry.log_time
+                                        );
                                     }
-                                }
-                                if cli.end.is_some() {
-                                    if let Ok(tz) = parse_timestamp_from_string(&caps["time"]) {
-                                        if tz > converted_args.end.unwrap() {
-                                            if verbose {
-                                                debug!(
-                                                    "Skipping log line as after end time: {}",
-                                                    &caps["time"]
-                                                );
-                                            }
-                                            continue;
-                                        }
-                                    }
+                                    continue;
                                 }
                             }
-                            println!("{}", line); // TODO is println sync / flushed i.e. slow ?
+                        }
+
+                        // Print all lines of the log entry
+                        for line in &entry.lines {
+                            println!("{}", line);
                         }
                     }
-                    Err(e) => error!("Error reading line {}: {}", line_number + 1, e),
+                    Err(e) => error!("Error reading log entry: {}", e),
                 }
             }
         }
