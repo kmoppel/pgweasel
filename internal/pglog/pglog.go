@@ -327,7 +327,7 @@ func (e LogEntry) GetCommandTag() string {
 
 // Simplistic approach. Adding severity could help a bit
 var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
-	"invalid value ",
+	"invalid value for parameter",
 	"configuration file ",
 	"starting ",
 	"listening on ",
@@ -340,7 +340,6 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"sending ",
 	"TimescaleDB ",
 	"redo ",
-	"invalid ",
 	"archive ",
 	"selected ",
 	"consistent recovery ",
@@ -360,13 +359,11 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_PREXIFES = []string{
 	"could not fsync ",
 	"could not access ",
 	"Could not open ",
-	"cannot ",
 	"database ",
 	"WAL redo ",
 	"replication ",
 	"Replication ",
 	"cache lookup ",
-	"function ",
 	"requested ",
 	"unrecognized ",
 	"internal error",
@@ -390,7 +387,7 @@ var POSTGRES_SYSTEM_MESSAGES_IDENT_CONTAINS = []string{
 	" data loss ",
 	" postmaster ",
 	" configuration file ",
-	" relfrozenxid ",
+	" relfrozenxid relfrozenxid ",
 	"multixact",
 	"MultiXact",
 	"replication slot",
@@ -498,6 +495,14 @@ func (e LogEntry) IsSystemEntry(systemIncludeCheckpointer bool) bool {
 
 	for _, ident := range POSTGRES_SYSTEM_MESSAGES_IDENT_CONTAINS {
 		if strings.Contains(e.Message, ident) {
+			if e.ErrorSeverity == "LOG" {
+				if strings.HasPrefix(e.Message, "statement: ") {
+					return false
+				}
+				if strings.HasPrefix(e.Message, "execute ") {
+					return false
+				}
+			}
 			return true
 		}
 	}
@@ -510,6 +515,13 @@ func (e LogEntry) IsSystemEntry(systemIncludeCheckpointer bool) bool {
 
 	// Everything with level LOG minus "slow queries" and pgaudit
 	if e.ErrorSeverity == "LOG" {
+		if strings.HasPrefix(e.Message, "statement: ") {
+			return false
+		}
+		if strings.HasPrefix(e.Message, "execute ") {
+			return false
+		}
+
 		// Check if message matches any of the regexes indicating non-system messages
 		for _, regex := range POSTGRES_LOG_LVL_NON_SYSTEM_REGEXES {
 			if regex.MatchString(e.Message) {
