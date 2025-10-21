@@ -230,7 +230,7 @@ func (e LogEntry) SeverityNum() int {
 	case "PANIC":
 		return 10
 	default:
-		return 5
+		return -1
 	}
 }
 
@@ -269,7 +269,7 @@ func SeverityToNum(severity string) int {
 	case "PANIC":
 		return 10
 	default:
-		return 5
+		return -1
 	}
 }
 

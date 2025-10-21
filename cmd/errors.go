@@ -155,6 +155,8 @@ func showErrors(cmd *cobra.Command, args []string) {
 		connectionsAggregator.Init()
 	}
 
+	extraErrContextTimestamp := ""
+
 	for _, logFile := range logFiles {
 		log.Debug().Msgf("Processing log file: %s", logFile)
 		if !cfg.ToTime.IsZero() && logFile != "stdin" {
@@ -232,8 +234,15 @@ func showErrors(cmd *cobra.Command, args []string) {
 				if TopNErrorsOnly && rec.SeverityNum() >= minErrLvlSeverityNum {
 					topErrors.AddError(rec.ErrorSeverity, rec.Message)
 				} else {
-					if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly, cfg.SystemIncludeCheckpointer, cfg.GrepRegex) { // TODO pass cfg
+					if rec.SeverityNum() == -1 && rec.LogTime == extraErrContextTimestamp {
+						// Output extra context continuation records (HINT / STATEMENT) for an ERROR
 						OutputLogRecord(rec, w, cfg.Oneline)
+						w.WriteByte('\n')
+					} else if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly, cfg.SystemIncludeCheckpointer, cfg.GrepRegex) { // TODO pass cfg
+						OutputLogRecord(rec, w, cfg.Oneline)
+						if rec.ErrorSeverity == "ERROR" {
+							extraErrContextTimestamp = rec.LogTime
+						}
 						w.WriteByte('\n')
 					}
 					if Verbose {
