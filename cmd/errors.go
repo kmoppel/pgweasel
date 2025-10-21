@@ -240,7 +240,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 						w.WriteByte('\n')
 					} else if logparser.DoesLogRecordSatisfyUserFilters(rec, cfg.MinErrLvlNum, Filters, cfg.FromTime, cfg.ToTime, cfg.MinSlowDurationMs, cfg.SystemOnly, cfg.SystemIncludeCheckpointer, cfg.GrepRegex) { // TODO pass cfg
 						OutputLogRecord(rec, w, cfg.Oneline)
-						if rec.ErrorSeverity == "ERROR" {
+						if rec.ErrorSeverity == "ERROR" || rec.ErrorSeverity == "FATAL" {
 							extraErrContextTimestamp = rec.LogTime
 						}
 						w.WriteByte('\n')
