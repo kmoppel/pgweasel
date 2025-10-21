@@ -12,7 +12,8 @@ import (
 func TestSeverityToNum(t *testing.T) {
 	assert.Greater(t, pglog.SeverityToNum("info"), pglog.SeverityToNum("DEBUG1"))
 	assert.Greater(t, pglog.SeverityToNum("debug1"), pglog.SeverityToNum("debug2"))
-	assert.Equal(t, 5, pglog.SeverityToNum("dbg"))
+	assert.Equal(t, -1, pglog.SeverityToNum("dbg"))
+	assert.Equal(t, -1, pglog.SeverityToNum("HINT"))
 }
 func TestIsSystemEntry(t *testing.T) {
 	tests := []struct {

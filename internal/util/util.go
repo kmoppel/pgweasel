@@ -432,7 +432,7 @@ func ExtractConnectUserDbAppnameSslFromLogMessage(message string) (string, strin
 
 	if appnameStart := strings.Index(message, "application_name="); appnameStart != -1 {
 		appnameStart += 17 // Skip "application_name="
-		appnameEnd := strings.Index(message[appnameStart:], "\n")
+		appnameEnd := strings.Index(message[appnameStart:], " ")
 
 		if appnameEnd == -1 {
 			appname = message[appnameStart:]
