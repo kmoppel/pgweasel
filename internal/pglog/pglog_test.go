@@ -348,3 +348,63 @@ func TestGetCommandTag(t *testing.T) {
 		})
 	}
 }
+
+func TestGetSessionIdentifierOrEmptyString(t *testing.T) {
+	tests := []struct {
+		name     string
+		entry    pglog.LogEntry
+		expected string
+	}{
+		{
+			name: "CSV entry with SessionID",
+			entry: pglog.LogEntry{
+				CsvColumns: &pglog.CsvEntry{
+					SessionID: "682db23a.501",
+				},
+			},
+			expected: "682db23a.501",
+		},
+		{
+			name: "Bracket format - process ID",
+			entry: pglog.LogEntry{
+				Lines: []string{"2025-10-21 23:11:17.347 EEST [49104] LOG:  statement: END;"},
+			},
+			expected: "49104",
+		},
+		{
+			name: "Dash format - session ID",
+			entry: pglog.LogEntry{
+				Lines: []string{"2025-05-21 11:00:10 UTC-682db23a.501-LOG:  connection received: host=127.0.0.1 port=34834"},
+			},
+			expected: "682db23a.501",
+		},
+		{
+			name: "Parentheses format - process ID",
+			entry: pglog.LogEntry{
+				Lines: []string{"2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: BEGIN;"},
+			},
+			expected: "32890",
+		},
+		{
+			name: "No identifier found",
+			entry: pglog.LogEntry{
+				Lines: []string{"2025-05-05 06:00:51 UTC: some random log message"},
+			},
+			expected: "",
+		},
+		{
+			name: "Empty lines",
+			entry: pglog.LogEntry{
+				Lines: []string{},
+			},
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.entry.GetSessionIdentifierOrEmptyString()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}

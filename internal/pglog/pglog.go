@@ -115,6 +115,13 @@ var REGEX_EXECUTE_COMMAND = regexp.MustCompile(`execute\s+[^:]*:\s+([A-Z][A-Z0-9
 var REGEX_DURATION_EXECUTE_COMMAND = regexp.MustCompile(`^duration:.*?\b(?:execute\s+[^:]*:|statement):\s+([A-Z][A-Z0-9_]*)\b`)
 var REGEX_QUERY_TEXT_COMMAND = regexp.MustCompile(`Query\s+Text:\s+([A-Z][A-Z0-9_]*)\b`)
 
+// Regex patterns for extracting session identifiers from plain text logs
+var REGEX_SESSION_ID_PATTERNS = []*regexp.Regexp{
+	regexp.MustCompile(`-([0-9a-f]+\.[0-9a-f]+)-`),     // Pattern 1: -session_id- format (e.g., -682db23a.501-)
+	regexp.MustCompile(`\d+\.\d+\.\d+\.\d+\((\d+)\):`), // Pattern 2: IP(process_id): format (e.g., 90.190.32.92(32890):)
+	regexp.MustCompile(`\[(\d+)\]`),                    // Pattern 3: [process_id] format (e.g., [49104])
+}
+
 func (e CsvEntry) String() string {
 	if e.CsvColumnCount == 23 {
 		return strings.Join([]string{
@@ -277,6 +284,30 @@ func SeverityToNum(severity string) int {
 // for example if we are only looking for errors and have no time range set by the user
 func (e LogEntry) GetTime() time.Time {
 	return util.TimestringToTime(e.LogTime)
+}
+
+func (e LogEntry) GetSessionIdentifierOrEmptyString() string {
+	if e.CsvColumns != nil {
+		return e.CsvColumns.SessionID
+	}
+	// 2025-10-21 23:11:17.347 EEST [49104] LOG:  statement: END; ->> 49104
+	// 2025-05-21 11:00:10 UTC-682db23a.501-LOG:  connection received: host=127.0.0.1 port=34834 ->> 682db23a.501
+	// 2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: BEGIN; ->> 32890
+
+	if len(e.Lines) == 0 {
+		return ""
+	}
+
+	firstLine := e.Lines[0]
+
+	// Try each pattern in order (most specific first)
+	for _, pattern := range REGEX_SESSION_ID_PATTERNS {
+		if match := pattern.FindStringSubmatch(firstLine); match != nil {
+			return match[1]
+		}
+	}
+
+	return ""
 }
 
 // GetCommandTag extracts the SQL command tag from log entries

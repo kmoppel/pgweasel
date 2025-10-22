@@ -142,6 +142,7 @@ func showErrors(cmd *cobra.Command, args []string) {
 	}
 
 	slowTopNCollector := pglog.NewTopN(cfg.SlowTopN)
+	slowQueryDurationAndQueryMatchingFifo := pglog.NewFifo(10)
 
 	slowStmtStatsCollector := pglog.NewSlowLogAggregator()
 
@@ -204,9 +205,38 @@ func showErrors(cmd *cobra.Command, args []string) {
 					}
 					duration, _ := util.ExtractDurationMillisFromLogMessage(rec.Message)
 					if duration == 0.0 {
+						// Cache a set of recent slow log entries where duration could be on a separate line after the statement
+						if strings.HasPrefix(rec.Message, "statement: ") || strings.HasPrefix(rec.Message, "execute ") {
+							slowQueryDurationAndQueryMatchingFifo.Add(rec)
+						}
 						continue
 					}
-					slowTopNCollector.Add(pglog.TopNSlowLogEntry{Rec: &rec, DurationMs: duration})
+					// Entries with duration and query on the same line
+					if strings.Contains(rec.Lines[0], " ms  execute") || strings.Contains(rec.Lines[0], " ms  bind") || strings.Contains(rec.Lines[0], " ms  parse") || strings.Contains(rec.Lines[0], " ms  plan") {
+						slowTopNCollector.Add(pglog.TopNSlowLogEntry{Rec: &rec, DurationMs: duration})
+						continue
+					}
+
+					fifoTsMatches := slowQueryDurationAndQueryMatchingFifo.GetAllByTimestampString(rec.LogTime)
+					if len(fifoTsMatches) > 0 {
+						// Timestamp + session identifiers need to match to correlate
+						sessId := rec.GetSessionIdentifierOrEmptyString()
+						if sessId == "" {
+							continue
+						}
+						for _, fifoRec := range fifoTsMatches {
+							fifoSessId := fifoRec.GetSessionIdentifierOrEmptyString()
+							if fifoSessId != "" && fifoSessId == sessId {
+								slowTopNCollector.Add(pglog.TopNSlowLogEntry{Rec: &pglog.LogEntry{
+									LogTime:       rec.LogTime,
+									ErrorSeverity: rec.ErrorSeverity,
+									Message:       fifoRec.Message + " " + rec.Message,
+								}, DurationMs: duration})
+								break
+							}
+						}
+					}
+
 					continue
 				}
 
