@@ -100,6 +100,11 @@ func GetLogRecordsFromLogFile(filePath string, logLineParsingRegex *regexp.Regex
 
 		scanner.Split(bufio.ScanLines)
 
+		// Increase default buffer size to support very long input lines
+		const maxLineSize = 10 * 1024 * 1024 // 10MB
+		buf := make([]byte, maxLineSize)
+		scanner.Buffer(buf, maxLineSize)
+
 		var lines = make([]string, 0)
 
 		batch := make([]pglog.LogEntry, 0, LOG_ENTRIES_PER_BATCH)
@@ -263,6 +268,11 @@ func peekRecordFromLogFile(filePath string, logLineParsingRegex *regexp.Regexp) 
 	}
 
 	scanner.Split(bufio.ScanLines)
+
+	// Increase default buffer size to support very long input lines
+	const maxLineSize = 10 * 1024 * 1024 // 10MB
+	buf := make([]byte, maxLineSize)
+	scanner.Buffer(buf, maxLineSize)
 
 	var lines []string
 	firstCompleteEntryFound := false
