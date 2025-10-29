@@ -19,8 +19,8 @@ import (
 
 const LOG_ENTRIES_PER_BATCH = 10
 
-var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})`)
-var REGEX_LOG_TIME = regexp.MustCompile(`^(?P<log_time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})[\s:\-]`)
+var REGEX_HAS_TIMESTAMP_PREFIX = regexp.MustCompile(`^\[?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})`)
+var REGEX_LOG_TIME = regexp.MustCompile(`^\[?(?P<log_time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})\]?[\s:\-]`)
 var REGEX_LOG_LEVEL_MESSAGE = regexp.MustCompile(`^.*?[\s:\-](?P<log_level>[A-Z12345]{3,12}):  (?P<message>.*)$`)
 
 func EventLinesToPgLogEntry(lines []string, filename string) (pglog.LogEntry, error) {
