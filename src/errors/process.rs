@@ -4,7 +4,42 @@ use csv::ReaderBuilder;
 use flate2::read::GzDecoder;
 use log::{debug, error};
 
-use crate::{Cli, ConvertedArgs, errors::{csv_reader::log_record::PostgresLog, log_entry_severity_to_num}};
+use crate::errors::log_record::PostgresLog;
+use crate::postgres::VALID_SEVERITIES;
+use crate::{Cli, ConvertedArgs};
+
+/// Validate that a severity level string is valid
+pub fn validate_severity(severity: &str) -> Result<(), String> {
+    VALID_SEVERITIES
+        .contains(&severity.to_uppercase().as_str())
+        .then_some(())
+        .ok_or_else(|| {
+            format!(
+                "Invalid severity level: '{}'. Valid values are: {}",
+                severity,
+                VALID_SEVERITIES.join(", ")
+            )
+        })
+}
+
+/// Convert PostgreSQL log severity level to a numeric priority
+fn log_entry_severity_to_num(severity: &str) -> i32 {
+    match severity.to_uppercase().as_str() {
+        "DEBUG5" => 0,
+        "DEBUG4" => 1,
+        "DEBUG3" => 2,
+        "DEBUG2" => 3,
+        "DEBUG1" => 4,
+        "LOG" => 5,
+        "INFO" => 5,
+        "NOTICE" => 6,
+        "WARNING" => 7,
+        "ERROR" => 8,
+        "FATAL" => 9,
+        "PANIC" => 10,
+        _ => 5, // Default to LOG level
+    }
+}
 
 pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &str) {
     let verbose = cli.verbose;
@@ -59,7 +94,7 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &
                         }
                     }
                     log_records.push(rec);
-                },
+                }
                 Err(e) => {
                     error!("Error reading CSV record in file {}: {}", filename, e);
                 }

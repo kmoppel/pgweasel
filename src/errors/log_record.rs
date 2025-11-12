@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PostgresLog {
-    #[serde(with = "crate::errors::csv_reader::date_serializer")]
+    #[serde(with = "crate::errors::date_serializer")]
     pub log_time: Option<DateTime<FixedOffset>>,
     pub user_name: Option<String>,
     pub database_name: Option<String>,
@@ -12,7 +12,7 @@ pub struct PostgresLog {
     pub session_id: String,
     pub session_line_num: i64,
     pub command_tag: Option<String>,
-    #[serde(with = "crate::errors::csv_reader::date_serializer")]
+    #[serde(with = "crate::errors::date_serializer")]
     pub session_start_time: Option<DateTime<FixedOffset>>,
     pub virtual_transaction_id: Option<String>,
     pub transaction_id: Option<i64>,
@@ -32,4 +32,3 @@ pub struct PostgresLog {
     pub leader_pid: Option<i32>,
     pub query_id: Option<i64>,
 }
-
