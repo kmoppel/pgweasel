@@ -63,6 +63,10 @@ enum Commands {
         #[arg(short = 'l', long = "min-severity", default_value = "WARNING")]
         min_severity: String,
 
+        /// Postgres log timestamp mask (e.g. "2025-05-21 12:57" - will show all events at 12:57)
+        #[arg(short = 't', long = "timestamp-mask")]
+        timestamp_mask: Option<String>,
+
         #[command(subcommand)]
         subcommand: Option<ErrorsSubcommands>,
     },
@@ -104,6 +108,7 @@ fn main() {
     match &cli.command {
         Commands::Errors {
             min_severity,
+            timestamp_mask,
             subcommand,
         } => {
             // Validate min_severity early
@@ -117,7 +122,7 @@ fn main() {
                     println!("hello top errors. min_severity = {}", min_severity);
                 }
                 None => {
-                    errors::process_errors(&cli, &converted_args, min_severity);
+                    errors::process_errors(&cli, &converted_args, min_severity, timestamp_mask);
                 }
             }
         }

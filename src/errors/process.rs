@@ -1,3 +1,4 @@
+use std::time::Instant;
 use std::{fs::File, io::Read};
 
 use csv::ReaderBuilder;
@@ -41,7 +42,12 @@ fn log_entry_severity_to_num(severity: &str) -> i32 {
     }
 }
 
-pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &str) {
+pub fn process_errors(
+    cli: &Cli,
+    converted_args: &ConvertedArgs,
+    min_severity: &str,
+    timestamp_mask: &Option<String>,
+) {
     let verbose = cli.verbose;
     let min_severity_num = log_entry_severity_to_num(min_severity);
 
@@ -73,35 +79,46 @@ pub fn process_errors(cli: &Cli, converted_args: &ConvertedArgs, min_severity: &
             .from_reader(reader);
 
         let mut log_records: Vec<PostgresLog> = Vec::new();
-        for result in csv_reader.deserialize::<PostgresLog>() {
-            match result {
-                Ok(rec) => {
-                    let log_level_num = log_entry_severity_to_num(&rec.error_severity);
-                    if log_level_num < min_severity_num {
-                        continue;
-                    }
-                    if let Some(log_time) = rec.log_time {
-                        let log_time_local = log_time.with_timezone(&chrono::Local);
-                        if let Some(begin) = converted_args.begin {
-                            if log_time_local < begin {
-                                continue;
-                            }
-                        }
-                        if let Some(end) = converted_args.end {
-                            if log_time_local > end {
-                                continue;
-                            }
-                        }
-                    }
-                    log_records.push(rec);
+        let start = Instant::now();
+        for result in csv_reader.records() {
+            let record = result.unwrap();
+            let log_level_num = log_entry_severity_to_num(&record[11]);
+            if log_level_num < min_severity_num {
+                continue;
+            }
+            if let Some(timestamp_str) = timestamp_mask {
+                if !record[0].starts_with(timestamp_str) {
+                    continue;
                 }
+            }
+            let log_record: PostgresLog = match record.deserialize(None) {
+                Ok(rec) => rec,
                 Err(e) => {
-                    error!("Error reading CSV record in file {}: {}", filename, e);
+                    error!("Error deserializing CSV record in file {}: {}", filename, e);
+                    continue;
                 }
             };
+            if let Some(log_time) = log_record.log_time {
+                let log_time_local = log_time.with_timezone(&chrono::Local);
+                if let Some(begin) = converted_args.begin {
+                    if log_time_local < begin {
+                        continue;
+                    }
+                }
+                if let Some(end) = converted_args.end {
+                    if log_time_local > end {
+                        continue;
+                    }
+                }
+            }
+
+            log_records.push(log_record);
         }
+        debug!("Read data within: {:?}", start.elapsed());
+
         for record in &log_records {
             println!("{:?}", record);
         }
+        debug!("Finished in: {:?}", start.elapsed());
     }
 }
