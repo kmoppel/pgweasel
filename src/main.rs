@@ -1,14 +1,15 @@
 use core::str;
 
-use chrono::{DateTime, Local};
 use clap::{Parser, Subcommand};
 use log::{debug, error};
 
+mod convert_args;
 mod errors;
-mod files;
-mod logparser;
-mod logreader;
-mod postgres;
+// Comented out to not get warnings on dead code
+// mod files;
+// mod logparser;
+// mod logreader;
+// mod postgres;
 mod util;
 
 /// A PostgreSQL log parser
@@ -29,6 +30,10 @@ pub struct Cli {
         default_value_t = false
     )]
     verbose: bool,
+
+    /// Postgres log timestamp mask (e.g. "2025-05-21 12:57" - will show all events at 12:57)
+    #[arg(global = true, short = 't', long = "timestamp-mask", required = false)]
+    timestamp_mask: Option<String>,
 
     #[arg(
         global = true,
@@ -52,7 +57,7 @@ pub struct Cli {
     command: Commands,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Clone, Debug)]
 enum Commands {
     /// Show or summarize error messages
     #[command(visible_alias = "err")]
@@ -63,24 +68,15 @@ enum Commands {
         #[arg(short = 'l', long = "min-severity", default_value = "WARNING")]
         min_severity: String,
 
-        /// Postgres log timestamp mask (e.g. "2025-05-21 12:57" - will show all events at 12:57)
-        #[arg(short = 't', long = "timestamp-mask")]
-        timestamp_mask: Option<String>,
-
         #[command(subcommand)]
         subcommand: Option<ErrorsSubcommands>,
     },
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Clone, Debug)]
 enum ErrorsSubcommands {
     /// Show the most frequent error messages with counts
     Top,
-}
-
-struct ConvertedArgs {
-    begin: Option<DateTime<Local>>,
-    end: Option<DateTime<Local>>,
 }
 
 fn main() {
@@ -97,18 +93,9 @@ fn main() {
 
     debug!("Running in debug mode. Cmdline input: {cli:?}");
 
-    let converted_args = match util::convert_args(&cli) {
-        Ok(args) => args,
-        Err(e) => {
-            error!("Error processing arguments: {}", e);
-            std::process::exit(1);
-        }
-    };
-
-    match &cli.command {
+    match &cli.command.clone() {
         Commands::Errors {
             min_severity,
-            timestamp_mask,
             subcommand,
         } => {
             // Validate min_severity early
@@ -122,7 +109,7 @@ fn main() {
                     println!("hello top errors. min_severity = {}", min_severity);
                 }
                 None => {
-                    errors::process_errors(&cli, &converted_args, min_severity, timestamp_mask);
+                    errors::process_errors(&cli.into(), min_severity);
                 }
             }
         }

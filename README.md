@@ -8,6 +8,6 @@
 
 `pgweasel errors -l error $LOG(s)` - Show ERROR+ entries
 
-`pgweasel errors -l LOG -t '2025-05-08 12:29' $LOG(s)` - Show LOG entries with timestamp begining with '2025-05-08 12:29'
+`pgweasel -t "2025-05-21 13:00:00" errors -l LOG testdata/csvlog_pg14.csv $LOG(s)` - Show LOG entries with timestamp begining with '2025-05-21 13:00:00'
 
 `pgweasel errors -v $LOG(s)` - Show LOG entries with debug info including execution time.

@@ -1,10 +1,7 @@
 use chrono::{DateTime, Local, NaiveDate, NaiveDateTime, TimeZone};
-use log::debug;
 use regex::Regex;
 use std::error::Error;
 use std::fmt;
-
-use crate::{Cli, ConvertedArgs};
 
 #[derive(Debug)]
 pub enum TimeParseError {
@@ -359,44 +356,6 @@ mod tests {
         assert_eq!(result_no_millis.year(), 2025);
         assert_eq!(result_no_millis.month(), 5);
     }
-}
-
-pub fn convert_args(cli: &Cli) -> Result<ConvertedArgs, Box<dyn Error>> {
-    let begin = if let Some(begin_str) = &cli.begin {
-        match time_or_interval_string_to_time(begin_str, None) {
-            Ok(datetime) => {
-                debug!(
-                    "Parsed begin time: {}",
-                    datetime.format("%Y-%m-%d %H:%M:%S %Z")
-                );
-                Some(datetime)
-            }
-            Err(e) => {
-                return Err(Box::new(e));
-            }
-        }
-    } else {
-        None
-    };
-
-    let end = if let Some(end_str) = &cli.end {
-        match time_or_interval_string_to_time(end_str, None) {
-            Ok(datetime) => {
-                debug!(
-                    "Parsed end time: {}",
-                    datetime.format("%Y-%m-%d %H:%M:%S %Z")
-                );
-                Some(datetime)
-            }
-            Err(e) => {
-                return Err(Box::new(e));
-            }
-        }
-    } else {
-        None
-    };
-
-    Ok(ConvertedArgs { begin, end })
 }
 
 #[allow(dead_code)]

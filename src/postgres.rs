@@ -1,9 +1,3 @@
-/// Valid PostgreSQL log severity levels
-pub const VALID_SEVERITIES: &[&str] = &[
-    "DEBUG5", "DEBUG4", "DEBUG3", "DEBUG2", "DEBUG1", "LOG", "INFO", "NOTICE", "WARNING", "ERROR",
-    "FATAL", "PANIC",
-];
-
 /// CSV log entry structure for PostgreSQL CSV logs
 /// CSV column count varies by version: <v13=23, v14=24, v15+=26
 #[derive(Debug, Clone)]
