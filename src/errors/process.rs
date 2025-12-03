@@ -13,16 +13,16 @@ pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &str) {
     let verbose = converted_args.cli.verbose;
     let min_severity_num = log_entry_severity_to_num(min_severity);
 
-    for filename in &converted_args.cli.input_files {
+    for filename in &converted_args.file_list {
         if verbose {
-            debug!("Processing CSV file: {}", filename);
+            debug!("Processing CSV file: {}", filename.to_str().unwrap());
         }
 
         let reader: Box<dyn Read> = if filename.ends_with(".gz") {
             match File::open(filename) {
                 Ok(file) => Box::new(GzDecoder::new(file)),
                 Err(e) => {
-                    error!("Error opening file {}: {}", filename, e);
+                    error!("Error opening file {}: {}", filename.to_str().unwrap(), e);
                     continue;
                 }
             }
@@ -30,7 +30,7 @@ pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &str) {
             match File::open(filename) {
                 Ok(file) => Box::new(file),
                 Err(e) => {
-                    error!("Error opening file {}: {}", filename, e);
+                    error!("Error opening file {}: {}", filename.to_str().unwrap(), e);
                     continue;
                 }
             }
@@ -56,7 +56,7 @@ pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &str) {
             let log_record: PostgresLog = match record.deserialize(None) {
                 Ok(rec) => rec,
                 Err(e) => {
-                    error!("Error deserializing CSV record in file {}: {}", filename, e);
+                    error!("Error deserializing CSV record in file {}: {}", filename.to_str().unwrap(), e);
                     continue;
                 }
             };

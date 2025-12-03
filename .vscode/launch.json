@@ -20,7 +20,7 @@
                     "kind": "bin"
                 }
             },
-            "args": [ "errs", "-t", "2025-05-08", "-l", "LOG", "./testdata/csvlog1.csv"],
+            "args": [ "errs", "-t", "2025-05-08", "-l", "LOG", "./testdata/csvlog1.csv.gz"],
             "cwd": "${workspaceFolder}"
         },
         {

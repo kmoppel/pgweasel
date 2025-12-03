@@ -3,6 +3,8 @@ use core::str;
 use clap::{Parser, Subcommand};
 use log::{debug, error};
 
+use crate::convert_args::ConvertedArgs;
+
 mod convert_args;
 mod errors;
 // Comented out to not get warnings on dead code
@@ -12,15 +14,19 @@ mod errors;
 // mod postgres;
 mod util;
 
-/// A PostgreSQL log parser
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-#[command(subcommand_precedence_over_arg = false)] // Allow also subcommands before args as well
-pub struct Cli {
-    /// Input logfile paths (files or directories)
-    #[arg(global = true, required = false)]
-    input_files: Vec<String>,
+pub type Result<T> = core::result::Result<T, Error>;
+pub type Error = Box<dyn std::error::Error>;
 
+/// A PostgreSQL log parser
+#[derive(Parser, Debug, Clone)]
+#[command(
+    version,
+    about,
+    long_about = None,
+    trailing_var_arg = true,
+    subcommand_precedence_over_arg = true    // <-- MUST be TRUE
+)]
+pub struct Cli {
     /// Verbose. Show debug information
     #[arg(
         global = true,
@@ -55,6 +61,10 @@ pub struct Cli {
 
     #[command(subcommand)]
     command: Commands,
+
+    /// Input logfile paths (files or directories)
+    #[arg(required = true)]
+    input_files: Vec<String>,
 }
 
 #[derive(Subcommand, Clone, Debug)]
@@ -79,7 +89,7 @@ enum ErrorsSubcommands {
     Top,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // Initialize logger based on verbose flag
@@ -93,7 +103,10 @@ fn main() {
 
     debug!("Running in debug mode. Cmdline input: {cli:?}");
 
-    match &cli.command.clone() {
+    let mut processed_cli: ConvertedArgs = cli.clone().into();
+    processed_cli = processed_cli.expand_dirs()?.expand_archives()?;
+
+    match &cli.command {
         Commands::Errors {
             min_severity,
             subcommand,
@@ -109,9 +122,10 @@ fn main() {
                     println!("hello top errors. min_severity = {}", min_severity);
                 }
                 None => {
-                    errors::process_errors(&cli.into(), min_severity);
+                    errors::process_errors(&processed_cli, min_severity);
                 }
             }
         }
-    }
+    };
+    Ok(())
 }
