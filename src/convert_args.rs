@@ -24,15 +24,25 @@ pub struct ConvertedArgs {
 
 impl ConvertedArgs {
     pub fn expand_dirs(mut self) -> Result<Self> {
-        for p_str in &self.cli.input_files {
-            let p = Path::new(p_str);
-            if p.is_file() {
-                self.file_list.push(p.to_path_buf());
-            } else if p.is_dir() {
-                for entry in fs::read_dir(p)? {
-                    let entry = entry?;
-                    let path = entry.path();
-                    self.file_list.push(path);
+        match &self.cli.command {
+            crate::Commands::Errors {
+                #[allow(unused)]
+                min_severity,
+                #[allow(unused)]
+                subcommand,
+                input_files,
+            } => {
+                for p_str in input_files {
+                    let p = Path::new(p_str);
+                    if p.is_file() {
+                        self.file_list.push(p.to_path_buf());
+                    } else if p.is_dir() {
+                        for entry in fs::read_dir(p)? {
+                            let entry = entry?;
+                            let path = entry.path();
+                            self.file_list.push(path);
+                        }
+                    }
                 }
             }
         }
@@ -151,9 +161,9 @@ mod tests {
 
     #[test]
     fn test_zip_list() -> Result<()> {
-        // TODO Add checks for expanded list to have appropriate file names and do not contain archive names
+        let mut input_files: Vec<String> = vec![];
+        input_files.push("./testdata/pgbadger".to_string());
         let cli: Cli = Cli {
-            input_files: vec![],
             verbose: false,
             timestamp_mask: None,
             begin: None,
@@ -161,15 +171,13 @@ mod tests {
             command: crate::Commands::Errors {
                 min_severity: "F".to_string(),
                 subcommand: None,
+                input_files: vec![],
             },
         };
-        let mut convert_args: ConvertedArgs = cli.into();
-        convert_args
-            .cli
-            .input_files
-            .push("./testdata/pgbadger".to_string());
+        let convert_args: ConvertedArgs = cli.into();
         let convert_args = convert_args.expand_dirs()?.expand_archives()?;
 
+        // TODO Add checks for expanded list to have appropriate file names and do not contain archive names
         println!("File list: {:?}", convert_args.file_list);
 
         Ok(())
