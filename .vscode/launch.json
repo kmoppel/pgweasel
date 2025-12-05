@@ -4,7 +4,6 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-    
         {
             "type": "lldb",
             "request": "launch",
@@ -20,7 +19,14 @@
                     "kind": "bin"
                 }
             },
-            "args": [ "errs", "-t", "2025-05-08", "-l", "LOG", "./testdata/csvlog1.csv.gz"],
+            "args": [
+                "-m",
+                "2025-05-08",
+                "error",
+                "-level",
+                "LOG",
+                "./testdata/csvlog1.csv.gz"
+            ],
             "cwd": "${workspaceFolder}"
         },
         {

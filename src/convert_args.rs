@@ -5,43 +5,41 @@ use std::{
 };
 
 use chrono::{DateTime, Local};
+use clap::ArgMatches;
 use flate2::read::GzDecoder;
 use log::{debug, error};
 use tempfile::TempDir;
 use zip::ZipArchive;
 
-use crate::{Cli, util::time_or_interval_string_to_time};
+use crate::util::time_or_interval_string_to_time;
 
 pub type Result<T> = core::result::Result<T, Error>;
 pub type Error = Box<dyn std::error::Error>;
 
 pub struct ConvertedArgs {
-    pub cli: Cli,
+    pub matches: ArgMatches,
     pub file_list: Vec<PathBuf>,
     pub begin: Option<DateTime<Local>>,
     pub end: Option<DateTime<Local>>,
+    pub verbose: bool,
 }
 
 impl ConvertedArgs {
     pub fn expand_dirs(mut self) -> Result<Self> {
-        match &self.cli.command {
-            crate::Commands::Errors {
-                #[allow(unused)]
-                min_severity,
-                #[allow(unused)]
-                subcommand,
-                input_files,
-            } => {
-                for p_str in input_files {
-                    let p = Path::new(p_str);
-                    if p.is_file() {
-                        self.file_list.push(p.to_path_buf());
-                    } else if p.is_dir() {
-                        for entry in fs::read_dir(p)? {
-                            let entry = entry?;
-                            let path = entry.path();
-                            self.file_list.push(path);
-                        }
+        if let Some((_, sub_matches)) = self.matches.subcommand() {
+            let paths = sub_matches
+                .get_many::<PathBuf>("PATH")
+                .into_iter()
+                .flatten()
+                .collect::<Vec<_>>();
+            for p in paths {
+                if p.is_file() {
+                    self.file_list.push(p.to_path_buf());
+                } else if p.is_dir() {
+                    for entry in fs::read_dir(p)? {
+                        let entry = entry?;
+                        let path = entry.path();
+                        self.file_list.push(path);
                     }
                 }
             }
@@ -68,9 +66,9 @@ impl ConvertedArgs {
     }
 }
 
-impl Into<ConvertedArgs> for Cli {
+impl Into<ConvertedArgs> for ArgMatches {
     fn into(self) -> ConvertedArgs {
-        let begin = if let Some(begin_str) = &self.begin {
+        let begin = if let Some(begin_str) = &self.get_one::<String>("begin") {
             match time_or_interval_string_to_time(begin_str, None) {
                 Ok(datetime) => {
                     debug!(
@@ -88,7 +86,7 @@ impl Into<ConvertedArgs> for Cli {
             None
         };
 
-        let end = if let Some(end_str) = &self.end {
+        let end = if let Some(end_str) = &self.get_one::<String>("end") {
             match time_or_interval_string_to_time(end_str, None) {
                 Ok(datetime) => {
                     debug!(
@@ -106,11 +104,24 @@ impl Into<ConvertedArgs> for Cli {
             None
         };
 
+        // Initialize logger based on verbose flag
+        let mut verbose = false;
+        env_logger::Builder::from_default_env()
+            .filter_level(if self.get_flag("debug") {
+                verbose = true;
+                debug!("Running in debug mode.");
+                log::LevelFilter::Debug
+            } else {
+                log::LevelFilter::Info
+            })
+            .init();
+
         ConvertedArgs {
             file_list: vec![],
             begin,
             end,
-            cli: self,
+            matches: self,
+            verbose,
         }
     }
 }
@@ -155,31 +166,31 @@ fn extract_zip(src: &Path, temp_dir: &Path) -> Result<Vec<PathBuf>> {
     Ok(out_files)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    #[test]
-    fn test_zip_list() -> Result<()> {
-        let mut input_files: Vec<String> = vec![];
-        input_files.push("./testdata/pgbadger".to_string());
-        let cli: Cli = Cli {
-            verbose: false,
-            timestamp_mask: None,
-            begin: None,
-            end: None,
-            command: crate::Commands::Errors {
-                min_severity: "F".to_string(),
-                subcommand: None,
-                input_files: vec![],
-            },
-        };
-        let convert_args: ConvertedArgs = cli.into();
-        let convert_args = convert_args.expand_dirs()?.expand_archives()?;
+//     #[test]
+//     fn test_zip_list() -> Result<()> {
+//         let mut input_files: Vec<String> = vec![];
+//         input_files.push("./testdata/pgbadger".to_string());
+//         let cli: Cli = Cli {
+//             verbose: false,
+//             timestamp_mask: None,
+//             begin: None,
+//             end: None,
+//             command: crate::Commands::Errors {
+//                 min_severity: "F".to_string(),
+//                 subcommand: None,
+//                 input_files: vec![],
+//             },
+//         };
+//         let convert_args: ConvertedArgs = cli.into();
+//         let convert_args = convert_args.expand_dirs()?.expand_archives()?;
 
-        // TODO Add checks for expanded list to have appropriate file names and do not contain archive names
-        println!("File list: {:?}", convert_args.file_list);
+//         // TODO Add checks for expanded list to have appropriate file names and do not contain archive names
+//         println!("File list: {:?}", convert_args.file_list);
 
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }

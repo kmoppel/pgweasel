@@ -1,14 +1,12 @@
-use core::str;
-use std::path::PathBuf;
-
-use clap::{Parser, Subcommand};
 use log::{debug, error};
+
+use crate::{convert_args::ConvertedArgs, errors::process_errors};
 
 // use crate::convert_args::ConvertedArgs;
 
 mod cli;
-// mod convert_args;
-// mod errors;
+mod convert_args;
+mod errors;
 // Comented out to not get warnings on dead code
 // mod files;
 // mod logparser;
@@ -23,54 +21,43 @@ fn main() -> Result<()> {
     let cli = cli::cli();
     let matches = cli.clone().get_matches();
 
-    // Initialize logger based on verbose flag
-    env_logger::Builder::from_default_env()
-        .filter_level(if matches.get_flag("debug") {
-            log::LevelFilter::Debug
-        } else {
-            log::LevelFilter::Info
-        })
-        .init();
-
-    debug!("Running in debug mode.");
+    let mut converted_args: ConvertedArgs = matches.clone().into();
+    converted_args = converted_args.expand_dirs()?.expand_archives()?;
 
     match matches.subcommand() {
         Some(("error", sub_matches)) => {
-            let paths = sub_matches
-                .get_many::<PathBuf>("PATH")
-                .into_iter()
-                .flatten()
-                .collect::<Vec<_>>();
-            println!("Analyzing for error {paths:?}");
+            let error_command = sub_matches.subcommand().unwrap_or(("list", sub_matches));
+            match error_command {
+                ("list", list_subcommand) => {
+                    process_errors(
+                        &converted_args,
+                        list_subcommand
+                            .get_one::<String>("level")
+                            .unwrap_or(&"ERROR".to_string()),
+                    );
+                }
+                ("top", _) => {
+                    println!("Analyzing for top errors");
+                }
+                (name, _) => {
+                    error!("Unsupported subcommand `{name}`")
+                }
+            }
         }
-        _ => unreachable!(),
+        Some(("locks", _)) => {
+            error!("Not implemented")
+        }
+        Some(("peaks", _)) => {
+            error!("Not implemented")
+        }
+        Some(("slow", _)) => {
+            error!("Not implemented")
+        }
+        Some(("stats", _)) => {
+            error!("Not implemented")
+        }
+        _ => error!("command not found"),
     }
 
-    // let mut processed_cli: ConvertedArgs = cli.clone().into();
-    // processed_cli = processed_cli.expand_dirs()?.expand_archives()?;
-
-    // match &cli.command {
-    //     Commands::Errors {
-    //         min_severity,
-    //         subcommand,
-    //         #[allow(unused)]
-    //         input_files,
-    //     } => {
-    //         // Validate min_severity early
-    //         if let Err(e) = errors::validate_severity(min_severity) {
-    //             error!("{}", e);
-    //             std::process::exit(1);
-    //         }
-
-    //         match subcommand {
-    //             Some(ErrorsSubcommands::Top) => {
-    //                 println!("hello top errors. min_severity = {}", min_severity);
-    //             }
-    //             None => {
-    //                 errors::process_errors(&processed_cli, min_severity);
-    //             }
-    //         }
-    //     }
-    // };
     Ok(())
 }

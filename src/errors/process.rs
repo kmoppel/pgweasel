@@ -10,11 +10,10 @@ use crate::errors::log_record::PostgresLog;
 use crate::errors::severities::log_entry_severity_to_num;
 
 pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &str) {
-    let verbose = converted_args.cli.verbose;
     let min_severity_num = log_entry_severity_to_num(min_severity);
 
     for filename in &converted_args.file_list {
-        if verbose {
+        if converted_args.verbose {
             debug!("Processing CSV file: {}", filename.to_str().unwrap());
         }
 
@@ -48,7 +47,7 @@ pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &str) {
             if log_level_num < min_severity_num {
                 continue;
             }
-            if let Some(timestamp_str) = &converted_args.cli.timestamp_mask {
+            if let Some(timestamp_str) = converted_args.matches.get_one::<String>("mask") {
                 if !record[0].starts_with(timestamp_str) {
                     continue;
                 }
