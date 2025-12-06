@@ -23,9 +23,10 @@
                 "-m",
                 "2025-05-08",
                 "error",
-                "-level",
+                "--level",
                 "LOG",
-                "./testdata/csvlog1.csv.gz"
+                "./testdata/csvlog_pg14.csv",
+                "./testdata/csvlog1.csv.gz",
             ],
             "cwd": "${workspaceFolder}"
         },

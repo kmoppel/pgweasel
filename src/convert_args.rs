@@ -1,5 +1,5 @@
 use std::{
-    fs,
+    fs::{self, File},
     io::copy,
     path::{Path, PathBuf},
 };
@@ -16,9 +16,15 @@ use crate::util::time_or_interval_string_to_time;
 pub type Result<T> = core::result::Result<T, Error>;
 pub type Error = Box<dyn std::error::Error>;
 
+pub struct FileWithPath {
+    pub file: std::fs::File,
+    pub path: std::path::PathBuf,
+}
+
 pub struct ConvertedArgs {
     pub matches: ArgMatches,
     pub file_list: Vec<PathBuf>,
+    pub files: Vec<FileWithPath>,
     pub begin: Option<DateTime<Local>>,
     pub end: Option<DateTime<Local>>,
     pub verbose: bool,
@@ -50,17 +56,22 @@ impl ConvertedArgs {
 
     pub fn expand_archives(mut self) -> Result<Self> {
         let temp_dir = TempDir::new()?;
-        let mut out_files: Vec<PathBuf> = vec![];
 
-        for f in &self.file_list {
-            match f.extension().and_then(|s| s.to_str()) {
-                Some("gz") => out_files.extend(extract_gz(&f, temp_dir.path())?),
-                Some("zip") => out_files.extend(extract_zip(&f, temp_dir.path())?),
-                Some(_r) => out_files.push(f.clone()),
+        for path in &self.file_list {
+            match path.extension().and_then(|s| s.to_str()) {
+                Some("gz") => self.files.push(extract_gz(&path, temp_dir.path())?),
+                Some("zip") => self.files.extend(extract_zip(&path, temp_dir.path())?),
+
+                Some(_r) => {
+                    let file_with_path = FileWithPath {
+                        file: File::open(&path)?,
+                        path: path.clone(),
+                    };
+                    self.files.push(file_with_path)
+                }
                 None => {}
             }
         }
-        self.file_list = out_files;
 
         Ok(self)
     }
@@ -68,6 +79,7 @@ impl ConvertedArgs {
 
 impl Into<ConvertedArgs> for ArgMatches {
     fn into(self) -> ConvertedArgs {
+        // Parse begin / end flags
         let begin = if let Some(begin_str) = &self.get_one::<String>("begin") {
             match time_or_interval_string_to_time(begin_str, None) {
                 Ok(datetime) => {
@@ -118,6 +130,7 @@ impl Into<ConvertedArgs> for ArgMatches {
 
         ConvertedArgs {
             file_list: vec![],
+            files: vec![],
             begin,
             end,
             matches: self,
@@ -126,7 +139,7 @@ impl Into<ConvertedArgs> for ArgMatches {
     }
 }
 
-fn extract_gz(src: &Path, temp_dir: &Path) -> Result<Vec<PathBuf>> {
+fn extract_gz(src: &Path, temp_dir: &Path) -> Result<FileWithPath> {
     let file = fs::File::open(src)?;
     let mut decoder = GzDecoder::new(file);
 
@@ -135,11 +148,15 @@ fn extract_gz(src: &Path, temp_dir: &Path) -> Result<Vec<PathBuf>> {
 
     let mut out_file = fs::File::create(&out_path)?;
     copy(&mut decoder, &mut out_file)?;
+    let reopened = fs::File::open(&out_path)?;
 
-    Ok(vec![out_path])
+    Ok(FileWithPath {
+        file: reopened,
+        path: out_path,
+    })
 }
 
-fn extract_zip(src: &Path, temp_dir: &Path) -> Result<Vec<PathBuf>> {
+fn extract_zip(src: &Path, temp_dir: &Path) -> Result<Vec<FileWithPath>> {
     let file = fs::File::open(src)?;
     let mut archive = ZipArchive::new(file)?;
 
@@ -160,7 +177,12 @@ fn extract_zip(src: &Path, temp_dir: &Path) -> Result<Vec<PathBuf>> {
         let mut out_file = fs::File::create(&out_path)?;
         copy(&mut zip_file, &mut out_file)?;
 
-        out_files.push(out_path);
+        let reopened = fs::File::open(&out_path)?;
+
+        out_files.push(FileWithPath {
+            file: reopened,
+            path: out_path,
+        });
     }
 
     Ok(out_files)

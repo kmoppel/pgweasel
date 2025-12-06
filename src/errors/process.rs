@@ -1,8 +1,7 @@
+use std::io::BufReader;
 use std::time::Instant;
-use std::{fs::File, io::Read};
 
 use csv::ReaderBuilder;
-use flate2::read::GzDecoder;
 use log::{debug, error};
 
 use crate::convert_args::ConvertedArgs;
@@ -12,28 +11,15 @@ use crate::errors::log_record::PostgresLog;
 pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &Severity) {
     let min_severity_num: i32 = min_severity.into();
 
-    for filename in &converted_args.file_list {
+    for file_with_path in &converted_args.files {
         if converted_args.verbose {
-            debug!("Processing CSV file: {}", filename.to_str().unwrap());
+            debug!(
+                "Processing CSV file: {}",
+                file_with_path.path.to_str().unwrap()
+            );
         }
 
-        let reader: Box<dyn Read> = if filename.ends_with(".gz") {
-            match File::open(filename) {
-                Ok(file) => Box::new(GzDecoder::new(file)),
-                Err(e) => {
-                    error!("Error opening file {}: {}", filename.to_str().unwrap(), e);
-                    continue;
-                }
-            }
-        } else {
-            match File::open(filename) {
-                Ok(file) => Box::new(file),
-                Err(e) => {
-                    error!("Error opening file {}: {}", filename.to_str().unwrap(), e);
-                    continue;
-                }
-            }
-        };
+        let reader = BufReader::new(&file_with_path.file);
         let mut csv_reader = ReaderBuilder::new()
             .has_headers(false)
             .flexible(true) // Allow variable number of columns
@@ -44,7 +30,7 @@ pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &Severity) {
         for result in csv_reader.records() {
             let record = result.unwrap();
             let level: Severity = record[11].to_string().into();
-            let log_level_num:i32 = (&level).into();
+            let log_level_num: i32 = (&level).into();
             if log_level_num < min_severity_num {
                 continue;
             }
@@ -58,7 +44,7 @@ pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &Severity) {
                 Err(e) => {
                     error!(
                         "Error deserializing CSV record in file {}: {}",
-                        filename.to_str().unwrap(),
+                        file_with_path.path.to_str().unwrap(),
                         e
                     );
                     continue;
