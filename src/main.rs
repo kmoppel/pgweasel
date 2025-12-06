@@ -1,6 +1,6 @@
-use log::{debug, error};
+use log::error;
 
-use crate::{convert_args::ConvertedArgs, errors::process_errors};
+use crate::{convert_args::ConvertedArgs, errors::{Severity, process_errors}};
 
 // use crate::convert_args::ConvertedArgs;
 
@@ -32,8 +32,8 @@ fn main() -> Result<()> {
                     process_errors(
                         &converted_args,
                         list_subcommand
-                            .get_one::<String>("level")
-                            .unwrap_or(&"ERROR".to_string()),
+                            .get_one::<Severity>("level")
+                            .unwrap_or(&Severity::ERROR),
                     );
                 }
                 ("top", _) => {

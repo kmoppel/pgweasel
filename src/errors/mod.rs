@@ -1,6 +1,6 @@
 mod process;
 mod date_serializer;
 mod log_record;
-mod severities;
+mod severity;
 pub use process::process_errors;
-pub use severities::validate_severity;
+pub use severity::Severity;

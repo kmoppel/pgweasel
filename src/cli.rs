@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-use clap::{Arg, ArgAction, Command, arg};
+use clap::{Arg, ArgAction, Command, arg, value_parser};
+
+use crate::errors::Severity;
 
 pub fn cli() -> Command {
     Command::new("pgweasel")
@@ -16,10 +18,10 @@ pub fn cli() -> Command {
                 .about("Show or summarize error messages")
                 .args_conflicts_with_subcommands(true)
                 .flatten_help(true)
-                .args(error_args())
+                .args(level_args())
                 .args(filelist_args())
-                .subcommand(Command::new("list").args(error_args()).args(filelist_args()))
-                .subcommand(Command::new("top").args(error_args()).args(filelist_args()))
+                .subcommand(Command::new("list").args(level_args()).args(filelist_args()))
+                .subcommand(Command::new("top").args(level_args()).args(filelist_args()))
         )
         .subcommand(
             Command::new("locks")
@@ -43,8 +45,12 @@ pub fn cli() -> Command {
         )
 }
 
-fn error_args() -> Vec<Arg> {
-    vec![arg!(--level <LEVEL>).short('l')]
+fn level_args() -> Vec<Arg> {
+    vec![
+        arg!(--level <SEVERITY>)
+            .short('l')
+            .value_parser(value_parser!(Severity)),
+    ]
 }
 
 fn filelist_args() -> Vec<Arg> {

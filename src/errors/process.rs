@@ -6,11 +6,11 @@ use flate2::read::GzDecoder;
 use log::{debug, error};
 
 use crate::convert_args::ConvertedArgs;
+use crate::errors::Severity;
 use crate::errors::log_record::PostgresLog;
-use crate::errors::severities::log_entry_severity_to_num;
 
-pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &str) {
-    let min_severity_num = log_entry_severity_to_num(min_severity);
+pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &Severity) {
+    let min_severity_num: i32 = min_severity.into();
 
     for filename in &converted_args.file_list {
         if converted_args.verbose {
@@ -43,7 +43,8 @@ pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &str) {
         let start = Instant::now();
         for result in csv_reader.records() {
             let record = result.unwrap();
-            let log_level_num = log_entry_severity_to_num(&record[11]);
+            let level: Severity = record[11].to_string().into();
+            let log_level_num:i32 = (&level).into();
             if log_level_num < min_severity_num {
                 continue;
             }
@@ -55,7 +56,11 @@ pub fn process_errors(converted_args: &ConvertedArgs, min_severity: &str) {
             let log_record: PostgresLog = match record.deserialize(None) {
                 Ok(rec) => rec,
                 Err(e) => {
-                    error!("Error deserializing CSV record in file {}: {}", filename.to_str().unwrap(), e);
+                    error!(
+                        "Error deserializing CSV record in file {}: {}",
+                        filename.to_str().unwrap(),
+                        e
+                    );
                     continue;
                 }
             };
