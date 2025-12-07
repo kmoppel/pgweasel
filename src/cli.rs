@@ -17,7 +17,6 @@ pub fn cli() -> Command {
             Command::new("error")
                 .about("Show or summarize error messages")
                 .args_conflicts_with_subcommands(true)
-                .flatten_help(true)
                 .args(level_args())
                 .args(filelist_args())
                 .subcommand(Command::new("list").args(level_args()).args(filelist_args()))
