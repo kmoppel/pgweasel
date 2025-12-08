@@ -6,6 +6,7 @@ use crate::{convert_args::ConvertedArgs, errors::{Severity, process_errors}};
 
 mod cli;
 mod convert_args;
+mod parsers;
 mod errors;
 // Comented out to not get warnings on dead code
 // mod files;

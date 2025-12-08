@@ -4,3 +4,4 @@ mod log_record;
 mod severity;
 pub use process::process_errors;
 pub use severity::Severity;
+pub use log_record::PostgresLog;
