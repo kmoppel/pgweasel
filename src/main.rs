@@ -31,11 +31,11 @@ fn main() -> Result<()> {
             match error_command {
                 ("list", list_subcommand) => {
                     process_errors(
-                        &converted_args,
+                        converted_args,
                         list_subcommand
                             .get_one::<Severity>("level")
                             .unwrap_or(&Severity::ERROR),
-                    );
+                    )?;
                 }
                 ("top", _) => {
                     println!("Analyzing for top errors");

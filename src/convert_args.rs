@@ -27,6 +27,7 @@ pub struct ConvertedArgs {
     pub files: Vec<FileWithPath>,
     pub begin: Option<DateTime<Local>>,
     pub end: Option<DateTime<Local>>,
+    pub mask: Option<String>,
     pub verbose: bool,
 }
 
@@ -116,6 +117,8 @@ impl Into<ConvertedArgs> for ArgMatches {
             None
         };
 
+        let mask = self.get_one::<String>("mask").map(|s| s.to_owned());
+
         // Initialize logger based on verbose flag
         let mut verbose = false;
         env_logger::Builder::from_default_env()
@@ -133,6 +136,7 @@ impl Into<ConvertedArgs> for ArgMatches {
             files: vec![],
             begin,
             end,
+            mask,
             matches: self,
             verbose,
         }
