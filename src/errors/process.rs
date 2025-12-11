@@ -14,10 +14,7 @@ pub fn process_errors(converted_args: ConvertedArgs, min_severity: &Severity) ->
 
     for file_with_path in converted_args.files {
         if converted_args.verbose {
-            debug!(
-                "Processing file: {}",
-                file_with_path.path.to_str().unwrap()
-            );
+            debug!("Processing file: {}", file_with_path.path.to_str().unwrap());
         }
 
         let start = Instant::now();
@@ -32,7 +29,11 @@ pub fn process_errors(converted_args: ConvertedArgs, min_severity: &Severity) ->
             converted_args.begin,
             converted_args.end,
         ) {
-            println!("{:?}", record);
+            let result = record?;
+            println!(
+                "timestamp {}, severity: {}, message: {}, raw string {}",
+                result.timestamp, result.severity, result.message, result.raw
+            );
         }
         debug!("Finished in: {:?}", start.elapsed());
     }

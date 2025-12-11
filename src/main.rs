@@ -1,18 +1,16 @@
 use log::error;
 
-use crate::{convert_args::ConvertedArgs, errors::{Severity, process_errors}};
+use crate::{
+    convert_args::ConvertedArgs,
+    errors::{Severity, process_errors},
+};
 
 // use crate::convert_args::ConvertedArgs;
 
 mod cli;
 mod convert_args;
-mod parsers;
 mod errors;
-// Comented out to not get warnings on dead code
-// mod files;
-// mod logparser;
-// mod logreader;
-// mod postgres;
+mod parsers;
 mod util;
 
 pub type Result<T> = core::result::Result<T, Error>;
