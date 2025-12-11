@@ -16,6 +16,48 @@ pub enum Severity {
     PANIC,
 }
 
+impl Severity {
+    pub fn from_log_string(str: &str) -> Self {
+        if str.contains("LOG:") {
+            return Severity::LOG;
+        };
+        if str.contains("ERROR:") {
+            return Severity::ERROR;
+        };
+        if str.contains("INFO:") {
+            return Severity::INFO;
+        };
+        if str.contains("NOTICE:") {
+            return Severity::NOTICE;
+        };
+        if str.contains("WARNING:") {
+            return Severity::WARNING;
+        };
+        if str.contains("DEBUG5:") {
+            return Severity::DEBUG5;
+        };
+        if str.contains("DEBUG4:") {
+            return Severity::DEBUG4;
+        };
+        if str.contains("DEBUG3:") {
+            return Severity::DEBUG3;
+        };
+        if str.contains("DEBUG2:") {
+            return Severity::DEBUG2;
+        };
+        if str.contains("DEBUG1:") {
+            return Severity::DEBUG1;
+        };
+        if str.contains("FATAL:") {
+            return Severity::FATAL;
+        };
+        if str.contains("PANIC:") {
+            return Severity::PANIC;
+        };
+        Severity::LOG
+    }
+}
+
 impl ValueEnum for Severity {
     fn value_variants<'a>() -> &'a [Self] {
         &[
@@ -111,5 +153,19 @@ impl From<String> for Severity {
             "PANIC" => Severity::PANIC,
             _ => Severity::INFO, // Default to LOG level
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from_log_string() {
+        let sev1 = Severity::from_log_string("string :ERROR string");
+        assert_eq!(Severity::ERROR, sev1);
+
+        let sev2 = Severity::from_log_string("2025-05-21 10:57:10.100 UTC [596]: [1-1] db=postgres,user=postgres,host=91.129.106.131 ERROR:  syntax error at or near \"sdaasdasda\" at character 12025-05-21 10:57:10.100 UTC [596]: [2-1] db=postgres,user=postgres,host=91.129.106.131 STATEMENT:  sdaasdasda");
+        assert_eq!(Severity::ERROR, sev2);
     }
 }

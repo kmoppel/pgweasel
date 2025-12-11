@@ -35,7 +35,7 @@ where
     Ok(None)
 }
 
-fn deserialize_helper(s: &str) -> Result<DateTime<FixedOffset>> {
+pub fn deserialize_helper(s: &str) -> Result<DateTime<FixedOffset>> {
     if let Ok(dt) = DateTime::parse_from_str(s, FORMAT) {
         return Ok(dt);
     }

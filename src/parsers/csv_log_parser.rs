@@ -24,7 +24,7 @@ impl LogParser for CsvLogParser {
         mask: Option<String>,
         begin: Option<DateTime<Local>>,
         end: Option<DateTime<Local>>,
-    ) -> Box<dyn Iterator<Item = Result<LogLine>>> {
+    ) -> Box<dyn Iterator<Item = Result<LogLine>> + '_> {
         let reader = BufReader::new(file);
         let iter = reader.lines().filter_map(move |lin| {
             let line = match lin {
@@ -79,7 +79,7 @@ impl LogParser for CsvLogParser {
 
             Some(Ok(LogLine {
                 raw: line,
-                timtestamp: log_record.log_time.unwrap(),
+                timestamp: log_record.log_time.unwrap(),
                 severity: log_record.error_severity.into(),
                 message: log_record.message.unwrap(),
             }))
