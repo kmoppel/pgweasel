@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn from_log_string() {
-        let sev1 = Severity::from_log_string("string :ERROR string");
+        let sev1 = Severity::from_log_string("string ERROR: string");
         assert_eq!(Severity::Error, sev1);
 
         let sev2 = Severity::from_log_string(
