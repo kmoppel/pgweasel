@@ -2,94 +2,94 @@ use clap::{ValueEnum, builder::PossibleValue};
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum Severity {
-    DEBUG5,
-    DEBUG4,
-    DEBUG3,
-    DEBUG2,
-    DEBUG1,
-    LOG,
-    INFO,
-    NOTICE,
-    WARNING,
-    ERROR,
-    FATAL,
-    PANIC,
+    Debug5,
+    Debug4,
+    Debug3,
+    Debug2,
+    Debug1,
+    Log,
+    Info,
+    Notice,
+    Warning,
+    Error,
+    Fatal,
+    Panic,
 }
 
 impl Severity {
     pub fn from_log_string(str: &str) -> Self {
         if str.contains("LOG:") {
-            return Severity::LOG;
+            return Severity::Log;
         };
         if str.contains("ERROR:") {
-            return Severity::ERROR;
+            return Severity::Error;
         };
         if str.contains("INFO:") {
-            return Severity::INFO;
+            return Severity::Info;
         };
         if str.contains("NOTICE:") {
-            return Severity::NOTICE;
+            return Severity::Notice;
         };
         if str.contains("WARNING:") {
-            return Severity::WARNING;
+            return Severity::Warning;
         };
         if str.contains("DEBUG5:") {
-            return Severity::DEBUG5;
+            return Severity::Debug5;
         };
         if str.contains("DEBUG4:") {
-            return Severity::DEBUG4;
+            return Severity::Debug4;
         };
         if str.contains("DEBUG3:") {
-            return Severity::DEBUG3;
+            return Severity::Debug3;
         };
         if str.contains("DEBUG2:") {
-            return Severity::DEBUG2;
+            return Severity::Debug2;
         };
         if str.contains("DEBUG1:") {
-            return Severity::DEBUG1;
+            return Severity::Debug1;
         };
         if str.contains("FATAL:") {
-            return Severity::FATAL;
+            return Severity::Fatal;
         };
         if str.contains("PANIC:") {
-            return Severity::PANIC;
+            return Severity::Panic;
         };
-        Severity::LOG
+        Severity::Log
     }
 }
 
 impl ValueEnum for Severity {
     fn value_variants<'a>() -> &'a [Self] {
         &[
-            Severity::DEBUG5,
-            Severity::DEBUG4,
-            Severity::DEBUG3,
-            Severity::DEBUG2,
-            Severity::DEBUG1,
-            Severity::LOG,
-            Severity::INFO,
-            Severity::NOTICE,
-            Severity::WARNING,
-            Severity::ERROR,
-            Severity::FATAL,
-            Severity::PANIC,
+            Severity::Debug5,
+            Severity::Debug4,
+            Severity::Debug3,
+            Severity::Debug2,
+            Severity::Debug1,
+            Severity::Log,
+            Severity::Info,
+            Severity::Notice,
+            Severity::Warning,
+            Severity::Error,
+            Severity::Fatal,
+            Severity::Panic,
         ]
     }
 
     fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
         Some(match self {
-            Severity::DEBUG5 => PossibleValue::new("DEBUG5").help(""),
-            Severity::DEBUG4 => PossibleValue::new("DEBUG4").help(""),
-            Severity::DEBUG3 => PossibleValue::new("DEBUG3").help(""),
-            Severity::DEBUG2 => PossibleValue::new("DEBUG2").help(""),
-            Severity::DEBUG1 => PossibleValue::new("DEBUG1").help(""),
-            Severity::LOG => PossibleValue::new("LOG").help(""),
-            Severity::INFO => PossibleValue::new("INFO").help(""),
-            Severity::NOTICE => PossibleValue::new("NOTICE").help(""),
-            Severity::WARNING => PossibleValue::new("WARNING").help(""),
-            Severity::ERROR => PossibleValue::new("ERROR").help(""),
-            Severity::FATAL => PossibleValue::new("FATAL").help(""),
-            Severity::PANIC => PossibleValue::new("PANIC").help(""),
+            Severity::Debug5 => PossibleValue::new("DEBUG5").help(""),
+            Severity::Debug4 => PossibleValue::new("DEBUG4").help(""),
+            Severity::Debug3 => PossibleValue::new("DEBUG3").help(""),
+            Severity::Debug2 => PossibleValue::new("DEBUG2").help(""),
+            Severity::Debug1 => PossibleValue::new("DEBUG1").help(""),
+            Severity::Log => PossibleValue::new("LOG").help(""),
+            Severity::Info => PossibleValue::new("INFO").help(""),
+            Severity::Notice => PossibleValue::new("NOTICE").help(""),
+            Severity::Warning => PossibleValue::new("WARNING").help(""),
+            Severity::Error => PossibleValue::new("ERROR").help(""),
+            Severity::Fatal => PossibleValue::new("FATAL").help(""),
+            Severity::Panic => PossibleValue::new("PANIC").help(""),
         })
     }
 }
@@ -119,18 +119,18 @@ impl std::str::FromStr for Severity {
 impl From<&Severity> for i32 {
     fn from(val: &Severity) -> Self {
         match val {
-            Severity::DEBUG5 => 0,
-            Severity::DEBUG4 => 1,
-            Severity::DEBUG3 => 2,
-            Severity::DEBUG2 => 3,
-            Severity::DEBUG1 => 4,
-            Severity::LOG => 5,
-            Severity::INFO => 5,
-            Severity::NOTICE => 6,
-            Severity::WARNING => 7,
-            Severity::ERROR => 8,
-            Severity::FATAL => 9,
-            Severity::PANIC => 0,
+            Severity::Debug5 => 0,
+            Severity::Debug4 => 1,
+            Severity::Debug3 => 2,
+            Severity::Debug2 => 3,
+            Severity::Debug1 => 4,
+            Severity::Log => 5,
+            Severity::Info => 5,
+            Severity::Notice => 6,
+            Severity::Warning => 7,
+            Severity::Error => 8,
+            Severity::Fatal => 9,
+            Severity::Panic => 0,
         }
     }
 }
@@ -139,19 +139,19 @@ impl From<&Severity> for i32 {
 impl From<String> for Severity {
     fn from(value: String) -> Self {
         match value.to_uppercase().as_str() {
-            "DEBUG5" => Severity::DEBUG5,
-            "DEBUG4" => Severity::DEBUG4,
-            "DEBUG3" => Severity::DEBUG3,
-            "DEBUG2" => Severity::DEBUG2,
-            "DEBUG1" => Severity::DEBUG1,
-            "LOG" => Severity::LOG,
-            "INFO" => Severity::INFO,
-            "NOTICE" => Severity::NOTICE,
-            "WARNING" => Severity::WARNING,
-            "ERROR" => Severity::ERROR,
-            "FATAL" => Severity::FATAL,
-            "PANIC" => Severity::PANIC,
-            _ => Severity::INFO, // Default to LOG level
+            "DEBUG5" => Severity::Debug5,
+            "DEBUG4" => Severity::Debug4,
+            "DEBUG3" => Severity::Debug3,
+            "DEBUG2" => Severity::Debug2,
+            "DEBUG1" => Severity::Debug1,
+            "LOG" => Severity::Log,
+            "INFO" => Severity::Info,
+            "NOTICE" => Severity::Notice,
+            "WARNING" => Severity::Warning,
+            "ERROR" => Severity::Error,
+            "FATAL" => Severity::Fatal,
+            "PANIC" => Severity::Panic,
+            _ => Severity::Info, // Default to LOG level
         }
     }
 }
@@ -163,9 +163,11 @@ mod tests {
     #[test]
     fn from_log_string() {
         let sev1 = Severity::from_log_string("string :ERROR string");
-        assert_eq!(Severity::ERROR, sev1);
+        assert_eq!(Severity::Error, sev1);
 
-        let sev2 = Severity::from_log_string("2025-05-21 10:57:10.100 UTC [596]: [1-1] db=postgres,user=postgres,host=91.129.106.131 ERROR:  syntax error at or near \"sdaasdasda\" at character 12025-05-21 10:57:10.100 UTC [596]: [2-1] db=postgres,user=postgres,host=91.129.106.131 STATEMENT:  sdaasdasda");
-        assert_eq!(Severity::ERROR, sev2);
+        let sev2 = Severity::from_log_string(
+            "2025-05-21 10:57:10.100 UTC [596]: [1-1] db=postgres,user=postgres,host=91.129.106.131 ERROR:  syntax error at or near \"sdaasdasda\" at character 12025-05-21 10:57:10.100 UTC [596]: [2-1] db=postgres,user=postgres,host=91.129.106.131 STATEMENT:  sdaasdasda",
+        );
+        assert_eq!(Severity::Error, sev2);
     }
 }

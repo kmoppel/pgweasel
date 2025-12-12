@@ -32,7 +32,7 @@ fn main() -> Result<()> {
                         converted_args,
                         list_subcommand
                             .get_one::<Severity>("level")
-                            .unwrap_or(&Severity::ERROR),
+                            .unwrap_or(&Severity::Error),
                     )?;
                 }
                 ("top", _) => {
