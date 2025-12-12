@@ -1,9 +1,6 @@
 use log::error;
 
-use crate::{
-    convert_args::ConvertedArgs,
-    errors::{Severity, process_errors},
-};
+use crate::{convert_args::ConvertedArgs, errors::process_errors, severity::Severity};
 
 // use crate::convert_args::ConvertedArgs;
 
@@ -11,6 +8,7 @@ mod cli;
 mod convert_args;
 mod errors;
 mod parsers;
+mod severity;
 mod util;
 
 pub type Result<T> = core::result::Result<T, Error>;

@@ -2,8 +2,8 @@ use std::time::Instant;
 
 use log::debug;
 
+use crate::Severity;
 use crate::convert_args::ConvertedArgs;
-use crate::errors::Severity;
 use crate::parsers::get_parser;
 
 pub type Result<T> = core::result::Result<T, Error>;

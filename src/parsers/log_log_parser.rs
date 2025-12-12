@@ -6,8 +6,8 @@ use std::{
 use chrono::{DateTime, Local};
 
 use crate::{
-    errors::{Severity, deserialize_helper},
-    parsers::{LogLine, LogParser},
+    errors::deserialize_helper,
+    parsers::{LogLine, LogParser}, severity::Severity,
 };
 
 pub struct LogLogParser {

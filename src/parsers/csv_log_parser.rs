@@ -7,8 +7,8 @@ use chrono::{DateTime, Local};
 use csv::ReaderBuilder;
 
 use crate::{
-    errors::{PostgresLog, Severity},
-    parsers::{LogLine, LogParser},
+    errors::PostgresLog,
+    parsers::{LogLine, LogParser}, severity::Severity,
 };
 
 pub struct CsvLogParser;

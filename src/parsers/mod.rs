@@ -2,7 +2,7 @@ use std::{fs::File, path::PathBuf};
 
 use chrono::{DateTime, FixedOffset, Local};
 
-use crate::errors::Severity;
+use crate::Severity;
 
 mod csv_log_parser;
 mod log_log_parser;

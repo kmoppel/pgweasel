@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::{Arg, ArgAction, Command, arg, value_parser};
 
-use crate::errors::Severity;
+use crate::Severity;
 
 pub fn cli() -> Command {
     Command::new("pgweasel")
