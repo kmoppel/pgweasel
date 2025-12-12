@@ -39,7 +39,7 @@ impl LogParser for LogLogParser {
             }
 
             let result_line = self.remaining_string.clone();
-            self.remaining_string = String::from(line);
+            self.remaining_string = line;
 
             if let Some(some_mask) = &mask {
                 if !result_line.starts_with(some_mask) {

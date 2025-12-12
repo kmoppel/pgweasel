@@ -116,9 +116,9 @@ impl std::str::FromStr for Severity {
     }
 }
 
-impl Into<i32> for &Severity {
-    fn into(self) -> i32 {
-        match self {
+impl From<&Severity> for i32 {
+    fn from(val: &Severity) -> Self {
+        match val {
             Severity::DEBUG5 => 0,
             Severity::DEBUG4 => 1,
             Severity::DEBUG3 => 2,
