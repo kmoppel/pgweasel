@@ -39,20 +39,37 @@ impl ConvertedArgs {
                 .into_iter()
                 .flatten()
                 .collect::<Vec<_>>();
-            for p in paths {
-                if p.is_file() {
-                    self.file_list.push(p.to_path_buf());
-                } else if p.is_dir() {
-                    for entry in fs::read_dir(p)? {
-                        let entry = entry?;
-                        let path = entry.path();
-                        self.file_list.push(path);
-                    }
-                }
+            let file_list_to_add = self.expand_paths_helper(paths)?;
+            self.file_list.extend(file_list_to_add);
+            if let Some((_, sub_sub_matches)) = sub_matches.subcommand() {
+                let paths = sub_sub_matches
+                    .get_many::<PathBuf>("PATH")
+                    .into_iter()
+                    .flatten()
+                    .collect::<Vec<_>>();
+                let file_list_to_add = self.expand_paths_helper(paths)?;
+                self.file_list.extend(file_list_to_add);
             }
         }
 
         Ok(self)
+    }
+
+    fn expand_paths_helper(&self, path: Vec<&PathBuf>) -> Result<Vec<PathBuf>> {
+        let mut result: Vec<PathBuf> = vec![];
+        for p in path {
+            if p.is_file() {
+                result.push(p.to_path_buf());
+            } else if p.is_dir() {
+                debug!("Expanding directory: {:?}", p);
+                for entry in fs::read_dir(p)? {
+                    let entry = entry?;
+                    let path = entry.path();
+                    result.push(path);
+                }
+            }
+        }
+        Ok(result)
     }
 
     pub fn expand_archives(mut self) -> Result<Self> {
@@ -78,10 +95,10 @@ impl ConvertedArgs {
     }
 }
 
-impl Into<ConvertedArgs> for ArgMatches {
-    fn into(self) -> ConvertedArgs {
+impl From<ArgMatches> for ConvertedArgs {
+    fn from(val: ArgMatches) -> Self {
         // Parse begin / end flags
-        let begin = if let Some(begin_str) = &self.get_one::<String>("begin") {
+        let begin = if let Some(begin_str) = &val.get_one::<String>("begin") {
             match time_or_interval_string_to_time(begin_str, None) {
                 Ok(datetime) => {
                     debug!(
@@ -99,7 +116,7 @@ impl Into<ConvertedArgs> for ArgMatches {
             None
         };
 
-        let end = if let Some(end_str) = &self.get_one::<String>("end") {
+        let end = if let Some(end_str) = &val.get_one::<String>("end") {
             match time_or_interval_string_to_time(end_str, None) {
                 Ok(datetime) => {
                     debug!(
@@ -117,12 +134,12 @@ impl Into<ConvertedArgs> for ArgMatches {
             None
         };
 
-        let mask = self.get_one::<String>("mask").map(|s| s.to_owned());
+        let mask = val.get_one::<String>("mask").map(|s| s.to_owned());
 
         // Initialize logger based on verbose flag
         let mut verbose = false;
         env_logger::Builder::from_default_env()
-            .filter_level(if self.get_flag("debug") {
+            .filter_level(if val.get_flag("debug") {
                 verbose = true;
                 debug!("Running in debug mode.");
                 log::LevelFilter::Debug
@@ -137,7 +154,7 @@ impl Into<ConvertedArgs> for ArgMatches {
             begin,
             end,
             mask,
-            matches: self,
+            matches: val,
             verbose,
         }
     }
