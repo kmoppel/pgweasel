@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Cursor},
 };
 
 use chrono::{DateTime, Local};
@@ -36,24 +36,23 @@ impl LogParser for CsvLogParser {
                     return None;
                 };
             }
+
+            let severity = Severity::from_csv_string(&line);
+            let log_level_num: i32 = (&severity).into();
+            if log_level_num < min_severity {
+                return None;
+            }
+
+            let cursor = Cursor::new(line.clone());
             let rdr = ReaderBuilder::new()
                 .has_headers(false)
-                .from_reader(line.as_bytes());
+                .from_reader(cursor);
 
             let record = match rdr.into_records().next().unwrap() {
                 Ok(r) => r,
                 Err(err) => return Some(Err(format!("Failed to parse! Err: {err}").into())),
             };
-            let level: Severity = record[11].to_string().into();
-            let log_level_num: i32 = (&level).into();
-            if log_level_num < min_severity {
-                return None;
-            }
-            if let Some(timestamp_str) = &mask {
-                if !record[0].starts_with(timestamp_str) {
-                    return None;
-                }
-            }
+
             let log_record: PostgresLog = match record.deserialize(None) {
                 Ok(rec) => rec,
                 Err(err) => {
