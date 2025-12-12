@@ -106,7 +106,7 @@ pub fn is_pg_timestamp_start(line: &str) -> bool {
 
     // Check digits in required places
     fn is_digit(b: u8) -> bool {
-        b'0' <= b && b <= b'9'
+        b.is_ascii_digit()
     }
 
     for &idx in &[

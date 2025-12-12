@@ -38,11 +38,11 @@ pub fn time_or_interval_string_to_time(
         return Err(TimeParseError::InvalidFormat("Empty input".to_string()));
     }
     let parsed_time = parse_timestamp_from_string(human_input);
-    if parsed_time.is_ok() {
-        return Ok(parsed_time.unwrap());
+    if let Ok(dt) = parsed_time {
+        return Ok(dt);
     }
 
-    let reference_time = reference_time.unwrap_or_else(|| Local::now());
+    let reference_time = reference_time.unwrap_or_else(Local::now);
 
     // Special case for "today"
     if human_input.to_lowercase() == "today" {
@@ -179,9 +179,9 @@ pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, Strin
     // %t	Time stamp without milliseconds 2006-01-02 15:04:05.000 MST
     // %m	Time stamp with milliseconds 2006-01-02 15:04:05 MST
     // %n	Time stamp with milliseconds (as a Unix epoch)  TODO
-    let formats = vec![
+    let formats = [
         "%Y-%m-%d %H:%M:%S%.3f %Z", // 2025-08-24 00:05:48.870 CEST
-        "%Y-%m-%d %H:%M:%S% %Z",    // with any fractional seconds
+        "%Y-%m-%d %H:%M:%S% %Z",
     ];
 
     // Try parsing with timezone first
@@ -201,6 +201,19 @@ pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, Strin
     }
 
     Err(format!("Unable to parse timestamp: '{}'", input))
+}
+
+#[allow(dead_code)]
+fn line_has_timestamp_prefix(line: &str) -> (bool, Option<String>) {
+    // Check if the line starts with a timestamp pattern
+    let timestamp_regex = Regex::new(r"^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})").unwrap();
+
+    if let Some(captures) = timestamp_regex.captures(line) {
+        let time_match = captures.name("time").map(|m| m.as_str().to_string());
+        (true, time_match)
+    } else {
+        (false, None)
+    }
 }
 
 #[cfg(test)]
@@ -355,18 +368,5 @@ mod tests {
         // println!("Result no millis: {}", result_no_millis);
         assert_eq!(result_no_millis.year(), 2025);
         assert_eq!(result_no_millis.month(), 5);
-    }
-}
-
-#[allow(dead_code)]
-fn line_has_timestamp_prefix(line: &str) -> (bool, Option<String>) {
-    // Check if the line starts with a timestamp pattern
-    let timestamp_regex = Regex::new(r"^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})").unwrap();
-
-    if let Some(captures) = timestamp_regex.captures(line) {
-        let time_match = captures.name("time").map(|m| m.as_str().to_string());
-        (true, time_match)
-    } else {
-        (false, None)
     }
 }

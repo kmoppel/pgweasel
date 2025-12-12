@@ -77,12 +77,12 @@ impl ConvertedArgs {
 
         for path in &self.file_list {
             match path.extension().and_then(|s| s.to_str()) {
-                Some("gz") => self.files.push(extract_gz(&path, temp_dir.path())?),
-                Some("zip") => self.files.extend(extract_zip(&path, temp_dir.path())?),
+                Some("gz") => self.files.push(extract_gz(path, temp_dir.path())?),
+                Some("zip") => self.files.extend(extract_zip(path, temp_dir.path())?),
 
                 Some(_r) => {
                     let file_with_path = FileWithPath {
-                        file: File::open(&path)?,
+                        file: File::open(path)?,
                         path: path.clone(),
                     };
                     self.files.push(file_with_path)
