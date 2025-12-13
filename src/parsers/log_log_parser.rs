@@ -10,6 +10,7 @@ use crate::{
     parsers::{LogLine, LogParser}, severity::Severity,
 };
 
+#[derive(Default)]
 pub struct LogLogParser {
     pub remaining_string: String,
 }
