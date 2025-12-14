@@ -6,8 +6,7 @@ use crate::Severity;
 use crate::convert_args::ConvertedArgs;
 use crate::parsers::get_parser;
 
-pub type Result<T> = core::result::Result<T, Error>;
-pub type Error = Box<dyn std::error::Error>;
+use crate::Result;
 
 pub fn process_errors(converted_args: ConvertedArgs, min_severity: &Severity) -> Result<()> {
     let min_severity_num: i32 = min_severity.into();

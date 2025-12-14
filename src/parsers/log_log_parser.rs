@@ -15,8 +15,7 @@ pub struct LogLogParser {
     pub remaining_string: String,
 }
 
-pub type Result<T> = core::result::Result<T, Error>;
-pub type Error = Box<dyn std::error::Error>;
+use crate::Result;
 
 impl LogParser for LogLogParser {
     fn parse(

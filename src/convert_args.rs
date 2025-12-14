@@ -13,8 +13,7 @@ use zip::ZipArchive;
 
 use crate::util::time_or_interval_string_to_time;
 
-pub type Result<T> = core::result::Result<T, Error>;
-pub type Error = Box<dyn std::error::Error>;
+use crate::Result;
 
 pub struct FileWithPath {
     pub file: std::fs::File,

@@ -10,9 +10,7 @@ mod log_log_parser;
 pub use csv_log_parser::CsvLogParser;
 pub use log_log_parser::LogLogParser;
 
-pub type Result<T> = core::result::Result<T, Error>;
-pub type Error = Box<dyn std::error::Error>;
-
+use crate::Result;
 #[derive(Debug)]
 pub struct LogLine {
     pub timestamp: DateTime<FixedOffset>,

@@ -2,17 +2,15 @@ use log::error;
 
 use crate::{convert_args::ConvertedArgs, errors::process_errors, severity::Severity};
 
-// use crate::convert_args::ConvertedArgs;
-
 mod cli;
 mod convert_args;
+mod error;
 mod errors;
 mod parsers;
 mod severity;
 mod util;
 
-pub type Result<T> = core::result::Result<T, Error>;
-pub type Error = Box<dyn std::error::Error>;
+pub use self::error::{Error, Result};
 
 fn main() -> Result<()> {
     let cli = cli::cli();

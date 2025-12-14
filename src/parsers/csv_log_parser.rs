@@ -13,8 +13,7 @@ use crate::{
 
 pub struct CsvLogParser;
 
-pub type Result<T> = core::result::Result<T, Error>;
-pub type Error = Box<dyn std::error::Error>;
+use crate::Result;
 
 impl LogParser for CsvLogParser {
     fn parse(
