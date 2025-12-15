@@ -20,11 +20,10 @@
                 }
             },
             "args": [
-                "-m",
-                "2025-05-08",
                 "error",
+                "list",
                 "--level",
-                "LOG",
+                "ERROR",
                 "./testdata/csvlog_pg14.csv",
                 "./testdata/csvlog1.csv.gz",
             ],
