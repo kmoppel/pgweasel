@@ -66,6 +66,8 @@ impl ConvertedArgs {
                     let path = entry.path();
                     result.push(path);
                 }
+            } else {
+                return Err(format!("File - {} does not exist", p.to_str().unwrap()).into());
             }
         }
         Ok(result)
