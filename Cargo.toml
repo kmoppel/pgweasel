@@ -15,3 +15,4 @@ csv = "1.4.0"
 serde = { version = "1.0.228", features = ["derive"] }
 tempfile = "3.23.0"
 zip = "6.0.0"
+derive_more = {version = "2.1.0", features = ["from"]}
