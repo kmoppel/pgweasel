@@ -2,7 +2,7 @@ use std::{fs::File, path::PathBuf};
 
 use chrono::{DateTime, FixedOffset, Local};
 
-use crate::Severity;
+use crate::{Error, Severity};
 
 mod csv_log_parser;
 mod log_log_parser;
@@ -35,7 +35,8 @@ pub fn get_parser(path: PathBuf) -> Result<Box<dyn LogParser>> {
     match path.extension() {
         Some(ext) if ext == "csv" => Ok(Box::new(CsvLogParser {})),
         Some(ext) if ext == "log" => Ok(Box::new(LogLogParser::default())),
-        Some(ext) => Err(format!("File extension: {:?} not supported", ext).into()),
-        None => Err("No Extension".into()),
+        Some(ext) if ext == "json" => Err(Error::JsonNotYetImplemented),
+        Some(_) => Err(Error::FileExtensionIsNotSupported { file: path }),
+        None => Err(Error::FileHasNoExtension { file: path }),
     }
 }

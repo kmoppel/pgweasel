@@ -8,7 +8,8 @@ use csv::ReaderBuilder;
 
 use crate::{
     errors::PostgresLog,
-    parsers::{LogLine, LogParser}, severity::Severity,
+    parsers::{LogLine, LogParser},
+    severity::Severity,
 };
 
 pub struct CsvLogParser;
@@ -28,7 +29,7 @@ impl LogParser for CsvLogParser {
         let iter = reader.lines().filter_map(move |lin| {
             let line = match lin {
                 Ok(l) => l,
-                Err(err) => return Some(Err(format!("Failed to read! Err: {err}").into())),
+                Err(err) => return Some(Err(crate::Error::FailedToRead { error: err })),
             };
             if let Some(some_mask) = &mask {
                 if !line.starts_with(some_mask) {
@@ -43,21 +44,17 @@ impl LogParser for CsvLogParser {
             }
 
             let cursor = Cursor::new(line.clone());
-            let rdr = ReaderBuilder::new()
-                .has_headers(false)
-                .from_reader(cursor);
+            let rdr = ReaderBuilder::new().has_headers(false).from_reader(cursor);
 
             let record = match rdr.into_records().next().unwrap() {
                 Ok(r) => r,
-                Err(err) => return Some(Err(format!("Failed to parse! Err: {err}").into())),
+                Err(err) => return Some(Err(crate::Error::FailedToParseCsv { error: err })),
             };
 
             let log_record: PostgresLog = match record.deserialize(None) {
                 Ok(rec) => rec,
                 Err(err) => {
-                    return Some(Err(
-                        format!("Failed to parse to postgres log! Err: {err}").into()
-                    ));
+                    return Some(Err(crate::Error::FailedToParseCsvToPostgres { error: err }));
                 }
             };
 

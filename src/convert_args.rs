@@ -11,7 +11,7 @@ use log::{debug, error};
 use tempfile::TempDir;
 use zip::ZipArchive;
 
-use crate::util::time_or_interval_string_to_time;
+use crate::{Error, util::time_or_interval_string_to_time};
 
 use crate::Result;
 
@@ -67,7 +67,7 @@ impl ConvertedArgs {
                     result.push(path);
                 }
             } else {
-                return Err(format!("File - {} does not exist", p.to_str().unwrap()).into());
+                return Err(Error::FileDoesNotExist { path: p.clone() });
             }
         }
         Ok(result)

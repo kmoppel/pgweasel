@@ -30,7 +30,7 @@ impl LogParser for LogLogParser {
         let iter = reader.lines().filter_map(move |lin| {
             let line = match lin {
                 Ok(l) => l,
-                Err(err) => return Some(Err(format!("Failed to read! Err: {err}").into())),
+                Err(err) => return Some(Err(crate::Error::FailedToRead { error: err })),
             };
 
             self.remaining_string.push_str(&line);

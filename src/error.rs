@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use derive_more::From;
 
 pub type Result<T> = core::result::Result<T, Error>;
@@ -8,16 +10,31 @@ pub enum Error {
     #[from]
     Custom(String),
 
-    // -- Parsers
+    // -- ConvertArgs
+    FileDoesNotExist {
+        path: PathBuf,
+    },
 
+    // -- Parsers
+    JsonNotYetImplemented,
+    FileHasNoExtension {
+        file: PathBuf,
+    },
+    FileExtensionIsNotSupported {
+        file: PathBuf,
+    },
+
+    // -- LogParser
+    FailedToRead { error: std::io::Error },
+    FailedToParseCsv { error: csv::Error },
+    FailedToParseCsvToPostgres { error: csv::Error },
 
     // -- Externals
     #[from]
     Io(std::io::Error),
 
     #[from]
-    Zip(zip::result::ZipError)
-
+    Zip(zip::result::ZipError),
 }
 
 // region:    --- Custom --- Uncomment if want custom errors
