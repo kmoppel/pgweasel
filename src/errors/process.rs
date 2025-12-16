@@ -29,10 +29,7 @@ pub fn process_errors(converted_args: ConvertedArgs, min_severity: &Severity) ->
             converted_args.end,
         ) {
             let result = record?;
-            println!(
-                "timestamp {}, severity: {}, message: {}, raw string {}",
-                result.timestamp, result.severity, result.message, result.raw
-            );
+            println!("{}", result.raw);
         }
         debug!("Finished in: {:?}", start.elapsed());
     }
