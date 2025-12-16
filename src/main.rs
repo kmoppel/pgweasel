@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     converted_args = converted_args.expand_dirs()?.expand_archives()?;
 
     match matches.subcommand() {
-        Some(("error", sub_matches)) => {
+        Some(("errors", sub_matches)) => {
             let error_command = sub_matches.subcommand().unwrap_or(("list", sub_matches));
             match error_command {
                 ("list", list_subcommand) => {

@@ -14,8 +14,10 @@ pub fn cli() -> Command {
         .arg(arg!(--end <END>).short('e'))
         .subcommand_required(true)
         .subcommand(
-            Command::new("error")
+            Command::new("errors")
                 .about("Show or summarize error messages")
+                .alias("error")
+                .alias("err")
                 .args_conflicts_with_subcommands(true)
                 .args(level_args())
                 .args(filelist_args())
