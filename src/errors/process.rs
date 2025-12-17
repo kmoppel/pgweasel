@@ -29,6 +29,7 @@ pub fn process_errors(converted_args: ConvertedArgs, min_severity: &Severity) ->
             converted_args.end,
         ) {
             let result = record?;
+            debug!("Log line received: {result:?}");
             println!("{}", result.raw);
         }
         debug!("Finished in: {:?}", start.elapsed());
