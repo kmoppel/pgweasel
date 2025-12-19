@@ -702,7 +702,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "pgweasel-rust"
+name = "pgweasel"
 version = "0.1.0"
 dependencies = [
  "assert_cmd",

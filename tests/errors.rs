@@ -4,7 +4,7 @@ use std::process::Command; // Run programs
 
 #[test]
 fn simple_error_filter() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel-rust"));
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["err", "./testdata/csvlog1.csv"])
         .assert()
@@ -16,7 +16,7 @@ fn simple_error_filter() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn simple_filter_with_list_subcommand() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel-rust"));
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["err", "list", "./testdata/csvlog1.csv"])
         .assert()
@@ -28,7 +28,7 @@ fn simple_filter_with_list_subcommand() -> Result<(), Box<dyn std::error::Error>
 
 #[test]
 fn non_existing_file() -> Result<(), Box<dyn std::error::Error>> {
-    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel-rust"));
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["err", "list", "./testdata/csvlog1.cs"])
         .assert()

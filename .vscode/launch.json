@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'pgweasel-rust'",
+            "name": "Debug executable 'pgweasel'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=pgweasel-rust",
-                    "--package=pgweasel-rust"
+                    "--bin=pgweasel",
+                    "--package=pgweasel"
                 ],
                 "filter": {
-                    "name": "pgweasel-rust",
+                    "name": "pgweasel",
                     "kind": "bin"
                 }
             },
@@ -32,16 +32,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'pgweasel-rust'",
+            "name": "Debug unit tests in executable 'pgweasel'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=pgweasel-rust",
-                    "--package=pgweasel-rust"
+                    "--bin=pgweasel",
+                    "--package=pgweasel"
                 ],
                 "filter": {
-                    "name": "pgweasel-rust",
+                    "name": "pgweasel",
                     "kind": "bin"
                 }
             },
