@@ -8,7 +8,7 @@ use crate::parsers::get_parser;
 
 use crate::Result;
 
-pub fn process_errors(converted_args: ConvertedArgs, min_severity: &Severity) -> Result<()> {
+pub fn print_logs(converted_args: ConvertedArgs, min_severity: &Severity) -> Result<()> {
     let min_severity_num: i32 = min_severity.into();
 
     for file_with_path in converted_args.files {

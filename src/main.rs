@@ -1,5 +1,5 @@
 //! # pgweasel
-//! 
+//!
 //! A simple CLI usage oriented PostgreSQL log parser, to complement pgBadger.
 //!
 //! pgweasel tries to:
@@ -9,10 +9,10 @@
 //!  - more cloud-friendly - no deps, a single binary
 //!  - zero config - not dependent on Postgres log_line_prefix
 //!  - be more user-friendly - handle relative time inputs, auto-detect log files, subcommand aliases
-//! 
+//!
 //! # Features
-//! 
-//!  - errors 
+//!
+//!  - errors
 //!    - [x] list
 //!    - [ ] top
 //!  - [ ] locks
@@ -24,13 +24,13 @@
 
 use log::error;
 
-use crate::{convert_args::ConvertedArgs, errors::process_errors, severity::Severity};
+use crate::{convert_args::ConvertedArgs, print_logs::print_logs, severity::Severity};
 
 mod cli;
 mod convert_args;
 mod error;
-mod errors;
 mod parsers;
+mod print_logs;
 mod severity;
 mod util;
 
@@ -48,7 +48,7 @@ fn main() -> Result<()> {
             let error_command = sub_matches.subcommand().unwrap_or(("list", sub_matches));
             match error_command {
                 ("list", list_subcommand) => {
-                    process_errors(
+                    print_logs(
                         converted_args,
                         list_subcommand
                             .get_one::<Severity>("level")
