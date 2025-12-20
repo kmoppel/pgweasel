@@ -1,3 +1,9 @@
+//! This module is responsible for reading file, doing first filtering
+//! and parsing first phase
+//! 
+//! It finds appropriate parser using file extension.
+//!  
+
 use std::{fs::File, path::PathBuf};
 
 use chrono::{DateTime, FixedOffset, Local};

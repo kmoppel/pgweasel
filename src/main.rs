@@ -1,3 +1,27 @@
+//! # pgweasel
+//! 
+//! A simple CLI usage oriented PostgreSQL log parser, to complement pgBadger.
+//!
+//! pgweasel tries to:
+//!  - be an order of magnitude faster than pgBadger
+//!  - way simpler, with less flags, operating rather via commands and sub-commands
+//!  - focus on CLI interactions only - no html / json
+//!  - more cloud-friendly - no deps, a single binary
+//!  - zero config - not dependent on Postgres log_line_prefix
+//!  - be more user-friendly - handle relative time inputs, auto-detect log files, subcommand aliases
+//! 
+//! # Features
+//! 
+//!  - errors 
+//!    - [x] list
+//!    - [ ] top
+//!  - [ ] locks
+//!  - [ ] peaks
+//!  - [ ] slow
+//!  - [ ] stats
+//!  - [ ] system
+//!  - [ ] connections
+
 use log::error;
 
 use crate::{convert_args::ConvertedArgs, errors::process_errors, severity::Severity};
