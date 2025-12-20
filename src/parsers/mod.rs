@@ -12,6 +12,7 @@ use crate::{Error, Severity};
 
 mod csv_log_parser;
 mod log_log_parser;
+mod date_serializer;
 
 pub use csv_log_parser::CsvLogParser;
 pub use log_log_parser::LogLogParser;

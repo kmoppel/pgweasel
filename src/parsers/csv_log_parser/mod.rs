@@ -7,10 +7,11 @@ use chrono::{DateTime, Local};
 use csv::ReaderBuilder;
 
 use crate::{
-    errors::PostgresLog,
-    parsers::{LogLine, LogParser},
+    parsers::{LogLine, LogParser, csv_log_parser::log_record::PostgresLog},
     severity::Severity,
 };
+
+mod log_record;
 
 pub struct CsvLogParser;
 
@@ -82,33 +83,3 @@ impl LogParser for CsvLogParser {
         Box::new(iter)
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use std::{fs::File, path::PathBuf};
-
-//     use crate::{errors::Severity, parsers::csv_log_parser::CsvLogParser};
-
-//     use super::*;
-
-//     #[test]
-//     fn test_csv_parser() -> Result<()> {
-//         let path: PathBuf = PathBuf::from("./testdata/csvlog_pg14.csv");
-//         let file = File::open(path.clone())?;
-//         let parser = Box::new(CsvLogParser {});
-
-//         let intseverity = (&(Severity::LOG)).into();
-//         let iter = parser.parse(
-//             intseverity,
-//             Some("2025-05-21 13:00:03.127".to_string()),
-//             None,
-//             None,
-//         );
-//         for line in iter {
-//             let line = line?;
-//             println!("{:?}", line);
-//         }
-
-//         Ok(())
-//     }
-// }

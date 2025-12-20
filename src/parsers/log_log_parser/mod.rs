@@ -6,8 +6,7 @@ use std::{
 use chrono::{DateTime, Local};
 
 use crate::{
-    errors::deserialize_helper,
-    parsers::{LogLine, LogParser}, severity::Severity,
+    parsers::{LogLine, LogParser, date_serializer::deserialize_helper}, severity::Severity,
 };
 
 #[derive(Default)]
