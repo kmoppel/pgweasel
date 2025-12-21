@@ -3,12 +3,17 @@ use std::time::Instant;
 use log::debug;
 
 use crate::Severity;
+use crate::aggregators::Aggregator;
 use crate::convert_args::ConvertedArgs;
 use crate::parsers::get_parser;
 
 use crate::Result;
 
-pub fn print_logs(converted_args: ConvertedArgs, min_severity: &Severity) -> Result<()> {
+pub fn output_results(
+    converted_args: ConvertedArgs,
+    min_severity: &Severity,
+    agragators: &mut Vec<Box<dyn Aggregator>>,
+) -> Result<()> {
     let min_severity_num: i32 = min_severity.into();
 
     for file_with_path in converted_args.files {
@@ -30,7 +35,14 @@ pub fn print_logs(converted_args: ConvertedArgs, min_severity: &Severity) -> Res
         ) {
             let result = record?;
             debug!("Log line received: {result:?}");
-            println!("{}", result.raw);
+            let mut tmp = agragators.into_iter();
+            while let Some(agregator) = tmp.next() {
+                agregator.add(result.clone());
+            }
+        }
+        let mut tmp = agragators.into_iter();
+        while let Some(agregator) = tmp.next() {
+            agregator.print();
         }
         debug!("Finished in: {:?}", start.elapsed());
     }

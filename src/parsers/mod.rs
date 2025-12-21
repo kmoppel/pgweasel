@@ -18,7 +18,7 @@ pub use csv_log_parser::CsvLogParser;
 pub use log_log_parser::LogLogParser;
 
 use crate::Result;
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LogLine {
     pub timestamp: DateTime<FixedOffset>,
     pub severity: Severity,

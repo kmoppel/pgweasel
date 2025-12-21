@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{num::ParseIntError, path::PathBuf};
 
 use derive_more::From;
 
@@ -32,6 +32,9 @@ pub enum Error {
     // -- Externals
     #[from]
     Io(std::io::Error),
+
+    #[from]
+    ParseInt(ParseIntError),
 
     #[from]
     Zip(zip::result::ZipError),

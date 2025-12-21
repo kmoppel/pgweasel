@@ -24,13 +24,19 @@
 
 use log::error;
 
-use crate::{convert_args::ConvertedArgs, print_logs::print_logs, severity::Severity};
+use crate::{
+    aggregators::{Aggregator, SlowQueryAggregator, ZeroAgregator},
+    convert_args::ConvertedArgs,
+    output_results::output_results,
+    severity::Severity,
+};
 
+mod aggregators;
 mod cli;
 mod convert_args;
 mod error;
+mod output_results;
 mod parsers;
-mod print_logs;
 mod severity;
 mod util;
 
@@ -48,11 +54,14 @@ fn main() -> Result<()> {
             let error_command = sub_matches.subcommand().unwrap_or(("list", sub_matches));
             match error_command {
                 ("list", list_subcommand) => {
-                    print_logs(
+                    let mut aggregators: Vec<Box<dyn Aggregator>> = Vec::new();
+                    aggregators.push(Box::new(ZeroAgregator));
+                    output_results(
                         converted_args,
                         list_subcommand
                             .get_one::<Severity>("level")
                             .unwrap_or(&Severity::Error),
+                        &mut aggregators,
                     )?;
                 }
                 ("top", _) => {
@@ -69,8 +78,14 @@ fn main() -> Result<()> {
         Some(("peaks", _)) => {
             error!("Not implemented")
         }
-        Some(("slow", _)) => {
-            error!("Not implemented")
+        Some(("slow", matches)) => {
+            let mut treshold = 3000;
+            if let Some(treshold_str) = matches.get_one::<String>("treshold") {
+                treshold = treshold_str.parse()?;
+            };
+            let mut aggregators: Vec<Box<dyn Aggregator>> = Vec::new();
+            aggregators.push(Box::new(SlowQueryAggregator::new(treshold)));
+            output_results(converted_args, &Severity::Log, &mut aggregators)?;
         }
         Some(("stats", _)) => {
             error!("Not implemented")

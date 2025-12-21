@@ -37,7 +37,8 @@ pub fn cli() -> Command {
         .subcommand(
             Command::new("slow")
                 .about("Show queries taking longer than give threshold")
-                .args_conflicts_with_subcommands(true)
+                .arg(arg!(<treshold>).help("Treshold in miliseconds to consider slow query."))
+                .args(filelist_args())
         )
         .subcommand(
             Command::new("stats")
