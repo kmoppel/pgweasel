@@ -7,13 +7,15 @@ use chrono::{DateTime, Local};
 use csv::ReaderBuilder;
 
 use crate::{
-    parsers::{LogLine, LogParser, csv_log_parser::log_record::PostgresLog},
+    parsers::{LogLine, LogParser},
     severity::Severity,
+    util::{line_has_timestamp_prefix, parse_timestamp_from_string},
 };
 
-mod log_record;
-
-pub struct CsvLogParser;
+#[derive(Default)]
+pub struct CsvLogParser {
+    pub remaining_string: String,
+}
 
 use crate::Result;
 
@@ -32,19 +34,28 @@ impl LogParser for CsvLogParser {
                 Ok(l) => l,
                 Err(err) => return Some(Err(crate::Error::FailedToRead { error: err })),
             };
+            self.remaining_string.push_str(&line);
+            let (has, _) = line_has_timestamp_prefix(&line);
+            if !has {
+                return None;
+            }
+
+            let result_line = self.remaining_string.clone();
+            self.remaining_string = line;
+
             if let Some(some_mask) = &mask {
-                if !line.starts_with(some_mask) {
+                if !result_line.starts_with(some_mask) {
                     return None;
                 };
             }
 
-            let severity = Severity::from_csv_string(&line);
+            let severity = Severity::from_csv_string(&result_line);
             let log_level_num: i32 = (&severity).into();
             if log_level_num < min_severity {
                 return None;
             }
 
-            let cursor = Cursor::new(line.clone());
+            let cursor = Cursor::new(result_line.clone());
             let rdr = ReaderBuilder::new().has_headers(false).from_reader(cursor);
 
             let record = match rdr.into_records().next().unwrap() {
@@ -52,32 +63,23 @@ impl LogParser for CsvLogParser {
                 Err(err) => return Some(Err(crate::Error::FailedToParseCsv { error: err })),
             };
 
-            let log_record: PostgresLog = match record.deserialize(None) {
-                Ok(rec) => rec,
-                Err(err) => {
-                    return Some(Err(crate::Error::FailedToParseCsvToPostgres { error: err }));
+            let log_time_local = parse_timestamp_from_string(record.get(0).unwrap()).unwrap();
+            if let Some(begin) = begin {
+                if log_time_local < begin {
+                    return None;
                 }
-            };
-
-            if let Some(log_time) = log_record.log_time {
-                let log_time_local = log_time.with_timezone(&chrono::Local);
-                if let Some(begin) = begin {
-                    if log_time_local < begin {
-                        return None;
-                    }
-                }
-                if let Some(end) = end {
-                    if log_time_local > end {
-                        return None;
-                    }
+            }
+            if let Some(end) = end {
+                if log_time_local > end {
+                    return None;
                 }
             }
 
             Some(Ok(LogLine {
-                raw: line,
-                timestamp: log_record.log_time.unwrap(),
-                severity: log_record.error_severity.into(),
-                message: log_record.message.unwrap(),
+                raw: result_line,
+                timestamp: log_time_local.into(),
+                severity,
+                message: record.get(13).unwrap().to_string(),
             }))
         });
         Box::new(iter)

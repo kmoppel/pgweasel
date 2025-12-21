@@ -1,39 +1,9 @@
 use chrono::{DateTime, FixedOffset};
-use serde::{self, Deserialize, Deserializer, Serializer};
 
 pub type Result<T> = std::result::Result<T, Error>;
 pub type Error = Box<dyn std::error::Error>;
 
 const FORMAT: &str = "%Y-%m-%d %H:%M:%S%.3f %:z";
-
-pub fn serialize<S>(
-    date: &Option<DateTime<FixedOffset>>,
-    serializer: S,
-) -> std::result::Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    match date {
-        Some(dt) => serializer.serialize_str(&dt.format(FORMAT).to_string()),
-        None => serializer.serialize_none(),
-    }
-}
-
-pub fn deserialize<'de, D>(
-    deserializer: D,
-) -> std::result::Result<Option<DateTime<FixedOffset>>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s: Option<String> = Option::deserialize(deserializer)?;
-    if let Some(s) = s {
-        return match deserialize_helper(&s) {
-            Ok(dt) => Ok(Some(dt)),
-            Err(e) => Err(serde::de::Error::custom(e.to_string())),
-        };
-    }
-    Ok(None)
-}
 
 pub fn deserialize_helper(s: &str) -> Result<DateTime<FixedOffset>> {
     if let Ok(dt) = DateTime::parse_from_str(s, FORMAT) {

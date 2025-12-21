@@ -40,7 +40,7 @@ pub trait LogParser {
 
 pub fn get_parser(path: PathBuf) -> Result<Box<dyn LogParser>> {
     match path.extension() {
-        Some(ext) if ext == "csv" => Ok(Box::new(CsvLogParser {})),
+        Some(ext) if ext == "csv" => Ok(Box::new(CsvLogParser::default())),
         Some(ext) if ext == "log" => Ok(Box::new(LogLogParser::default())),
         Some(ext) if ext == "json" => Err(Error::JsonNotYetImplemented),
         Some(_) => Err(Error::FileExtensionIsNotSupported { file: path }),
