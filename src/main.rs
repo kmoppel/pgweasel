@@ -22,6 +22,8 @@
 //!  - [ ] system
 //!  - [ ] connections
 
+use std::time::Duration;
+
 use log::error;
 
 use crate::{
@@ -29,6 +31,7 @@ use crate::{
     convert_args::ConvertedArgs,
     output_results::output_results,
     severity::Severity,
+    util::parse_duration,
 };
 
 mod aggregators;
@@ -79,9 +82,9 @@ fn main() -> Result<()> {
             error!("Not implemented")
         }
         Some(("slow", matches)) => {
-            let mut treshold = 3000;
+            let mut treshold = Duration::from_secs(3);
             if let Some(treshold_str) = matches.get_one::<String>("treshold") {
-                treshold = treshold_str.parse()?;
+                treshold = parse_duration(&treshold_str)?;
             };
             let mut aggregators: Vec<Box<dyn Aggregator>> = Vec::new();
             aggregators.push(Box::new(SlowQueryAggregator::new(treshold)));

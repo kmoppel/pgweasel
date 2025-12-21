@@ -38,6 +38,9 @@ pub enum Error {
 
     #[from]
     Zip(zip::result::ZipError),
+
+    #[from]
+    TimeParseError(crate::util::TimeParseError),
 }
 
 // region:    --- Custom --- Uncomment if want custom errors
