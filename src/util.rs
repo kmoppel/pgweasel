@@ -243,8 +243,7 @@ pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, Strin
     Err(format!("Unable to parse timestamp: '{}'", input))
 }
 
-#[allow(dead_code)]
-fn line_has_timestamp_prefix(line: &str) -> (bool, Option<String>) {
+pub fn line_has_timestamp_prefix(line: &str) -> (bool, Option<String>) {
     // Check if the line starts with a timestamp pattern
     let timestamp_regex = Regex::new(r"^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})").unwrap();
 

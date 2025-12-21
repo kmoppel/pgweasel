@@ -6,7 +6,7 @@ use std::{
 use chrono::{DateTime, Local};
 
 use crate::{
-    parsers::{LogLine, LogParser, date_serializer::deserialize_helper}, severity::Severity,
+    parsers::{LogLine, LogParser, date_serializer::deserialize_helper}, severity::Severity, util::line_has_timestamp_prefix,
 };
 
 #[derive(Default)]
@@ -33,7 +33,8 @@ impl LogParser for LogLogParser {
             };
 
             self.remaining_string.push_str(&line);
-            if !is_pg_timestamp_start(&line) {
+            let (has, _) = line_has_timestamp_prefix(&line);
+            if !has {
                 return None;
             }
 
@@ -85,50 +86,9 @@ impl LogParser for LogLogParser {
     }
 }
 
-pub fn is_pg_timestamp_start(line: &str) -> bool {
-    // Minimum length: "YYYY-MM-DD HH:MM:SS" → 19 chars
-    if line.len() < 19 {
-        return false;
-    }
-
-    let bytes = line.as_bytes();
-
-    // Check fixed characters
-    if bytes[4] != b'-'
-        || bytes[7] != b'-'
-        || bytes[10] != b' '
-        || bytes[13] != b':'
-        || bytes[16] != b':'
-    {
-        return false;
-    }
-
-    // Check digits in required places
-    fn is_digit(b: u8) -> bool {
-        b.is_ascii_digit()
-    }
-
-    for &idx in &[
-        0, 1, 2, 3, // YYYY
-        5, 6, // MM
-        8, 9, // DD
-        11, 12, // HH
-        14, 15, // MM
-        17, 18,
-    ]
-    // SS
-    {
-        if !is_digit(bytes[idx]) {
-            return false;
-        }
-    }
-
-    true
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::util::line_has_timestamp_prefix;
 
     #[test]
     fn test_timestamp_finder() {
@@ -136,32 +96,8 @@ mod tests {
         let bad = "ERROR: something";
         let almost = "2025/08/27 01:24:43 LOG";
 
-        assert!(is_pg_timestamp_start(good));
-        assert!(!is_pg_timestamp_start(bad));
-        assert!(!is_pg_timestamp_start(almost));
+        assert_eq!(line_has_timestamp_prefix(good), (true, "2025-08-27 01:24:43.415 EEST".to_string().into()));
+        assert_eq!(line_has_timestamp_prefix(bad), (false, None));
+        assert_eq!(line_has_timestamp_prefix(almost), (false, None));
     }
-    //     use std::{fs::File, path::PathBuf};
-
-    //     use crate::{errors::Severity, parsers::csv_log_parser::CsvLogParser};
-
-    //     #[test]
-    //     fn test_csv_parser() -> Result<()> {
-    //         let path: PathBuf = PathBuf::from("./testdata/csvlog_pg14.csv");
-    //         let file = File::open(path.clone())?;
-    //         let parser = CsvLogParser::new(FileWithPath { file, path });
-
-    //         let intseverity = (&(Severity::LOG)).into();
-    //         let iter = parser.parse(
-    //             intseverity,
-    //             Some("2025-05-21 13:00:03.127".to_string()),
-    //             None,
-    //             None,
-    //         );
-    //         for line in iter {
-    //             let line = line?;
-    //             println!("{:?}", line);
-    //         }
-
-    //         Ok(())
-    //     }
 }
