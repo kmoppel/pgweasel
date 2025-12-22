@@ -6,7 +6,9 @@ use std::{
 use chrono::{DateTime, Local};
 
 use crate::{
-    parsers::{LogLine, LogParser, date_serializer::deserialize_helper}, severity::Severity, util::line_has_timestamp_prefix,
+    parsers::{LogLine, LogParser, date_serializer::deserialize_helper},
+    severity::Severity,
+    util::line_has_timestamp_prefix,
 };
 
 #[derive(Default)]
@@ -33,13 +35,14 @@ impl LogParser for LogLogParser {
             };
 
             self.remaining_string.push_str(&line);
+            self.remaining_string.push('\n');
             let (has, _) = line_has_timestamp_prefix(&line);
             if !has {
                 return None;
             }
 
             let result_line = self.remaining_string.clone();
-            self.remaining_string = line;
+            self.remaining_string = String::new();
 
             if let Some(some_mask) = &mask {
                 if !result_line.starts_with(some_mask) {
@@ -96,7 +99,10 @@ mod tests {
         let bad = "ERROR: something";
         let almost = "2025/08/27 01:24:43 LOG";
 
-        assert_eq!(line_has_timestamp_prefix(good), (true, "2025-08-27 01:24:43.415 EEST".to_string().into()));
+        assert_eq!(
+            line_has_timestamp_prefix(good),
+            (true, "2025-08-27 01:24:43.415 EEST".to_string().into())
+        );
         assert_eq!(line_has_timestamp_prefix(bad), (false, None));
         assert_eq!(line_has_timestamp_prefix(almost), (false, None));
     }

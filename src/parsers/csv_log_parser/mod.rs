@@ -35,13 +35,14 @@ impl LogParser for CsvLogParser {
                 Err(err) => return Some(Err(crate::Error::FailedToRead { error: err })),
             };
             self.remaining_string.push_str(&line);
+            self.remaining_string.push('\n');
             let (has, _) = line_has_timestamp_prefix(&line);
             if !has {
                 return None;
             }
 
             let result_line = self.remaining_string.clone();
-            self.remaining_string = line;
+            self.remaining_string = String::new();
 
             if let Some(some_mask) = &mask {
                 if !result_line.starts_with(some_mask) {

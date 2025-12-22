@@ -212,4 +212,12 @@ mod tests {
         );
         assert_eq!(Severity::Error, sev2);
     }
+
+    #[test]
+    fn from_csv_string() {
+        let sev1 = Severity::from_csv_string(
+            "\"2025-05-08 12:24:37.731 EEST\",\"krl\",\"postgres\",166063,\"127.0.0.1:33584\",681c7855.288af,1,\"INSERT\",2025-05-08 12:24:37 EEST,3/2,770,ERROR,23503,\"insert or update on table \"pgbench_accounts\" violates foreign key constraint \"pgbench_accounts_bid_fkey\"\",\"Key (bid)=(0) is not present in table \"pgbench_branches\".\",,,,,\"insert into pgbench_accounts select 0, 0, 0\",,,\"psql\",\"client backend\",,0\"",
+        );
+        assert_eq!(Severity::Error, sev1);
+    }
 }
