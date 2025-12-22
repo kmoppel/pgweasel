@@ -1,6 +1,10 @@
-# Currently implemented operating modes / subcommands
+# Rust rewrite of pgweasel
 
-## errors [ err | errs ]
+This is a fork of [pgweasel](https://github.com/kmoppel/pgweasel/) as rewrite in RUST. 
+
+## Currently implemented operating modes / subcommands
+
+### errors [ err | errs ]
 
 `pgweasel errors $LOG(s)` - Show WARN+ (by default) log entries "as is"
 
