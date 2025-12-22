@@ -1,0 +1,30 @@
+May 30 11:03:43 i13400f postgres[693826]: [1-1] 2025-05-30 11:03:43.580 EEST [693826] LOG:  ending log output to stderr
+May 30 11:03:43 i13400f postgres[693826]: [1-2] 2025-05-30 11:03:43.580 EEST [693826] HINT:  Future log output will go to log destination "syslog".
+May 30 11:03:43 i13400f postgres[693826]: [2-1] 2025-05-30 11:03:43.580 EEST [693826] LOG:  starting PostgreSQL 18devel on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, 64-bit
+May 30 11:03:43 i13400f postgres[693826]: [3-1] 2025-05-30 11:03:43.581 EEST [693826] LOG:  listening on IPv4 address "127.0.0.1", port 54318
+May 30 11:03:43 i13400f postgres[693826]: [4-1] 2025-05-30 11:03:43.593 EEST [693826] LOG:  listening on Unix socket "/tmp/.s.PGSQL.54318"
+May 30 11:03:43 i13400f postgres[693829]: [5-1] 2025-05-30 11:03:43.610 EEST [693829] LOG:  database system was shut down at 2025-05-30 11:03:43 EEST
+May 30 11:03:43 i13400f postgres[693826]: [5-1] 2025-05-30 11:03:43.622 EEST [693826] LOG:  database system is ready to accept connections
+May 30 11:03:46 i13400f postgres[693852]: [6-1] 2025-05-30 11:03:46.191 EEST [693852] ERROR:  syntax error at or near "sdasda" at character 1
+May 30 11:03:46 i13400f postgres[693852]: [6-2] 2025-05-30 11:03:46.191 EEST [693852] STATEMENT:  sdasda
+May 30 11:08:43 i13400f postgres[693827]: [5-1] 2025-05-30 11:08:43.698 EEST [693827] LOG:  checkpoint starting: time
+May 30 11:08:43 i13400f postgres[693827]: [6-1] 2025-05-30 11:08:43.752 EEST [693827] LOG:  checkpoint complete: wrote 0 buffers (0.0%), wrote 3 SLRU buffers; 0 WAL file(s) added, 0 removed, 0 recycled; write=0.013 s, sync=0.004 s, total=0.055 s; sync files=2, longest=0.002 s, average=0.002 s; distance=0 kB, estimate=0 kB; lsn=0/179FE10, redo lsn=0/179FDB8
+May 30 12:12:55 i13400f postgres[745941]: [6-1] 2025-05-30 12:12:55.806 EEST [745941] LOG:  statement: select count(*) from pgbench_branches
+May 30 12:12:55 i13400f postgres[745941]: [7-1] 2025-05-30 12:12:55.806 EEST [745941] LOG:  statement: select o.n, p.partstrat, pg_catalog.count(i.inhparent) from pg_catalog.pg_class as c join pg_catalog.pg_namespace as n on (n.oid = c.relnamespace) cross join lateral (select pg_catalog.array_position(pg_catalog.current_schemas(true), n.nspname)) as o(n) left join pg_catalog.pg_partitioned_table as p on (p.partrelid = c.oid) left join pg_catalog.pg_inherits as i on (c.oid = i.inhparent) where c.relname = 'pgbench_accounts' and o.n is not null group by 1, 2 order by 1 asc limit 1
+May 30 12:12:55 i13400f postgres[745941]: [8-1] 2025-05-30 12:12:55.808 EEST [745941] LOG:  statement: vacuum pgbench_branches
+May 30 12:12:55 i13400f postgres[745941]: [9-1] 2025-05-30 12:12:55.809 EEST [745941] LOG:  statement: vacuum pgbench_tellers
+May 30 12:12:55 i13400f postgres[745941]: [10-1] 2025-05-30 12:12:55.810 EEST [745941] LOG:  statement: truncate pgbench_history
+May 30 12:12:55 i13400f postgres[745942]: [6-1] 2025-05-30 12:12:55.829 EEST [745942] LOG:  statement: BEGIN;
+May 30 12:12:55 i13400f postgres[745942]: [7-1] 2025-05-30 12:12:55.829 EEST [745942] LOG:  statement: UPDATE pgbench_accounts SET abalance = abalance + -3009 WHERE aid = 61997;
+May 30 12:12:55 i13400f postgres[745942]: [8-1] 2025-05-30 12:12:55.843 EEST [745942] LOG:  statement: SELECT abalance FROM pgbench_accounts WHERE aid = 61997;
+May 30 12:12:55 i13400f postgres[745942]: [9-1] 2025-05-30 12:12:55.847 EEST [745942] LOG:  statement: UPDATE pgbench_tellers SET tbalance = tbalance + -3009 WHERE tid = 7;
+May 30 12:12:55 i13400f postgres[745942]: [10-1] 2025-05-30 12:12:55.848 EEST [745942] LOG:  statement: UPDATE pgbench_branches SET bbalance = bbalance + -3009 WHERE bid = 1;
+May 30 12:12:55 i13400f postgres[745942]: [11-1] 2025-05-30 12:12:55.848 EEST [745942] LOG:  statement: INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (7, 1, 61997, -3009, CURRENT_TIMESTAMP);
+May 30 12:12:55 i13400f postgres[745942]: [12-1] 2025-05-30 12:12:55.848 EEST [745942] LOG:  statement: END;
+May 30 12:12:55 i13400f postgres[745942]: [13-1] 2025-05-30 12:12:55.848 EEST [745942] LOG:  statement: BEGIN;
+May 30 12:12:55 i13400f postgres[745942]: [14-1] 2025-05-30 12:12:55.848 EEST [745942] LOG:  statement: UPDATE pgbench_accounts SET abalance = abalance + -3139 WHERE aid = 15051;
+May 30 12:12:55 i13400f postgres[745942]: [15-1] 2025-05-30 12:12:55.851 EEST [745942] LOG:  statement: SELECT abalance FROM pgbench_accounts WHERE aid = 15051;
+May 30 12:12:55 i13400f postgres[745942]: [16-1] 2025-05-30 12:12:55.853 EEST [745942] LOG:  statement: UPDATE pgbench_tellers SET tbalance = tbalance + -3139 WHERE tid = 6;
+May 30 12:12:55 i13400f postgres[745942]: [17-1] 2025-05-30 12:12:55.853 EEST [745942] LOG:  statement: UPDATE pgbench_branches SET bbalance = bbalance + -3139 WHERE bid = 1;
+May 30 12:12:55 i13400f postgres[745942]: [18-1] 2025-05-30 12:12:55.853 EEST [745942] LOG:  statement: INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (6, 1, 15051, -3139, CURRENT_TIMESTAMP);
+May 30 12:12:55 i13400f postgres[745942]: [19-1] 2025-05-30 12:12:55.853 EEST [745942] LOG:  statement: END;

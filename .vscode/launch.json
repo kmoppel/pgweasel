@@ -1,0 +1,52 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'pgweasel'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=pgweasel",
+                    "--package=pgweasel"
+                ],
+                "filter": {
+                    "name": "pgweasel",
+                    "kind": "bin"
+                }
+            },
+            "args": [
+                "error",
+                "list",
+                "--level",
+                "ERROR",
+                "./testdata/csvlog_pg14.csv",
+                "./testdata/csvlog1.csv.gz",
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'pgweasel'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=pgweasel",
+                    "--package=pgweasel"
+                ],
+                "filter": {
+                    "name": "pgweasel",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
