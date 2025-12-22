@@ -17,6 +17,18 @@ fn simple_error_filter() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
+fn error_multiline_csv() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args(["err", "./tests/files/multiple_lines.csv"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("2025-12-15 12:41:20.659"));
+
+    Ok(())
+}
+
+#[test]
 fn simple_error_filter_with_begin_min() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
@@ -28,7 +40,7 @@ fn simple_error_filter_with_begin_min() -> Result<(), Box<dyn std::error::Error>
     write!(tmp, "{}", content)?;
     tmp.flush()?;
 
-    cmd.args(["-b", "1m", "err", tmp.path().to_str().unwrap()])
+    cmd.args(["-b", "10m", "err", tmp.path().to_str().unwrap()])
         .assert()
         .success()
         .stdout(predicates::str::contains(

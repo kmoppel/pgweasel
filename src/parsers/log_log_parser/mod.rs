@@ -1,6 +1,7 @@
 use std::{
     fs::File,
     io::{BufRead, BufReader},
+    iter, mem,
 };
 
 use chrono::{DateTime, Local};
@@ -13,7 +14,7 @@ use crate::{
 
 #[derive(Default)]
 pub struct LogLogParser {
-    pub remaining_string: String,
+    pub current: String,
 }
 
 use crate::Result;
@@ -27,66 +28,90 @@ impl LogParser for LogLogParser {
         begin: Option<DateTime<Local>>,
         end: Option<DateTime<Local>>,
     ) -> Box<dyn Iterator<Item = Result<LogLine>> + '_> {
-        let reader = BufReader::new(file);
-        let iter = reader.lines().filter_map(move |lin| {
-            let line = match lin {
-                Ok(l) => l,
-                Err(err) => return Some(Err(crate::Error::FailedToRead { error: err })),
-            };
+        let mut lines = BufReader::new(file).lines();
 
-            self.remaining_string.push_str(&line);
-            self.remaining_string.push('\n');
-            let (has, _) = line_has_timestamp_prefix(&line);
-            if !has {
-                return None;
-            }
+        Box::new(iter::from_fn(move || {
+            while let Some(lin) = lines.next() {
+                let line = match lin {
+                    Ok(l) => l,
+                    Err(err) => {
+                        return Some(Err(crate::Error::FailedToRead { error: err }));
+                    }
+                };
 
-            let result_line = self.remaining_string.clone();
-            self.remaining_string = String::new();
+                let (has_ts, _) = line_has_timestamp_prefix(&line);
 
-            if let Some(some_mask) = &mask {
-                if !result_line.starts_with(some_mask) {
-                    return None;
+                if !has_ts {
+                    self.current.push_str(&line);
+                    self.current.push('\n');
+                    continue;
+                }
+
+                // New timestamp → flush previous record
+                let prev = mem::replace(&mut self.current, line);
+                if prev.is_empty() {
+                    continue;
+                }
+
+                match process_simple_log_record(prev, min_severity, &mask, begin, end) {
+                    Some(Ok(log_line)) => return Some(Ok(log_line)),
+                    Some(Err(e)) => return Some(Err(e)),
+                    None => continue,
                 };
             }
 
-            let severity = Severity::from_log_string(&result_line);
-            let log_level_num: i32 = (&severity).into();
-            if log_level_num < min_severity {
-                return None;
+            // EOF: flush last buffered record
+            if !self.current.is_empty() {
+                let last = mem::take(&mut self.current);
+                return process_simple_log_record(last, min_severity, &mask, begin, end);
             }
 
-            let mut parts = result_line.split_whitespace();
-            // TODO: Handle unwraps
-            let timestamp = deserialize_helper(&format!(
-                "{} {} {}",
-                parts.next().unwrap(),
-                parts.next().unwrap(),
-                parts.next().unwrap()
-            ))
-            .unwrap();
-
-            let log_time_local = timestamp.with_timezone(&chrono::Local);
-            if let Some(begin) = begin {
-                if log_time_local < begin {
-                    return None;
-                }
-            }
-            if let Some(end) = end {
-                if log_time_local > end {
-                    return None;
-                }
-            }
-
-            Some(Ok(LogLine {
-                raw: result_line,
-                timestamp,
-                severity,
-                message: self.remaining_string.clone(),
-            }))
-        });
-        Box::new(iter)
+            None
+        }))
     }
+}
+
+fn process_simple_log_record(
+    line: String,
+    min_severity: i32,
+    mask: &Option<String>,
+    begin: Option<DateTime<Local>>,
+    end: Option<DateTime<Local>>,
+) -> Option<Result<LogLine>> {
+    if let Some(mask) = mask {
+        if !line.starts_with(mask) {
+            return None;
+        }
+    }
+
+    let severity = Severity::from_log_string(&line);
+    let level: i32 = (&severity).into();
+    if level < min_severity {
+        return None;
+    }
+
+    let mut parts = line.split_whitespace();
+    let ts_str = format!("{} {} {}", parts.next()?, parts.next()?, parts.next()?);
+
+    let timestamp = match deserialize_helper(&ts_str) {
+        Ok(ts) => ts,
+        Err(e) => return Some(Err(e)),
+    };
+
+    let log_time_local = timestamp.with_timezone(&Local);
+    if begin.is_some_and(|b| log_time_local < b) {
+        return None;
+    }
+    if end.is_some_and(|e| log_time_local > e) {
+        return None;
+    }
+
+    Some(Ok(LogLine {
+        raw: line.clone(),
+        timestamp,
+        severity,
+        message: line,
+    }))
 }
 
 #[cfg(test)]

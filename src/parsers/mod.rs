@@ -19,6 +19,7 @@ pub use log_log_parser::LogLogParser;
 
 use crate::Result;
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct LogLine {
     pub timestamp: DateTime<FixedOffset>,
     pub severity: Severity,

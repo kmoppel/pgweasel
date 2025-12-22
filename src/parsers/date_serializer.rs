@@ -1,7 +1,6 @@
 use chrono::{DateTime, FixedOffset};
 
-pub type Result<T> = std::result::Result<T, Error>;
-pub type Error = Box<dyn std::error::Error>;
+use crate::Result;
 
 const FORMAT: &str = "%Y-%m-%d %H:%M:%S%.3f %:z";
 

@@ -35,6 +35,8 @@ pub enum Error {
     FailedToParseCsv {
         error: csv::Error,
     },
+    NotAbleToReadRecordFromCsvLine,
+    FailedToReadFirstRecord,
     FailedToParseCsvToPostgres {
         error: csv::Error,
     },
