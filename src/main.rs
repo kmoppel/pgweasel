@@ -49,7 +49,7 @@ fn main() -> Result<()> {
     let cli = cli::cli();
     let matches = cli.clone().get_matches();
 
-    let mut converted_args: ConvertedArgs = matches.clone().into();
+    let mut converted_args: ConvertedArgs = ConvertedArgs::parse_from_matches(matches.clone())?;
     converted_args = converted_args.expand_dirs()?.expand_archives()?;
 
     match matches.subcommand() {

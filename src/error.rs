@@ -14,6 +14,10 @@ pub enum Error {
     FileDoesNotExist {
         path: PathBuf,
     },
+    FiledToParseBeginEnd {
+        input: String,
+        source: crate::util::TimeParseError,
+    },
 
     // -- Parsers
     JsonNotYetImplemented,
@@ -25,10 +29,16 @@ pub enum Error {
     },
 
     // -- LogParser
-    FailedToRead { error: std::io::Error },
-    FailedToParseCsv { error: csv::Error },
-    FailedToParseCsvToPostgres { error: csv::Error },
-
+    FailedToRead {
+        error: std::io::Error,
+    },
+    FailedToParseCsv {
+        error: csv::Error,
+    },
+    FailedToParseCsvToPostgres {
+        error: csv::Error,
+    },
+    
     // -- Externals
     #[from]
     Io(std::io::Error),

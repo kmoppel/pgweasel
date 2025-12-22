@@ -7,7 +7,7 @@ use std::{
 use chrono::{DateTime, Local};
 use clap::ArgMatches;
 use flate2::read::GzDecoder;
-use log::{debug, error};
+use log::debug;
 use tempfile::TempDir;
 use zip::ZipArchive;
 
@@ -31,6 +31,45 @@ pub struct ConvertedArgs {
 }
 
 impl ConvertedArgs {
+    pub fn parse_from_matches(val: ArgMatches) -> Result<Self> {
+        // Parse begin / end flags
+        let begin = if let Some(begin_str) = val.get_one::<String>("begin") {
+            Some(time_or_interval_string_to_time(begin_str, None)?)
+        } else {
+            None
+        };
+
+        let end = if let Some(end_str) = val.get_one::<String>("end") {
+            Some(time_or_interval_string_to_time(end_str, None)?)
+        } else {
+            None
+        };
+
+        let mask = val.get_one::<String>("mask").map(|s| s.to_owned());
+
+        // Initialize logger based on verbose flag
+        let mut verbose = false;
+        env_logger::Builder::from_default_env()
+            .filter_level(if val.get_flag("debug") {
+                verbose = true;
+                debug!("Running in debug mode.");
+                log::LevelFilter::Debug
+            } else {
+                log::LevelFilter::Info
+            })
+            .init();
+
+        Ok(ConvertedArgs {
+            file_list: vec![],
+            files: vec![],
+            begin,
+            end,
+            mask,
+            matches: val,
+            verbose,
+        })
+    }
+
     pub fn expand_dirs(mut self) -> Result<Self> {
         if let Some((_, sub_matches)) = self.matches.subcommand() {
             let paths = sub_matches
@@ -93,71 +132,6 @@ impl ConvertedArgs {
         }
 
         Ok(self)
-    }
-}
-
-impl From<ArgMatches> for ConvertedArgs {
-    fn from(val: ArgMatches) -> Self {
-        // Parse begin / end flags
-        let begin = if let Some(begin_str) = &val.get_one::<String>("begin") {
-            match time_or_interval_string_to_time(begin_str, None) {
-                Ok(datetime) => {
-                    debug!(
-                        "Parsed begin time: {}",
-                        datetime.format("%Y-%m-%d %H:%M:%S %Z")
-                    );
-                    Some(datetime)
-                }
-                Err(e) => {
-                    error!("Error processing arguments: {}", e);
-                    std::process::exit(1);
-                }
-            }
-        } else {
-            None
-        };
-
-        let end = if let Some(end_str) = &val.get_one::<String>("end") {
-            match time_or_interval_string_to_time(end_str, None) {
-                Ok(datetime) => {
-                    debug!(
-                        "Parsed end time: {}",
-                        datetime.format("%Y-%m-%d %H:%M:%S %Z")
-                    );
-                    Some(datetime)
-                }
-                Err(e) => {
-                    error!("Error processing arguments: {}", e);
-                    std::process::exit(1);
-                }
-            }
-        } else {
-            None
-        };
-
-        let mask = val.get_one::<String>("mask").map(|s| s.to_owned());
-
-        // Initialize logger based on verbose flag
-        let mut verbose = false;
-        env_logger::Builder::from_default_env()
-            .filter_level(if val.get_flag("debug") {
-                verbose = true;
-                debug!("Running in debug mode.");
-                log::LevelFilter::Debug
-            } else {
-                log::LevelFilter::Info
-            })
-            .init();
-
-        ConvertedArgs {
-            file_list: vec![],
-            files: vec![],
-            begin,
-            end,
-            mask,
-            matches: val,
-            verbose,
-        }
     }
 }
 
