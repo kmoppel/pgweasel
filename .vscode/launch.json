@@ -21,11 +21,9 @@
             },
             "args": [
                 "error",
-                "list",
                 "--level",
                 "ERROR",
-                "./testdata/csvlog_pg14.csv",
-                "./testdata/csvlog1.csv.gz",
+                "./testdata/pgbench_large.log",
             ],
             "cwd": "${workspaceFolder}"
         },

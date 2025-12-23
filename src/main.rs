@@ -27,7 +27,7 @@ use std::time::Duration;
 use log::error;
 
 use crate::{
-    aggregators::{Aggregator, SlowQueryAggregator, ZeroAgregator},
+    aggregators::{Aggregator, SlowQueryAggregator},
     convert_args::ConvertedArgs,
     output_results::output_results,
     severity::Severity,
@@ -39,7 +39,6 @@ mod cli;
 mod convert_args;
 mod error;
 mod output_results;
-mod parsers;
 mod severity;
 mod util;
 
@@ -58,7 +57,6 @@ fn main() -> Result<()> {
             match error_command {
                 ("list", list_subcommand) => {
                     let mut aggregators: Vec<Box<dyn Aggregator>> = Vec::new();
-                    aggregators.push(Box::new(ZeroAgregator));
                     output_results(
                         converted_args,
                         list_subcommand

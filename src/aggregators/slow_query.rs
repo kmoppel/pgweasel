@@ -2,15 +2,15 @@ use std::time::Duration;
 
 use regex::Regex;
 
-use crate::{aggregators::Aggregator, parsers::LogLine, util::parse_duration};
+use crate::{aggregators::Aggregator, util::parse_duration};
 
-pub struct SlowQueryAggregator {
+pub struct SlowQueryAggregator<'a> {
     // treshold to consider query slow, in miliseconds
     treshold: Duration,
-    slow_queries: Vec<(LogLine, Duration)>,
+    slow_queries: Vec<(&'a str, Duration)>,
 }
 
-impl SlowQueryAggregator {
+impl SlowQueryAggregator<'_> {
     pub fn new(treshold: Duration) -> Self {
         SlowQueryAggregator {
             treshold,
@@ -19,19 +19,19 @@ impl SlowQueryAggregator {
     }
 }
 
-impl Aggregator for SlowQueryAggregator {
-    fn add(&mut self, log_line: LogLine) {
-        if let Some(duration) = extract_duration(&log_line.message) {
-            if duration > self.treshold {
-                self.slow_queries.push((log_line, duration));
-            }
+impl Aggregator for SlowQueryAggregator<'_> {
+    fn add(&mut self, log_line: &str) {
+        if let Some(duration) = extract_duration(&log_line) {
+            // if duration > self.treshold {
+            //     self.slow_queries.push((&log_line, duration));
+            // }
         }
     }
 
     fn print(&mut self) {
         self.slow_queries.sort_by(|a, b| b.1.cmp(&a.1));
         for (log_line, duration) in &self.slow_queries {
-            println!("{:?} | {}", duration, log_line.message);
+            println!("{:?} | {}", duration, log_line);
         }
     }
 }
