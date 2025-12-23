@@ -1,5 +1,2 @@
 .idea/
 target/
-.idea/
-*.csv
-*.log
