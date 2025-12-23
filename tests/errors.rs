@@ -8,10 +8,22 @@ use tempfile::Builder;
 fn simple_error_filter() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
-    cmd.args(["err", "./testdata/csvlog1.csv"])
+    cmd.args(["err", "./tests/files/csvlog1.csv"])
         .assert()
         .success()
         .stdout(predicates::str::contains("2025-05-08 12:24:37.731 EEST"));
+
+    Ok(())
+}
+
+#[test]
+fn simple_error_filter_for_log() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args(["err", "./tests/files/debian_default2.log"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("2025-05-22 15:15:09.392"));
 
     Ok(())
 }
@@ -60,7 +72,7 @@ fn simple_error_filter_with_begin_end() -> Result<(), Box<dyn std::error::Error>
         "-e",
         "2025-05-08 12:24:37.999 EEST",
         "err",
-        "./testdata/csvlog1.csv",
+        "./tests/files/csvlog1.csv",
     ])
     .assert()
     .success()
@@ -73,7 +85,7 @@ fn simple_error_filter_with_begin_end() -> Result<(), Box<dyn std::error::Error>
 fn simple_error_filter_with_mask() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
-    cmd.args(["-m", "2025-05-08 12:24:37", "err", "./testdata/csvlog1.csv"])
+    cmd.args(["-m", "2025-05-08 12:24:37", "err", "./tests/files/csvlog1.csv"])
         .assert()
         .success()
         .stdout(predicates::str::contains("2025-05-08 12:24:37.731 EEST"));
@@ -85,7 +97,7 @@ fn simple_error_filter_with_mask() -> Result<(), Box<dyn std::error::Error>> {
 fn simple_filter_with_list_subcommand() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
-    cmd.args(["err", "list", "./testdata/csvlog1.csv"])
+    cmd.args(["err", "list", "./tests/files/csvlog1.csv"])
         .assert()
         .success()
         .stdout(predicates::str::contains("2025-05-08 12:24:37.731 EEST"));
@@ -97,10 +109,11 @@ fn simple_filter_with_list_subcommand() -> Result<(), Box<dyn std::error::Error>
 fn non_existing_file() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
-    cmd.args(["err", "list", "./testdata/csvlog1.cs"])
+    cmd.args(["err", "list", "./tests/files/csvlog1.csv_non_existing"])
         .assert()
         .failure()
         .stderr(predicates::str::contains("FileDoesNotExist"));
 
     Ok(())
 }
+
