@@ -1,9 +1,5 @@
 use std::time::Duration;
 
-use regex::Regex;
-
-use crate::util::TimeParseError;
-
 use memchr::memmem;
 
 pub fn extract_duration(record: &[u8]) -> Option<Duration> {

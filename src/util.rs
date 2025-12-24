@@ -1,9 +1,7 @@
 use chrono::{DateTime, Local, NaiveDate, NaiveDateTime, TimeZone};
-use memchr::arch::all;
 use regex::Regex;
 use std::error::Error;
 use std::fmt;
-use std::time::Duration;
 
 #[derive(Debug)]
 pub enum TimeParseError {
