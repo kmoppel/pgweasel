@@ -15,8 +15,7 @@ impl FilterSlow {
 
 impl Filter for FilterSlow {
     fn matches(&self, record: &[u8]) -> bool {
-        let text = unsafe { std::str::from_utf8_unchecked(record) };
-        if let Some(duration) = extract_duration(text) {
+        if let Some(duration) = extract_duration(record) {
             if duration > self.treshold {
                 return true;
             }
