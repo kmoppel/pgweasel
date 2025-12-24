@@ -16,7 +16,7 @@ use crate::Result;
 pub fn output_results(
     converted_args: ConvertedArgs,
     min_severity: &Severity,
-    agragators: &mut Vec<Box<dyn Aggregator>>,
+    aggregators: &mut Vec<Box<dyn Aggregator>>,
     filters: &Vec<Box<dyn Filter>>,
 ) -> Result<()> {
     let min_severity_num: i32 = min_severity.into();
@@ -84,35 +84,59 @@ pub fn output_results(
 
         debug!("File did read in: {:?}", timing.elapsed());
 
-        ranges.par_iter().try_for_each(|range| -> Result<()> {
-            let slice = &bytes[range.clone()];
-            let text = unsafe { std::str::from_utf8_unchecked(slice) };
+        let partials: Result<Vec<Vec<Box<dyn Aggregator>>>> = ranges
+            .par_iter()
+            .map(|range| -> Result<Vec<Box<dyn Aggregator>>> {
+                let mut local_aggregators: Vec<Box<dyn Aggregator>> =
+                    aggregators.iter().map(|a| a.boxed_clone()).collect();
 
-            let mut record_start = 0;
-            let mut offset = 0;
+                let slice = &bytes[range.clone()];
+                let text = unsafe { std::str::from_utf8_unchecked(slice) };
 
-            for line in text.lines() {
-                let line_len = line.len() + 1; // include '\n'
+                let mut record_start = 0;
+                let mut offset = 0;
 
-                if is_record_start(line) && offset != 0 {
-                    let record = &slice[record_start..offset];
-                    filter_record(record, &filter_container)?;
-                    record_start = offset;
+                for line in text.lines() {
+                    let line_len = line.len() + 1; // include '\n'
+
+                    if is_record_start(line) && offset != 0 {
+                        let record = &slice[record_start..offset];
+                        aggragate_record(record, &mut local_aggregators);
+                        filter_record(record, &filter_container, converted_args.print_details)?;
+                        record_start = offset;
+                    }
+
+                    offset += line_len;
                 }
 
-                offset += line_len;
+                // last record in chunk
+                if record_start < slice.len() {
+                    aggragate_record(&slice[record_start..slice.len()], &mut local_aggregators);
+                    filter_record(&slice[record_start..slice.len()], &filter_container, converted_args.print_details)?;
+                };
+                Ok(local_aggregators)
+            })
+            .collect();
+
+        debug!("Finished output in: {:?}", timing.elapsed());
+        let partials = partials?;
+        for partial in partials {
+            for (i, aggregator) in partial.into_iter().enumerate() {
+                aggregators[i].merge_box(aggregator.as_ref());
             }
-
-            // last record in chunk
-            if record_start < slice.len() {
-                filter_record(&slice[record_start..slice.len()], &filter_container)?;
-            };
-            Ok(())
-        })?;
-
-        debug!("Finished in: {:?}", timing.elapsed());
+        }
+        for agg in &mut *aggregators {
+            agg.print();
+        }
+        debug!("Finished aggregating in: {:?}", timing.elapsed());
     }
     Ok(())
+}
+
+fn aggragate_record(record: &[u8], local_aggregators: &mut Vec<Box<dyn Aggregator>>) {
+    for aggregator in local_aggregators.iter_mut() {
+        aggregator.update(record);
+    }
 }
 
 enum Format {
@@ -140,7 +164,7 @@ struct FilterContainer<'a> {
 }
 
 #[inline]
-fn filter_record(record: &[u8], filters: &FilterContainer) -> Result<()> {
+fn filter_record(record: &[u8], filters: &FilterContainer, print: bool) -> Result<()> {
     for filter in &filters.filters {
         if !filter.matches(record) {
             return Ok(());
@@ -180,7 +204,9 @@ fn filter_record(record: &[u8], filters: &FilterContainer) -> Result<()> {
         }
     }
 
-    println!("{text}");
+    if print {
+        println!("{text}");
+    }
     Ok(())
 }
 

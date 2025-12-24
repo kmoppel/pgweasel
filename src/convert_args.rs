@@ -28,6 +28,7 @@ pub struct ConvertedArgs {
     pub end: Option<DateTime<Local>>,
     pub mask: Option<String>,
     pub verbose: bool,
+    pub print_details: bool,
 }
 
 impl ConvertedArgs {
@@ -67,6 +68,7 @@ impl ConvertedArgs {
             mask,
             matches: val,
             verbose,
+            print_details: true,
         })
     }
 

@@ -19,3 +19,5 @@ This is a fork of [pgweasel](https://github.com/kmoppel/pgweasel/) as rewrite in
 `pgweasel errors --debug $LOG(s)` - Show LOG entries with debug info including execution time.
 
 `pgweasel slow 1s ./testdata/csvlog_pg14.csv` - Show LOG entries that took longer than 1second.
+
+`pgweasel slow top ./testdata/cloudsql.log` - Show top 10 slowest queries.

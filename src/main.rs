@@ -25,10 +25,10 @@
 use std::time::Duration;
 
 use humantime::parse_duration;
-use log::error;
+use log::{debug, error};
 
 use crate::{
-    aggregators::{Aggregator, TopSlowQueryAggregator},
+    aggregators::{Aggregator, TopSlowQueries},
     convert_args::ConvertedArgs,
     filters::{Filter, FilterSlow},
     output_results::output_results,
@@ -88,15 +88,18 @@ fn main() -> Result<()> {
         Some(("slow", matches)) => {
             let mut treshold = Duration::from_secs(3);
             if let Some(treshold_str) = matches.get_one::<String>("treshold") {
-                treshold = parse_duration(&treshold_str)?;
-            };
+                if treshold_str.eq("top") {
+                    debug!("Using TopSlowQueryAggregator");
+                    aggregators.push(Box::new(TopSlowQueries::new(10)));
+                    converted_args.print_details = false;
+                    output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
+                    return Ok(());
+                } else {
+                    treshold = parse_duration(treshold_str)?;
+                };
+            }
             filters.push(Box::new(FilterSlow::new(treshold)));
-            output_results(
-                converted_args,
-                &Severity::Log,
-                &mut aggregators,
-                &filters,
-            )?;
+            output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
         }
         Some(("stats", _)) => {
             error!("Not implemented")

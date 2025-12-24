@@ -1,51 +1,75 @@
-use std::time::Duration;
+use std::{any::Any, cmp::Reverse, collections::BinaryHeap, time::Duration};
 
-use regex::Regex;
+use crate::{aggregators::Aggregator, duration::extract_duration};
 
-use crate::{aggregators::Aggregator};
-
-pub struct TopSlowQueryAggregator<'a> {
-    // treshold to consider query slow, in miliseconds
-    ten_top_slow_queries: Vec<(&'a [u8], Duration)>,
+#[derive(Clone)]
+pub struct TopSlowQueries {
+    limit: usize,
+    heap: BinaryHeap<Reverse<(Duration, Vec<u8>)>>,
 }
 
-impl TopSlowQueryAggregator<'_> {
-    pub fn new(treshold: Duration) -> Self {
-        TopSlowQueryAggregator {
-            ten_top_slow_queries: vec![],
+impl TopSlowQueries {
+    pub fn new(limit: usize) -> Self {
+        Self {
+            limit,
+            heap: BinaryHeap::with_capacity(limit),
         }
     }
 }
 
-impl Aggregator for TopSlowQueryAggregator<'_> {
-    fn update(&mut self, log_line: &[u8]) {
-        todo!()
+impl Aggregator for TopSlowQueries {
+    fn update(&mut self, record: &[u8]) {
+        let Some(duration) = extract_duration(record) else {
+            return;
+        };
+
+        if self.heap.len() < self.limit {
+            self.heap.push(Reverse((duration, record.to_vec())));
+            return;
+        }
+
+        if let Some(Reverse((min, _))) = self.heap.peek() {
+            if duration > *min {
+                self.heap.pop();
+                self.heap.push(Reverse((duration, record.to_vec())));
+            }
+        }
     }
 
     fn merge_box(&mut self, other: &dyn Aggregator) {
-        todo!()
+        let other = other
+            .as_any()
+            .downcast_ref::<TopSlowQueries>()
+            .expect("Aggregator type mismatch");
+
+        for Reverse((duration, record)) in &other.heap {
+            if self.heap.len() < self.limit {
+                self.heap.push(Reverse((*duration, record.clone())));
+            } else if let Some(Reverse((min, _))) = self.heap.peek() {
+                if *duration > *min {
+                    self.heap.pop();
+                    self.heap.push(Reverse((*duration, record.clone())));
+                }
+            }
+        }
     }
 
     fn print(&mut self) {
-        todo!()
+        let mut items: Vec<_> = self.heap.drain().collect();
+        items.sort_by_key(|Reverse((d, _))| *d);
+
+        println!("Top {} slowest queries:", items.len());
+        for Reverse((duration, record)) in items.into_iter().rev() {
+            println!("--- {:?} ---", duration);
+            println!("{}", unsafe { std::str::from_utf8_unchecked(&record) });
+        }
     }
 
     fn boxed_clone(&self) -> Box<dyn Aggregator> {
-        todo!()
+        Box::new(self.clone())
     }
-    // fn add(&mut self, log_line: &str) {
-    //     if let Some(duration) = extract_duration(&log_line) {
-    //         // if duration > self.treshold {
-    //         //     self.slow_queries.push((&log_line, duration));
-    //         // }
-    //     }
-    // }
 
-    // fn print(&mut self) {
-    //     self.slow_queries.sort_by(|a, b| b.1.cmp(&a.1));
-    //     for (log_line, duration) in &self.slow_queries {
-    //         println!("{:?} | {}", duration, log_line);
-    //     }
-    // }
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
-
