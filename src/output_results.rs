@@ -17,6 +17,7 @@ pub fn output_results(
     converted_args: ConvertedArgs,
     min_severity: &Severity,
     agragators: &mut Vec<Box<dyn Aggregator>>,
+    filters: &Vec<Box<dyn Filter>>,
 ) -> Result<()> {
     let min_severity_num: i32 = min_severity.into();
 
@@ -25,9 +26,9 @@ pub fn output_results(
             debug!("Processing file: {}", file_with_path.path.to_str().unwrap());
         }
 
-        let mut filters = Filters {
-            contains: vec![],
-            starts_with: vec![],
+        let mut filter_container = FilterContainer {
+            filters: vec![],
+            custom_filters: filters,
             min_severity: min_severity_num,
             begin: converted_args.begin,
             end: converted_args.end,
@@ -47,7 +48,7 @@ pub fn output_results(
 
         if let Some(mask) = &converted_args.mask {
             let mask_filter = Box::new(FilterContains::new(mask.clone()));
-            filters.contains.push(mask_filter);
+            filter_container.filters.push(mask_filter);
         };
 
         while start < bytes.len() {
@@ -81,6 +82,8 @@ pub fn output_results(
             start = end + 1;
         }
 
+        debug!("File did read in: {:?}", timing.elapsed());
+
         ranges.par_iter().try_for_each(|range| -> Result<()> {
             let slice = &bytes[range.clone()];
             let text = unsafe { std::str::from_utf8_unchecked(slice) };
@@ -93,7 +96,7 @@ pub fn output_results(
 
                 if is_record_start(line) && offset != 0 {
                     let record = &slice[record_start..offset];
-                    filter_record(record, &filters)?;
+                    filter_record(record, &filter_container)?;
                     record_start = offset;
                 }
 
@@ -102,7 +105,7 @@ pub fn output_results(
 
             // last record in chunk
             if record_start < slice.len() {
-                filter_record(&slice[record_start..slice.len()], &filters)?;
+                filter_record(&slice[record_start..slice.len()], &filter_container)?;
             };
             Ok(())
         })?;
@@ -127,9 +130,9 @@ impl Format {
     }
 }
 
-struct Filters<'a> {
-    contains: Vec<Box<dyn Filter + 'a>>,
-    starts_with: Vec<&'a str>,
+struct FilterContainer<'a> {
+    custom_filters: &'a Vec<Box<dyn Filter + 'a>>,
+    filters: Vec<Box<dyn Filter>>,
     min_severity: i32,
     begin: Option<DateTime<Local>>,
     end: Option<DateTime<Local>>,
@@ -137,18 +140,14 @@ struct Filters<'a> {
 }
 
 #[inline]
-fn filter_record(record: &[u8], filters: &Filters) -> Result<()> {
-    for prefix in &filters.starts_with {
-        if !record.starts_with(prefix.as_bytes()) {
-            return Ok(());
-        }
-    }
-    for filter in &filters.contains {
+fn filter_record(record: &[u8], filters: &FilterContainer) -> Result<()> {
+    for filter in &filters.filters {
         if !filter.matches(record) {
             return Ok(());
         }
     }
 
+    // Next code is not written as filters to avoid multiple string parsing and degradation of performance
     let text = unsafe { std::str::from_utf8_unchecked(record) };
     let severity = match filters.format {
         Format::Csv => Severity::from_csv_string(text),
@@ -173,6 +172,12 @@ fn filter_record(record: &[u8], filters: &Filters) -> Result<()> {
     }
     if filters.end.is_some_and(|e| log_time_local > e) {
         return Ok(());
+    }
+
+    for custom_filter in filters.custom_filters {
+        if !custom_filter.matches(record) {
+            return Ok(());
+        }
     }
 
     println!("{text}");

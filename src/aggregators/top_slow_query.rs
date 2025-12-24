@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use regex::Regex;
 
-use crate::{aggregators::Aggregator, util::parse_duration};
+use crate::{aggregators::Aggregator};
 
 pub struct TopSlowQueryAggregator<'a> {
     // treshold to consider query slow, in miliseconds
@@ -49,22 +49,3 @@ impl Aggregator for TopSlowQueryAggregator<'_> {
     // }
 }
 
-fn extract_duration(log: &str) -> Option<Duration> {
-    let re = Regex::new(r"duration:\s+([\d.]+\s ?(ns|us|µs|ms|s|m|min|minutes))").ok()?;
-    let caps = re.captures(log)?;
-
-    let ms = caps.get(1)?.as_str();
-    parse_duration(ms).ok()
-}
-
-#[cfg(test)]
-mod test {
-    use super::*;
-
-    #[test]
-    fn log_extract_test() {
-        let log = "Big text and duration: 121.997 ms more text";
-
-        assert_eq!(extract_duration(log), Some(Duration::from_millis(122)));
-    }
-}

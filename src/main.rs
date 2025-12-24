@@ -29,16 +29,18 @@ use log::error;
 use crate::{
     aggregators::{Aggregator, TopSlowQueryAggregator},
     convert_args::ConvertedArgs,
+    duration::parse_duration,
+    filters::{Filter, FilterSlow},
     output_results::output_results,
     severity::Severity,
-    util::parse_duration,
 };
 
 mod aggregators;
-mod filters;
 mod cli;
 mod convert_args;
+mod duration;
 mod error;
+mod filters;
 mod output_results;
 mod severity;
 mod util;
@@ -52,18 +54,21 @@ fn main() -> Result<()> {
     let mut converted_args: ConvertedArgs = ConvertedArgs::parse_from_matches(matches.clone())?;
     converted_args = converted_args.expand_dirs()?.expand_archives()?;
 
+    let mut aggregators: Vec<Box<dyn Aggregator>> = Vec::new();
+    let mut filters: Vec<Box<dyn Filter>> = Vec::new();
+
     match matches.subcommand() {
         Some(("errors", sub_matches)) => {
             let error_command = sub_matches.subcommand().unwrap_or(("list", sub_matches));
             match error_command {
                 ("list", list_subcommand) => {
-                    let mut aggregators: Vec<Box<dyn Aggregator>> = Vec::new();
                     output_results(
                         converted_args,
                         list_subcommand
                             .get_one::<Severity>("level")
                             .unwrap_or(&Severity::Error),
                         &mut aggregators,
+                        &filters,
                     )?;
                 }
                 ("top", _) => {
@@ -85,9 +90,13 @@ fn main() -> Result<()> {
             if let Some(treshold_str) = matches.get_one::<String>("treshold") {
                 treshold = parse_duration(&treshold_str)?;
             };
-            let mut aggregators: Vec<Box<dyn Aggregator>> = Vec::new();
-            aggregators.push(Box::new(TopSlowQueryAggregator::new(treshold)));
-            output_results(converted_args, &Severity::Log, &mut aggregators)?;
+            filters.push(Box::new(FilterSlow::new(treshold)));
+            output_results(
+                converted_args,
+                &Severity::Log,
+                &mut aggregators,
+                &filters,
+            )?;
         }
         Some(("stats", _)) => {
             error!("Not implemented")
