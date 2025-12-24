@@ -24,12 +24,12 @@
 
 use std::time::Duration;
 
+use humantime::parse_duration;
 use log::error;
 
 use crate::{
     aggregators::{Aggregator, TopSlowQueryAggregator},
     convert_args::ConvertedArgs,
-    duration::parse_duration,
     filters::{Filter, FilterSlow},
     output_results::output_results,
     severity::Severity,

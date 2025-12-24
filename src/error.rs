@@ -40,7 +40,7 @@ pub enum Error {
     FailedToParseCsvToPostgres {
         error: csv::Error,
     },
-    
+
     // -- Externals
     #[from]
     Io(std::io::Error),
@@ -53,6 +53,9 @@ pub enum Error {
 
     #[from]
     TimeParseError(crate::util::TimeParseError),
+
+    #[from]
+    DurationError(humantime::DurationError),
 }
 
 // region:    --- Custom --- Uncomment if want custom errors
