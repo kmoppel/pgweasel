@@ -7,6 +7,7 @@ use memmap2::MmapOptions;
 use crate::Severity;
 use crate::aggregators::Aggregator;
 use crate::convert_args::ConvertedArgs;
+use crate::filters::{Filter, FilterContains};
 use crate::util::parse_timestamp_from_string;
 use rayon::prelude::*;
 
@@ -15,7 +16,7 @@ use crate::Result;
 pub fn output_results(
     converted_args: ConvertedArgs,
     min_severity: &Severity,
-    _agragators: &mut Vec<Box<dyn Aggregator>>,
+    agragators: &mut Vec<Box<dyn Aggregator>>,
 ) -> Result<()> {
     let min_severity_num: i32 = min_severity.into();
 
@@ -45,7 +46,8 @@ pub fn output_results(
         let mut start = 0;
 
         if let Some(mask) = &converted_args.mask {
-            filters.contains.push(mask);
+            let mask_filter = Box::new(FilterContains::new(mask.clone()));
+            filters.contains.push(mask_filter);
         };
 
         while start < bytes.len() {
@@ -126,7 +128,7 @@ impl Format {
 }
 
 struct Filters<'a> {
-    contains: Vec<&'a str>,
+    contains: Vec<Box<dyn Filter + 'a>>,
     starts_with: Vec<&'a str>,
     min_severity: i32,
     begin: Option<DateTime<Local>>,
@@ -141,11 +143,12 @@ fn filter_record(record: &[u8], filters: &Filters) -> Result<()> {
             return Ok(());
         }
     }
-    for substring in &filters.contains {
-        if memchr::memmem::find(record, substring.as_bytes()).is_none() {
+    for filter in &filters.contains {
+        if !filter.matches(record) {
             return Ok(());
         }
     }
+
     let text = unsafe { std::str::from_utf8_unchecked(record) };
     let severity = match filters.format {
         Format::Csv => Severity::from_csv_string(text),

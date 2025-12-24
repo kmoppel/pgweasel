@@ -27,7 +27,7 @@ use std::time::Duration;
 use log::error;
 
 use crate::{
-    aggregators::{Aggregator, SlowQueryAggregator},
+    aggregators::{Aggregator, TopSlowQueryAggregator},
     convert_args::ConvertedArgs,
     output_results::output_results,
     severity::Severity,
@@ -35,6 +35,7 @@ use crate::{
 };
 
 mod aggregators;
+mod filters;
 mod cli;
 mod convert_args;
 mod error;
@@ -85,7 +86,7 @@ fn main() -> Result<()> {
                 treshold = parse_duration(&treshold_str)?;
             };
             let mut aggregators: Vec<Box<dyn Aggregator>> = Vec::new();
-            aggregators.push(Box::new(SlowQueryAggregator::new(treshold)));
+            aggregators.push(Box::new(TopSlowQueryAggregator::new(treshold)));
             output_results(converted_args, &Severity::Log, &mut aggregators)?;
         }
         Some(("stats", _)) => {
