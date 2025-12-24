@@ -1,5 +1,4 @@
 mod filter_contains;
-mod filter_starts_with;
 mod filter_slow;
 
 pub use filter_contains::FilterContains;
