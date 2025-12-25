@@ -151,10 +151,7 @@ fn filter_record(record: &[u8], filters: &FilterContainer, local_aggregators: &m
 
     // Next code is not written as filters to avoid multiple string parsing and degradation of performance
     let text = unsafe { std::str::from_utf8_unchecked(record) };
-    let severity = match filters.format {
-        Format::Csv => Severity::from_csv_string(text),
-        Format::Plain => Severity::from_log_string(text),
-    };
+    let severity = filters.format.severity_from_string(text);
     let level: i32 = (&severity).into();
     if level < filters.min_severity {
         return Ok(());

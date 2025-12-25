@@ -1,3 +1,5 @@
+use crate::severity::Severity;
+
 pub enum Format {
     Csv,
     Plain,
@@ -9,6 +11,13 @@ impl Format {
             Format::Csv
         } else {
             Format::Plain
+        }
+    }
+
+    pub fn severity_from_string(&self, text: &str) -> Severity {
+        match self {
+            Format::Csv => Severity::from_csv_string(text),
+            Format::Plain => Severity::from_log_string(text),
         }
     }
 }
