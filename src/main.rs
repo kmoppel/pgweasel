@@ -43,6 +43,7 @@ mod error;
 mod filters;
 mod output_results;
 mod severity;
+mod format;
 mod util;
 
 pub use self::error::{Error, Result};

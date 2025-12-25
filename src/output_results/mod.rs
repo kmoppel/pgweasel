@@ -8,6 +8,7 @@ use crate::Severity;
 use crate::aggregators::Aggregator;
 use crate::convert_args::ConvertedArgs;
 use crate::filters::{Filter, FilterContains};
+use crate::format::Format;
 use crate::util::parse_timestamp_from_string;
 use rayon::prelude::*;
 
@@ -131,21 +132,6 @@ pub fn output_results(
     Ok(())
 }
 
-enum Format {
-    Csv,
-    Plain,
-}
-
-impl Format {
-    fn from_file_extension(file_name: &str) -> Self {
-        if file_name.ends_with(".csv") {
-            Format::Csv
-        } else {
-            Format::Plain
-        }
-    }
-}
-
 struct FilterContainer<'a> {
     custom_filters: &'a Vec<Box<dyn Filter + 'a>>,
     filters: Vec<Box<dyn Filter>>,
@@ -196,7 +182,7 @@ fn filter_record(record: &[u8], filters: &FilterContainer, local_aggregators: &m
         }
     }
 
-    aggragate_record(record, local_aggregators);
+    aggragate_record(record, local_aggregators, &filters.format);
 
     if print {
         println!("{text}");
@@ -205,9 +191,9 @@ fn filter_record(record: &[u8], filters: &FilterContainer, local_aggregators: &m
 }
 
 #[inline]
-fn aggragate_record(record: &[u8], local_aggregators: &mut Vec<Box<dyn Aggregator>>) {
+fn aggragate_record(record: &[u8], local_aggregators: &mut Vec<Box<dyn Aggregator>>, fmt: &Format) {
     for aggregator in local_aggregators.iter_mut() {
-        aggregator.update(record);
+        aggregator.update(record, fmt);
     }
 }
 
