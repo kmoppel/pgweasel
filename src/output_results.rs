@@ -101,8 +101,7 @@ pub fn output_results(
 
                     if is_record_start(line) && offset != 0 {
                         let record = &slice[record_start..offset];
-                        aggragate_record(record, &mut local_aggregators);
-                        filter_record(record, &filter_container, converted_args.print_details)?;
+                        filter_record(record, &filter_container, &mut local_aggregators, converted_args.print_details)?;
                         record_start = offset;
                     }
 
@@ -111,8 +110,7 @@ pub fn output_results(
 
                 // last record in chunk
                 if record_start < slice.len() {
-                    aggragate_record(&slice[record_start..slice.len()], &mut local_aggregators);
-                    filter_record(&slice[record_start..slice.len()], &filter_container, converted_args.print_details)?;
+                    filter_record(&slice[record_start..slice.len()], &filter_container, &mut local_aggregators, converted_args.print_details)?;
                 };
                 Ok(local_aggregators)
             })
@@ -131,12 +129,6 @@ pub fn output_results(
         debug!("Finished aggregating in: {:?}", timing.elapsed());
     }
     Ok(())
-}
-
-fn aggragate_record(record: &[u8], local_aggregators: &mut Vec<Box<dyn Aggregator>>) {
-    for aggregator in local_aggregators.iter_mut() {
-        aggregator.update(record);
-    }
 }
 
 enum Format {
@@ -164,7 +156,7 @@ struct FilterContainer<'a> {
 }
 
 #[inline]
-fn filter_record(record: &[u8], filters: &FilterContainer, print: bool) -> Result<()> {
+fn filter_record(record: &[u8], filters: &FilterContainer, local_aggregators: &mut Vec<Box<dyn Aggregator>>, print: bool) -> Result<()> {
     for filter in &filters.filters {
         if !filter.matches(record) {
             return Ok(());
@@ -204,10 +196,19 @@ fn filter_record(record: &[u8], filters: &FilterContainer, print: bool) -> Resul
         }
     }
 
+    aggragate_record(record, local_aggregators);
+
     if print {
         println!("{text}");
     }
     Ok(())
+}
+
+#[inline]
+fn aggragate_record(record: &[u8], local_aggregators: &mut Vec<Box<dyn Aggregator>>) {
+    for aggregator in local_aggregators.iter_mut() {
+        aggregator.update(record);
+    }
 }
 
 #[inline]

@@ -1,5 +1,6 @@
 use assert_cmd::cargo;
-use assert_cmd::prelude::*; // Add methods on commands
+use assert_cmd::prelude::*;
+use predicates::prelude::PredicateBooleanExt; // Add methods on commands
 use std::process::Command; // Run programs
 
 #[test]
@@ -27,7 +28,7 @@ fn simple_log_slow_filter() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn aggregate_slow_filter() -> Result<(), Box<dyn std::error::Error>> {
+fn aggregate_top_slow() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args([
@@ -38,6 +39,24 @@ fn aggregate_slow_filter() -> Result<(), Box<dyn std::error::Error>> {
     .assert()
     .success()
     .stdout(predicates::str::contains("--- 25.761ms ---"));
+
+    Ok(())
+}
+
+#[test]
+fn aggregate_top_slow_with_filter() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args([
+        "-m",
+        "2025-05-21 11:00:40",
+        "slow",
+        "top",
+        "./tests/files/duration.log",
+    ])
+    .assert()
+    .success()
+    .stdout(predicates::str::contains("025-05-21 11:01:10").not());
 
     Ok(())
 }
