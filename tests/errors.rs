@@ -106,6 +106,18 @@ fn simple_filter_with_list_subcommand() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[test]
+fn simple_filter_with_top_subcommand() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args(["err", "top", "./tests/files/debian_default2.log"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("new row for relation \"pgbench_accounts\" violates check constraint \"posbal\""));
+
+    Ok(())
+}
+
+#[test]
 fn non_existing_file() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 

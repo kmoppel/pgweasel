@@ -28,7 +28,7 @@ use humantime::parse_duration;
 use log::{debug, error};
 
 use crate::{
-    aggregators::{Aggregator, TopSlowQueries},
+    aggregators::{Aggregator, ErrorFrequencyAggregator, TopSlowQueries},
     convert_args::ConvertedArgs,
     filters::{Filter, FilterSlow},
     output_results::output_results,
@@ -41,9 +41,9 @@ mod convert_args;
 mod duration;
 mod error;
 mod filters;
+mod format;
 mod output_results;
 mod severity;
-mod format;
 mod util;
 
 pub use self::error::{Error, Result};
@@ -72,8 +72,17 @@ fn main() -> Result<()> {
                         &filters,
                     )?;
                 }
-                ("top", _) => {
-                    println!("Analyzing for top errors");
+                ("top", top_subcommand) => {
+                    aggregators.push(Box::new(ErrorFrequencyAggregator::new()));
+                    converted_args.print_details = false;
+                    output_results(
+                        converted_args,
+                        top_subcommand
+                            .get_one::<Severity>("level")
+                            .unwrap_or(&Severity::Error),
+                        &mut aggregators,
+                        &filters,
+                    )?;
                 }
                 (name, _) => {
                     error!("Unsupported subcommand `{name}`")
