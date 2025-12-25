@@ -36,14 +36,17 @@ pub fn cli() -> Command {
         )
         .subcommand(
             Command::new("slow")
+                .subcommand(Command::new("top").args(filelist_args()))
+                .args_conflicts_with_subcommands(true)
                 .about("Show queries taking longer than give threshold")
-                .arg(arg!(<treshold>).help("Treshold in format like 10s, 10ms to consider slow query."))
+                .arg(arg!(<TRESHOLD>).help("Treshold in format like 10s, 10ms to consider slow query."))
                 .args(filelist_args())
         )
         .subcommand(
             Command::new("stats")
                 .about("Summary of log events - counts / frequency of errors, connections, checkpoints, autovacuums")
                 .args_conflicts_with_subcommands(true)
+                .args(filelist_args())
         )
 }
 

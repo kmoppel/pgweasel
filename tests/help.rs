@@ -41,3 +41,27 @@ fn errors_command_with_sub_command_help() -> Result<(), Box<dyn std::error::Erro
 
     Ok(())
 }
+
+#[test]
+fn slow_command_help_contains_treshold() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args(["slow", "--help"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("slow <TRESHOLD>"));
+
+    Ok(())
+}
+
+#[test]
+fn slow_command_help_contains_subcommand_top() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args(["slow", "--help"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("top"));
+
+    Ok(())
+}

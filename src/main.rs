@@ -85,21 +85,21 @@ fn main() -> Result<()> {
         Some(("peaks", _)) => {
             error!("Not implemented")
         }
-        Some(("slow", matches)) => {
-            let mut treshold = Duration::from_secs(3);
-            if let Some(treshold_str) = matches.get_one::<String>("treshold") {
-                if treshold_str.eq("top") {
-                    debug!("Using TopSlowQueryAggregator");
-                    aggregators.push(Box::new(TopSlowQueries::new(10)));
-                    converted_args.print_details = false;
-                    output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
-                    return Ok(());
-                } else {
+        Some(("slow", sub_matches)) => {
+            if let Some(("top", _)) = sub_matches.subcommand() {
+                debug!("Using TopSlowQueryAggregator");
+                aggregators.push(Box::new(TopSlowQueries::new(10)));
+                converted_args.print_details = false;
+                output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
+            } else {
+                let mut treshold = Duration::from_secs(3);
+                if let Some(treshold_str) = sub_matches.get_one::<String>("TRESHOLD") {
                     treshold = parse_duration(treshold_str)?;
-                };
+                }
+                filters.push(Box::new(FilterSlow::new(treshold)));
+                debug!("Using FilterSlow with treshold {:?}", treshold);
+                output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
             }
-            filters.push(Box::new(FilterSlow::new(treshold)));
-            output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
         }
         Some(("stats", _)) => {
             error!("Not implemented")
