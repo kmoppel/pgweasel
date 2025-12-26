@@ -46,7 +46,7 @@ This is a fork of [pgweasel](https://github.com/kmoppel/pgweasel/) as rewrite in
 
 ### system
 
-[ ] `pgweasel system $LOG` Show lifecycle / Postgres internal events, i.e. autovacuum, replication, extensions, config changes etc
+[*] NEEDS TESTING `pgweasel system testdata/debian_default.log` Show lifecycle / Postgres internal events, i.e. autovacuum, replication, extensions, config changes etc
 
 ### connections
 

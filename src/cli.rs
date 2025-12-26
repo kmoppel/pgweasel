@@ -48,6 +48,17 @@ pub fn cli() -> Command {
                 .args(filelist_args())
         )
         .subcommand(
+            Command::new("system")
+                .args_conflicts_with_subcommands(true)
+                .about("Show lifecycle / Postgres internal events, i.e. autovacuum, replication, extensions, config changes etc")
+                .alias("sys")
+                .alias("pg")
+                .alias("postgre")
+                .alias("postgres")
+                .args(filelist_args())
+                .args_conflicts_with_subcommands(true)
+        )
+        .subcommand(
             Command::new("stats")
                 .about("Summary of log events - counts / frequency of errors, connections, checkpoints, autovacuums")
                 .args_conflicts_with_subcommands(true)

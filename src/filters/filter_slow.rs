@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::{duration::extract_duration, filters::Filter};
+use crate::{duration::extract_duration, filters::Filter, format::Format};
 
 #[derive(Clone)]
 pub struct FilterSlow {
@@ -14,7 +14,7 @@ impl FilterSlow {
 }
 
 impl Filter for FilterSlow {
-    fn matches(&self, record: &[u8]) -> bool {
+    fn matches(&self, record: &[u8], _fmt: &Format) -> bool {
         if let Some(duration) = extract_duration(record) {
             if duration > self.treshold {
                 return true;

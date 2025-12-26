@@ -144,7 +144,7 @@ struct FilterContainer<'a> {
 #[inline]
 fn filter_record(record: &[u8], filters: &FilterContainer, local_aggregators: &mut Vec<Box<dyn Aggregator>>, print: bool) -> Result<()> {
     for filter in &filters.filters {
-        if !filter.matches(record) {
+        if !filter.matches(record, &filters.format) {
             return Ok(());
         }
     }
@@ -174,7 +174,7 @@ fn filter_record(record: &[u8], filters: &FilterContainer, local_aggregators: &m
     }
 
     for custom_filter in filters.custom_filters {
-        if !custom_filter.matches(record) {
+        if !custom_filter.matches(record, &filters.format) {
             return Ok(());
         }
     }

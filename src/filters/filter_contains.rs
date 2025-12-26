@@ -1,4 +1,4 @@
-use crate::filters::Filter;
+use crate::{filters::Filter, format::Format};
 
 #[derive(Clone)]
 pub struct FilterContains {
@@ -12,7 +12,7 @@ impl FilterContains {
 }
 
 impl Filter for FilterContains {
-    fn matches(&self, record: &[u8]) -> bool {
+    fn matches(&self, record: &[u8], _fmt: &Format) -> bool {
         memchr::memmem::find(record, self.substring.as_bytes()).is_some()
     }
 }

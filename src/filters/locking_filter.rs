@@ -1,10 +1,10 @@
-use crate::filters::Filter;
+use crate::{filters::Filter, format::Format};
 
 #[derive(Clone)]
 pub struct LockingFilter;
 
 impl Filter for LockingFilter {
-    fn matches(&self, record: &[u8]) -> bool {
+    fn matches(&self, record: &[u8], _fmt: &Format) -> bool {
         if memchr::memmem::find(record, b" conflicts ").is_some() {
             return true;
         };
