@@ -90,7 +90,13 @@ fn main() -> Result<()> {
             }
         }
         Some(("locks", _)) => {
-            error!("Not implemented")
+            filters.push(Box::new(crate::filters::LockingFilter{}));
+            output_results(
+                converted_args,
+                &Severity::Log,
+                &mut aggregators,
+                &filters,
+            )?;
         }
         Some(("peaks", _)) => {
             error!("Not implemented")

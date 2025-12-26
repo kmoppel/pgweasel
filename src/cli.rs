@@ -26,7 +26,12 @@ pub fn cli() -> Command {
         )
         .subcommand(
             Command::new("locks")
+                .alias("loc")
+                .alias("lock")
+                .alias("deadlock")
+                .alias("deadlocks")
                 .about("Only show locking (incl. deadlocks, recovery conflicts) entries")
+                .args(filelist_args())
                 .args_conflicts_with_subcommands(true)
         )
         .subcommand(

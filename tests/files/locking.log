@@ -1,0 +1,14 @@
+2025-06-03 12:45:41.596 EEST [3633376] krl@postgres LOG:  could not receive data from client: Connection reset by peer
+2025-06-03 12:45:41.596 EEST [3633376] krl@postgres LOG:  unexpected EOF on client connection with an open transaction
+2025-06-03 12:45:41.599 EEST [3633369] krl@postgres LOG:  duration: 44717.925 ms  execute P_2: SELECT abalance FROM pgbench_accounts WHERE aid = $1;
+2025-06-03 12:45:41.599 EEST [3633369] krl@postgres DETAIL:  parameters: $1 = '3711495'
+2025-06-03 12:46:07.920 EEST [3634117] krl@postgres LOG:  process 3634117 still waiting for ShareLock on transaction 280418 after 1.022 ms
+2025-06-03 12:46:07.920 EEST [3634117] krl@postgres DETAIL:  Process holding the lock: 3634097. Wait queue: 3634117.
+2025-06-03 12:46:07.920 EEST [3634117] krl@postgres CONTEXT:  while updating tuple (41,10) in relation "pgbench_tellers"
+2025-06-03 12:46:07.924 EEST [3634103] krl@postgres LOG:  process 3634103 still waiting for ShareLock on transaction 280419 after 1.020 ms
+2025-06-03 12:46:07.924 EEST [3634103] krl@postgres DETAIL:  Process holding the lock: 3634099. Wait queue: 3634103.
+2025-06-03 12:46:07.924 EEST [3634103] krl@postgres CONTEXT:  while updating tuple (3,14) in relation "pgbench_branches"
+2025-06-03 12:46:07.924 EEST [3634103] krl@postgres STATEMENT:  UPDATE pgbench_branches SET bbalance = bbalance + $1 WHERE bid = $2;
+2025-06-03 12:46:07.925 EEST [3634138] krl@postgres LOG:  process 3634138 still waiting for ShareLock on transaction 280429 after 1.018 ms
+2025-06-03 12:46:07.925 EEST [3634138] krl@postgres DETAIL:  Process holding the lock: 3634120. Wait queue: 3634138.
+2025-06-03 12:46:07.925 EEST [3634138] krl@postgres CONTEXT:  while updating tuple (3,9) in relation "pgbench_branches"
