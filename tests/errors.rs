@@ -85,10 +85,15 @@ fn simple_error_filter_with_begin_end() -> Result<(), Box<dyn std::error::Error>
 fn simple_error_filter_with_mask() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
-    cmd.args(["-m", "2025-05-08 12:24:37", "err", "./tests/files/csvlog1.csv"])
-        .assert()
-        .success()
-        .stdout(predicates::str::contains("2025-05-08 12:24:37.731 EEST"));
+    cmd.args([
+        "-m",
+        "2025-05-08 12:24:37",
+        "err",
+        "./tests/files/csvlog1.csv",
+    ])
+    .assert()
+    .success()
+    .stdout(predicates::str::contains("2025-05-08 12:24:37.731 EEST"));
 
     Ok(())
 }
@@ -112,7 +117,9 @@ fn simple_filter_with_top_subcommand() -> Result<(), Box<dyn std::error::Error>>
     cmd.args(["err", "top", "./tests/files/debian_default2.log"])
         .assert()
         .success()
-        .stdout(predicates::str::contains("new row for relation \"pgbench_accounts\" violates check constraint \"posbal\""));
+        .stdout(predicates::str::contains(
+            "new row for relation \"pgbench_accounts\" violates check constraint \"posbal\"",
+        ));
 
     Ok(())
 }
@@ -128,4 +135,3 @@ fn non_existing_file() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-

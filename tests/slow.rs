@@ -31,14 +31,10 @@ fn simple_log_slow_filter() -> Result<(), Box<dyn std::error::Error>> {
 fn aggregate_top_slow() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
-    cmd.args([
-        "slow",
-        "top",
-        "./tests/files/duration.log",
-    ])
-    .assert()
-    .success()
-    .stdout(predicates::str::contains("--- 25.761ms ---"));
+    cmd.args(["slow", "top", "./tests/files/duration.log"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("--- 25.761ms ---"));
 
     Ok(())
 }

@@ -15,7 +15,6 @@ impl SystemFilter {
             b"checkpointer",
             b"background writer",
             b"bgwriter",
-
             // WAL / replication
             b"wal",
             b"replication",
@@ -24,20 +23,17 @@ impl SystemFilter {
             b"walreceiver",
             b"walsender",
             b"archiver",
-
             // Startup / shutdown
             b"database system is starting",
             b"database system is ready",
             b"database system is shutting down",
             b"startup process",
             b"shutdown",
-
             // Configuration changes
             b"reloading configuration",
             b"configuration file",
             // b"parameter",
             b"SIGHUP",
-
             // Extensions
             b"extension",
             b"shared_preload_libraries",
@@ -50,7 +46,6 @@ impl SystemFilter {
             .expect("failed to build Aho-Corasick automaton");
 
         Self { ac }
-        
     }
 }
 
@@ -82,7 +77,12 @@ mod test {
 
         for (input, expected) in test_cases {
             let result = filter.matches(input, &super::Format::Plain);
-            assert_eq!(result, expected, "Failed on input: {:?}", String::from_utf8_lossy(input));
+            assert_eq!(
+                result,
+                expected,
+                "Failed on input: {:?}",
+                String::from_utf8_lossy(input)
+            );
         }
     }
 }

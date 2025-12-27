@@ -1,10 +1,10 @@
-mod top_slow_query;
 mod error_frequency;
+mod top_slow_query;
 
 use std::any::Any;
 
-pub use top_slow_query::TopSlowQueries;
 pub use error_frequency::ErrorFrequencyAggregator;
+pub use top_slow_query::TopSlowQueries;
 
 use crate::format::Format;
 
