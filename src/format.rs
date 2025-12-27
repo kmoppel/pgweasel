@@ -28,7 +28,7 @@ impl Format {
         }
     }
 
-    fn message_plain<'a>(record: &'a [u8]) -> Option<&'a [u8]> {
+    fn message_plain(record: &[u8]) -> Option<&[u8]> {
         let mut i = 0;
         while i + 1 < record.len() {
             if record[i] == b':' && record[i + 1] == b' ' {
@@ -48,7 +48,7 @@ impl Format {
         None
     }
 
-    fn message_csv<'a>(record: &'a [u8]) -> Option<&'a [u8]> {
+    fn message_csv(record: &[u8]) -> Option<&[u8]> {
         // Find last comma → message is final field
         let mut i = record.len();
         while i > 0 {

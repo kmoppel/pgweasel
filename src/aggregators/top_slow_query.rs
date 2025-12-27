@@ -28,11 +28,11 @@ impl Aggregator for TopSlowQueries {
             return;
         }
 
-        if let Some(Reverse((min, _))) = self.heap.peek() {
-            if duration > *min {
-                self.heap.pop();
-                self.heap.push(Reverse((duration, record.to_vec())));
-            }
+        if let Some(Reverse((min, _))) = self.heap.peek()
+            && duration > *min
+        {
+            self.heap.pop();
+            self.heap.push(Reverse((duration, record.to_vec())));
         }
     }
 
@@ -45,11 +45,11 @@ impl Aggregator for TopSlowQueries {
         for Reverse((duration, record)) in &other.heap {
             if self.heap.len() < self.limit {
                 self.heap.push(Reverse((*duration, record.clone())));
-            } else if let Some(Reverse((min, _))) = self.heap.peek() {
-                if *duration > *min {
-                    self.heap.pop();
-                    self.heap.push(Reverse((*duration, record.clone())));
-                }
+            } else if let Some(Reverse((min, _))) = self.heap.peek()
+                && *duration > *min
+            {
+                self.heap.pop();
+                self.heap.push(Reverse((*duration, record.clone())));
             }
         }
     }

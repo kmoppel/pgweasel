@@ -15,10 +15,10 @@ impl FilterSlow {
 
 impl Filter for FilterSlow {
     fn matches(&self, record: &[u8], _fmt: &Format) -> bool {
-        if let Some(duration) = extract_duration(record) {
-            if duration > self.treshold {
-                return true;
-            }
+        if let Some(duration) = extract_duration(record)
+            && duration > self.treshold
+        {
+            return true;
         }
         false
     }

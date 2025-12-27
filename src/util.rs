@@ -147,23 +147,23 @@ fn parse_timestamp(
     ];
 
     for format in &naive_formats {
-        if let Ok(naive_dt) = chrono::NaiveDateTime::parse_from_str(input, format) {
-            if let Some(local_dt) = Local.from_local_datetime(&naive_dt).single() {
-                return Ok(local_dt);
-            }
+        if let Ok(naive_dt) = chrono::NaiveDateTime::parse_from_str(input, format)
+            && let Some(local_dt) = Local.from_local_datetime(&naive_dt).single()
+        {
+            return Ok(local_dt);
         }
     }
 
     // Handle date-only format (YYYY-MM-DD)
-    if input.len() == 10 && input.chars().nth(4) == Some('-') && input.chars().nth(7) == Some('-') {
-        if let Ok(date) = NaiveDate::parse_from_str(input, "%Y-%m-%d") {
-            if let Some(datetime) = Local
-                .from_local_datetime(&date.and_hms_opt(0, 0, 0).unwrap())
-                .single()
-            {
-                return Ok(datetime);
-            }
-        }
+    if input.len() == 10
+        && input.chars().nth(4) == Some('-')
+        && input.chars().nth(7) == Some('-')
+        && let Ok(date) = NaiveDate::parse_from_str(input, "%Y-%m-%d")
+        && let Some(datetime) = Local
+            .from_local_datetime(&date.and_hms_opt(0, 0, 0).unwrap())
+            .single()
+    {
+        return Ok(datetime);
     }
 
     Err(TimeParseError::ParseError(format!(
@@ -193,10 +193,10 @@ pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, Strin
 
     // Try parsing as naive datetime and convert to local
     for format in formats.iter() {
-        if let Ok(naive_dt) = NaiveDateTime::parse_from_str(input, format) {
-            if let Some(local_dt) = Local.from_local_datetime(&naive_dt).single() {
-                return Ok(local_dt);
-            }
+        if let Ok(naive_dt) = NaiveDateTime::parse_from_str(input, format)
+            && let Some(local_dt) = Local.from_local_datetime(&naive_dt).single()
+        {
+            return Ok(local_dt);
         }
     }
 
