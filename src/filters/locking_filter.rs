@@ -1,61 +1,48 @@
+use aho_corasick::AhoCorasick;
+
 use crate::{filters::Filter, format::Format};
 
 #[derive(Clone)]
-pub struct LockingFilter;
+pub struct LockingFilter {
+    ac: AhoCorasick,
+}
+
+impl LockingFilter {
+    pub fn new() -> Self {
+        static PATTERNS: &[&[u8]] = &[
+            b" conflicts ",
+            b" conflicting ",
+            b" still waiting for ",
+            b"Wait queue:",
+            b"while locking tuple",
+            b"while updating tuple",
+            b"conflict detected",
+            b"deadlock detected",
+            b"buffer deadlock",
+            b"blocked by process ",
+            b"recovery conflict ",
+            b" concurrent update",
+            b"could not serialize",
+            b"could not obtain ",
+            b"lock on relation ",
+            b"cannot lock rows",
+            b" semaphore:",
+        ];
+
+        let ac = AhoCorasick::builder()
+            .ascii_case_insensitive(true)
+            .build(PATTERNS)
+            .expect("failed to build Aho-Corasick automaton");
+
+        Self { ac }
+    }
+}
 
 impl Filter for LockingFilter {
     fn matches(&self, record: &[u8], _fmt: &Format) -> bool {
-        if memchr::memmem::find(record, b" conflicts ").is_some() {
+        if self.ac.is_match(record) {
             return true;
-        };
-        if memchr::memmem::find(record, b" conflicting ").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b" still waiting for ").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"Wait queue:").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"while locking tuple").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"while updating tuple").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"conflict detected").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"deadlock detected").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"buffer deadlock").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"blocked by process ").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"recovery conflict ").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b" concurrent update").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"could not serialize").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"could not obtain ").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"lock on relation ").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b"cannot lock rows").is_some() {
-            return true;
-        };
-        if memchr::memmem::find(record, b" semaphore:").is_some() {
-            return true;
-        };
+        }
 
         matches_process_acquired(record)
     }

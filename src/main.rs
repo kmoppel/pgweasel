@@ -90,7 +90,7 @@ fn main() -> Result<()> {
             }
         }
         Some(("locks", _)) => {
-            filters.push(Box::new(crate::filters::LockingFilter {}));
+            filters.push(Box::new(crate::filters::LockingFilter::new()));
             output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
         }
         Some(("system", _)) => {
