@@ -25,6 +25,8 @@ pgweasel tries to:
 
 This project is in BETA. Command / subcommands "API" might change.
 
+MAC & Linux targts passes tests. Windows - needs testers.
+
 ## Installation
 
 ### Download latest binaries from GitHub
