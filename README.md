@@ -27,6 +27,10 @@ This project is in BETA. Command / subcommands "API" might change.
 
 ## Installation
 
+### Download latest binaries from GitHub
+
+You can download binaries from [GitHub Releases](https://github.com/gintsgints/pgweasel/releases/tag/latest).
+
 ### Install from source
 
 Make sure, you have RUST compiler installed. Then:
@@ -37,6 +41,7 @@ cd pgweasel
 cargo build --release
 The built binary will be in target/release/pgweasel.
 ```
+
 
 ## Usage
 
