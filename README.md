@@ -2,7 +2,45 @@
 
 This is a fork of [pgweasel](https://github.com/kmoppel/pgweasel/) as rewrite in RUST. 
 
-## Currently implemented operating modes / subcommands
+A simple CLI usage oriented PostgreSQL log parser, to complement pgBadger.
+
+pgweasel tries to:
+
+* be an order of magnitude faster than pgBadger
+* way simpler, with less flags, operating rather via commands and sub-commands
+* focus on CLI interactions only - no html / json
+* more cloud-friendly - no deps, a single binary
+* zero config - not dependent on Postgres log_line_prefix
+* be more user-friendly - handle relative time inputs, auto-detect log files, subcommand aliases
+
+## Table of Contents
+
+1. [Status](#status)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Contributing](#contributing)
+5. [License](#license)
+
+## Status
+
+This project is in BETA. Command / subcommands "API" might change.
+
+## Installation
+
+### Install from source
+
+Make sure, you have RUST compiler installed. Then:
+
+```sh
+git clone https://github.com/gintsgints/pgweasel.git
+cd pgweasel
+cargo build --release
+The built binary will be in target/release/pgweasel.
+```
+
+## Usage
+
+Here is a list of currently implemented commands
 
 ### errors [ err | errs ]
 
@@ -56,3 +94,15 @@ This is a fork of [pgweasel](https://github.com/kmoppel/pgweasel/) as rewrite in
 
 For grep I would recommend using grep cli - ripgrep
 
+## Contributing
+
+All kinds of feedback and help (PR-s, co-maintainer) would be much appreciated - especially as I'm not a developer per se. Hopefully pgweasel will grow into a community project with rock solid quality.
+
+When creating MR, make sure `cargo test` pass. 
+
+Have sample log files ?
+I've scraped the Postgres mailing archives for *.log attachements (in testdata folder), but they are not much sadly...so if you have some real-life logs from busy or somehow "troublesome" instances, not containing secrets - please add one one via PR or proide some S3 etc link under issues. Thank you!
+
+## License
+
+pgweasel is free software distributed under the [Apache Licence](./LICENSE).

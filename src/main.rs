@@ -14,12 +14,16 @@
 //!
 //!  - errors
 //!    - [x] list
-//!    - [ ] top
-//!  - [ ] locks
+//!    - [x] top
+//!    - [ ] histogram
+//!  - [x] locks
 //!  - [ ] peaks
-//!  - [ ] slow
+//!  - [x] slow
+//!   - [x] filter by threshold
+//!   - [x] top slow queries
+//!   - [ ] stat
 //!  - [ ] stats
-//!  - [ ] system
+//!  - [x] system
 //!  - [ ] connections
 
 use std::time::Duration;
