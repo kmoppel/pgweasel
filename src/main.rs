@@ -32,7 +32,7 @@ use humantime::parse_duration;
 use log::{debug, error};
 
 use crate::{
-    aggregators::{Aggregator, ErrorFrequencyAggregator, TopSlowQueries},
+    aggregators::{Aggregator, ConnectionsAggregator, ErrorFrequencyAggregator, TopSlowQueries},
     convert_args::ConvertedArgs,
     filters::{Filter, FilterSlow},
     output_results::output_results,
@@ -99,6 +99,11 @@ fn main() -> Result<()> {
         }
         Some(("system", _)) => {
             filters.push(Box::new(crate::filters::SystemFilter::new()));
+            output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
+        }
+        Some(("connections", _)) => {
+            aggregators.push(Box::new(ConnectionsAggregator::new()));
+            converted_args.print_details = false;
             output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
         }
         Some(("peaks", _)) => {

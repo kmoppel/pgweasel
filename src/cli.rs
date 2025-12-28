@@ -59,6 +59,15 @@ pub fn cli() -> Command {
                 .args_conflicts_with_subcommands(true)
         )
         .subcommand(
+            Command::new("connections")
+                .args_conflicts_with_subcommands(true)
+                .about("Show connections counts by total, db, user, application name. Assumes log_connections enabled")
+                .alias("conns")
+                .alias("conn")
+                .args(filelist_args())
+                .args_conflicts_with_subcommands(true)
+        )
+        .subcommand(
             Command::new("stats")
                 .about("Summary of log events - counts / frequency of errors, connections, checkpoints, autovacuums")
                 .args_conflicts_with_subcommands(true)

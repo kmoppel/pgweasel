@@ -63,7 +63,7 @@ pub fn output_results(
                         if next < bytes.len() {
                             let line_end = bytes[next..]
                                 .iter()
-                                .position(|&b| b == b'\n')
+                                .position(|&b| (b == b'\n') && (b == b'\r'))
                                 .map(|p| next + p)
                                 .unwrap_or(bytes.len());
 
@@ -92,6 +92,7 @@ pub fn output_results(
                     aggregators.iter().map(|a| a.boxed_clone()).collect();
 
                 let slice = &bytes[range.clone()];
+                // TODO: iterate slice without converting to str and back to record bytes
                 let text = unsafe { std::str::from_utf8_unchecked(slice) };
 
                 let mut record_start = 0;
@@ -102,6 +103,7 @@ pub fn output_results(
 
                     if is_record_start(line) && offset != 0 {
                         let record = &slice[record_start..offset];
+                        // debug!("Processing record: {:?} start {} offset {} line_len {}", std::str::from_utf8(record), record_start, offset, line_len);
                         filter_record(
                             record,
                             &filter_container,
@@ -112,6 +114,11 @@ pub fn output_results(
                     }
 
                     offset += line_len;
+                    // sometimes calculated offset is not at line end due to multibyte utf8 chars
+
+                    while (offset < slice.len()) && (&slice[offset - 1..offset] != b"\n") {
+                        offset += 1;
+                    }
                 }
 
                 // last record in chunk
@@ -194,7 +201,7 @@ fn filter_record(
         }
     }
 
-    aggragate_record(record, local_aggregators, &filters.format);
+    aggragate_record(record, local_aggregators, &severity, &filters.format);
 
     if print {
         println!("{text}");
@@ -203,9 +210,14 @@ fn filter_record(
 }
 
 #[inline]
-fn aggragate_record(record: &[u8], local_aggregators: &mut Vec<Box<dyn Aggregator>>, fmt: &Format) {
+fn aggragate_record(
+    record: &[u8],
+    local_aggregators: &mut Vec<Box<dyn Aggregator>>,
+    severity: &Severity,
+    fmt: &Format,
+) {
     for aggregator in local_aggregators.iter_mut() {
-        aggregator.update(record, fmt);
+        aggregator.update(record, severity, fmt);
     }
 }
 
