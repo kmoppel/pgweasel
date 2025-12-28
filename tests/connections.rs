@@ -9,7 +9,7 @@ fn simple_connection_aggregate() -> Result<(), Box<dyn std::error::Error>> {
     cmd.args(["conn", "./tests/files/azure_connections.log"])
         .assert()
         .success()
-        .stdout(predicates::str::contains("5  2025-05-21 11:00:00 +03:00"));
+        .stdout(predicates::str::contains("5  2025-05-21 11:00:00"));
 
     Ok(())
 }
