@@ -1,6 +1,10 @@
 use std::{any::Any, cmp::Reverse, collections::BinaryHeap, time::Duration};
 
-use crate::{aggregators::Aggregator, duration::extract_duration, format::Format, severity::Severity};
+use chrono::{DateTime, Local};
+
+use crate::{
+    aggregators::Aggregator, duration::extract_duration, format::Format, severity::Severity,
+};
 
 #[derive(Clone)]
 pub struct TopSlowQueries {
@@ -18,7 +22,13 @@ impl TopSlowQueries {
 }
 
 impl Aggregator for TopSlowQueries {
-    fn update(&mut self, record: &[u8], _severity: &Severity, _fmt: &Format) {
+    fn update(
+        &mut self,
+        record: &[u8],
+        _fmt: &Format,
+        _severity: &Severity,
+        _log_time: DateTime<Local>,
+    ) {
         let Some(duration) = extract_duration(record) else {
             return;
         };

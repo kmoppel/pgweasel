@@ -201,7 +201,13 @@ fn filter_record(
         }
     }
 
-    aggragate_record(record, local_aggregators, &severity, &filters.format);
+    aggragate_record(
+        local_aggregators,
+        record,
+        &filters.format,
+        &severity,
+        log_time_local,
+    );
 
     if print {
         println!("{text}");
@@ -211,13 +217,14 @@ fn filter_record(
 
 #[inline]
 fn aggragate_record(
-    record: &[u8],
     local_aggregators: &mut Vec<Box<dyn Aggregator>>,
-    severity: &Severity,
+    record: &[u8],
     fmt: &Format,
+    severity: &Severity,
+    log_time: DateTime<Local>,
 ) {
     for aggregator in local_aggregators.iter_mut() {
-        aggregator.update(record, severity, fmt);
+        aggregator.update(record, fmt, severity, log_time);
     }
 }
 

@@ -1,4 +1,3 @@
-
 #[inline]
 pub fn message(record: &[u8]) -> Option<&[u8]> {
     let mut start = 0;

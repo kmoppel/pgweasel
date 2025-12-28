@@ -1,6 +1,8 @@
 use std::{any::Any, collections::HashMap};
 
-use crate::{aggregators::Aggregator, severity::Severity};
+use chrono::{DateTime, Local};
+
+use crate::{aggregators::Aggregator, format::Format, severity::Severity};
 
 #[derive(Clone, Default)]
 pub struct ErrorFrequencyAggregator {
@@ -17,9 +19,15 @@ impl ErrorFrequencyAggregator {
 }
 
 impl Aggregator for ErrorFrequencyAggregator {
-    fn update(&mut self, log_line: &[u8], _severity: &Severity, fmt: &crate::format::Format) {
+    fn update(
+        &mut self,
+        record: &[u8],
+        fmt: &Format,
+        _severity: &Severity,
+        _log_time: DateTime<Local>,
+    ) {
         // TODO: Handle the case where message extraction fails
-        let message = match fmt.message_from_bytes(log_line) {
+        let message = match fmt.message_from_bytes(record) {
             Some(msg) => msg,
             None => return,
         };
