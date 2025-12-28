@@ -37,5 +37,11 @@ mod test {
             Some(b"password authentication failed for user \"sitt\"".as_slice()),
             message(line)
         );
+
+        let line = b"2025-05-21 11:01:20 UTC-682db26c.535-LOG:  disconnection: session time: 0:00:20.034 user=azuresu database=azure_maintenance host=127.0.0.1 port=55304";
+        assert_eq!(
+            Some(b"disconnection: session time: 0:00:20.034 user=azuresu database=azure_maintenance host=127.0.0.1 port=55304".as_slice()),
+            message(line)
+        );
     }
 }

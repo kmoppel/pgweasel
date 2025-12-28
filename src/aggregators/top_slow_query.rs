@@ -3,7 +3,8 @@ use std::{any::Any, cmp::Reverse, collections::BinaryHeap, time::Duration};
 use chrono::{DateTime, Local};
 
 use crate::{
-    aggregators::Aggregator, duration::extract_duration, format::Format, severity::Severity,
+    aggregators::Aggregator, duration::extract_duration, error::Result, format::Format,
+    severity::Severity,
 };
 
 #[derive(Clone)]
@@ -28,14 +29,14 @@ impl Aggregator for TopSlowQueries {
         _fmt: &Format,
         _severity: &Severity,
         _log_time: DateTime<Local>,
-    ) {
+    ) -> Result<()> {
         let Some(duration) = extract_duration(record) else {
-            return;
+            return Ok(());
         };
 
         if self.heap.len() < self.limit {
             self.heap.push(Reverse((duration, record.to_vec())));
-            return;
+            return Ok(());
         }
 
         if let Some(Reverse((min, _))) = self.heap.peek()
@@ -43,7 +44,8 @@ impl Aggregator for TopSlowQueries {
         {
             self.heap.pop();
             self.heap.push(Reverse((duration, record.to_vec())));
-        }
+        };
+        Ok(())
     }
 
     fn merge_box(&mut self, other: &dyn Aggregator) {

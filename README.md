@@ -91,11 +91,11 @@ Here is a list of currently implemented commands
 
 ### system
 
-- [x] NEEDS TESTING `pgweasel system testdata/debian_default.log` Show lifecycle / Postgres internal events, i.e. autovacuum, replication, extensions, config changes etc
+- [x] `pgweasel system testdata/debian_default.log` Show lifecycle / Postgres internal events, i.e. autovacuum, replication, extensions, config changes etc
 
 ### connections
 
-- [ ] `pgweasel connections $LOG` Show connections counts by total, db, user, application name. Assumes log_connections enabled
+- [x] `pgweasel connections ./tests/files/azure_connections.log` Show connections counts by total, db, user, application name. Assumes log_connections enabled
 
 ### grep
 
@@ -105,7 +105,7 @@ For grep I would recommend using grep cli - ripgrep
 
 All kinds of feedback and help (PR-s, co-maintainer) would be much appreciated - especially as I'm not a developer per se. Hopefully pgweasel will grow into a community project with rock solid quality.
 
-When creating MR, make sure `cargo test` pass. 
+When creating MR, make sure `cargo test` and `cargo fmt --all -- --check` pass. 
 
 Have sample log files ?
 I've scraped the Postgres mailing archives for *.log attachements (in testdata folder), but they are not much sadly...so if you have some real-life logs from busy or somehow "troublesome" instances, not containing secrets - please add one one via PR or proide some S3 etc link under issues. Thank you!

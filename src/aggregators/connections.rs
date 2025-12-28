@@ -2,7 +2,7 @@ use std::{any::Any, collections::HashMap, time::Duration};
 
 use chrono::{DateTime, Local, TimeZone};
 
-use crate::{aggregators::Aggregator, format::Format, severity::Severity};
+use crate::{aggregators::Aggregator, error::Result, format::Format, severity::Severity};
 
 #[derive(Clone, Debug, Default)]
 pub struct ConnectionsAggregator {
@@ -42,21 +42,21 @@ impl Aggregator for ConnectionsAggregator {
         fmt: &Format,
         severity: &Severity,
         log_time: DateTime<Local>,
-    ) {
-        // TODO: Handle the case where message extraction fails
-        let message = match fmt.message_from_bytes(record) {
-            Some(msg) => msg,
-            None => return,
-        };
+    ) -> Result<()> {
+        let message =
+            fmt.message_from_bytes(record)
+                .ok_or(crate::Error::NotAbleToExtractMessage {
+                    record: String::from_utf8(record.to_vec()).unwrap(),
+                })?;
         if (severity == &Severity::Fatal)
             && memchr::memmem::find(record, b"password authentication failed").is_some()
         {
             self.connection_failures += 1;
-            return;
+            return Ok(());
         };
 
         if severity != &Severity::Log {
-            return;
+            return Ok(());
         }
 
         if message.starts_with(b"connection received:") {
@@ -74,6 +74,32 @@ impl Aggregator for ConnectionsAggregator {
                 .and_modify(|count| *count += 1)
                 .or_insert(1);
         }
+
+        if message.starts_with(b"connection authorized:") {
+            self.total_authenticated += 1;
+            if memchr::memmem::find(message, b"SSL enabled").is_some() {
+                self.total_authenticated_ssl += 1;
+            }
+
+            let user = fmt.user_from_bytes(record).unwrap_or(b"unknown");
+            self.connections_by_user
+                .entry(String::from_utf8_lossy(user).to_string())
+                .and_modify(|count| *count += 1)
+                .or_insert(1);
+
+            let db = fmt.db_from_bytes(record).unwrap_or(b"unknown");
+            self.connections_by_database
+                .entry(String::from_utf8_lossy(db).to_string())
+                .and_modify(|count| *count += 1)
+                .or_insert(1);
+
+            let appname = fmt.appname_from_bytes(record).unwrap_or(b"unknown");
+            self.connections_by_appname
+                .entry(String::from_utf8_lossy(appname).to_string())
+                .and_modify(|count| *count += 1)
+                .or_insert(1);
+        };
+        Ok(())
     }
 
     fn merge_box(&mut self, other: &dyn Aggregator) {
@@ -89,6 +115,21 @@ impl Aggregator for ConnectionsAggregator {
 
         for (host, count) in &other.connections_by_host {
             *self.connections_by_host.entry(host.clone()).or_insert(0) += count;
+        }
+
+        for (user, count) in &other.connections_by_user {
+            *self.connections_by_user.entry(user.clone()).or_insert(0) += count;
+        }
+
+        for (db, count) in &other.connections_by_database {
+            *self.connections_by_database.entry(db.clone()).or_insert(0) += count;
+        }
+
+        for (appname, count) in &other.connections_by_appname {
+            *self
+                .connections_by_appname
+                .entry(appname.clone())
+                .or_insert(0) += count;
         }
 
         for (bucket, count) in &other.connection_attempts_by_time_bucket {

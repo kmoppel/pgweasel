@@ -10,6 +10,11 @@ pub enum Error {
     #[from]
     Custom(String),
 
+    // -- Aggregators
+    NotAbleToExtractMessage {
+        record: String,
+    },
+
     // -- ConvertArgs
     FileDoesNotExist {
         path: PathBuf,

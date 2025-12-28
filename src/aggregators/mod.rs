@@ -9,7 +9,7 @@ pub use connections::ConnectionsAggregator;
 pub use error_frequency::ErrorFrequencyAggregator;
 pub use top_slow_query::TopSlowQueries;
 
-use crate::{format::Format, severity::Severity};
+use crate::{error::Result, format::Format, severity::Severity};
 
 pub trait Aggregator: Send + Sync {
     fn update(
@@ -18,7 +18,7 @@ pub trait Aggregator: Send + Sync {
         fmt: &Format,
         severity: &Severity,
         log_time: DateTime<Local>,
-    );
+    ) -> Result<()>;
     fn merge_box(&mut self, other: &dyn Aggregator);
     fn print(&mut self);
     fn boxed_clone(&self) -> Box<dyn Aggregator>;

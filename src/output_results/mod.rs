@@ -207,7 +207,7 @@ fn filter_record(
         &filters.format,
         &severity,
         log_time_local,
-    );
+    )?;
 
     if print {
         println!("{text}");
@@ -222,10 +222,11 @@ fn aggragate_record(
     fmt: &Format,
     severity: &Severity,
     log_time: DateTime<Local>,
-) {
+) -> Result<()> {
     for aggregator in local_aggregators.iter_mut() {
-        aggregator.update(record, fmt, severity, log_time);
+        aggregator.update(record, fmt, severity, log_time)?;
     }
+    Ok(())
 }
 
 #[inline]
@@ -237,5 +238,17 @@ fn is_record_start(line: &str) -> bool {
         && b[10] == b' '
         && b[13] == b':'
         && b[16] == b':'
-        && b[19] == b'.'
+        && (b[19] == b'.' || b[19] == b' ')
+}
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[test]
+    fn test_record_start() {
+        let line = "2025-05-21 11:01:20 UTC-682db26c.535-LOG:  disconnection: session time: 0:00:20.034 user=azuresu database=azure_maintenance host=127.0.0.1 port=55304";
+        assert!(is_record_start(line));
+    }
 }

@@ -2,7 +2,7 @@ use std::{any::Any, collections::HashMap};
 
 use chrono::{DateTime, Local};
 
-use crate::{aggregators::Aggregator, format::Format, severity::Severity};
+use crate::{aggregators::Aggregator, error::Result, format::Format, severity::Severity};
 
 #[derive(Clone, Default)]
 pub struct ErrorFrequencyAggregator {
@@ -25,15 +25,16 @@ impl Aggregator for ErrorFrequencyAggregator {
         fmt: &Format,
         _severity: &Severity,
         _log_time: DateTime<Local>,
-    ) {
-        // TODO: Handle the case where message extraction fails
-        let message = match fmt.message_from_bytes(record) {
-            Some(msg) => msg,
-            None => return,
-        };
+    ) -> Result<()> {
+        let message =
+            fmt.message_from_bytes(record)
+                .ok_or(crate::Error::NotAbleToExtractMessage {
+                    record: String::from_utf8(record.to_vec()).unwrap(),
+                })?;
         let message = String::from_utf8_lossy(message).to_string();
 
         *self.counts.entry(message).or_insert(0) += 1;
+        Ok(())
     }
 
     fn merge_box(&mut self, other: &dyn Aggregator) {

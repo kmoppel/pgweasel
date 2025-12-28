@@ -34,6 +34,16 @@ impl Format {
     pub fn host_from_bytes<'a>(&self, record: &'a [u8]) -> Option<&'a [u8]> {
         extract_after_needle(record, b"host=")
     }
+
+    pub fn user_from_bytes<'a>(&self, record: &'a [u8]) -> Option<&'a [u8]> {
+        extract_after_needle(record, b"user=")
+    }
+    pub fn db_from_bytes<'a>(&self, record: &'a [u8]) -> Option<&'a [u8]> {
+        extract_after_needle(record, b"database=")
+    }
+    pub fn appname_from_bytes<'a>(&self, record: &'a [u8]) -> Option<&'a [u8]> {
+        extract_after_needle(record, b"application_name=")
+    }
 }
 
 #[inline]
