@@ -67,10 +67,7 @@ pub fn output_results(
                                 .map(|p| next + p)
                                 .unwrap_or(bytes.len());
 
-                            let line =
-                                unsafe { std::str::from_utf8_unchecked(&bytes[next..line_end]) };
-
-                            if is_record_start(line) {
+                            if is_record_start(&bytes[next..line_end]) {
                                 break;
                             }
                         }
@@ -92,13 +89,11 @@ pub fn output_results(
                     aggregators.iter().map(|a| a.boxed_clone()).collect();
 
                 let slice = &bytes[range.clone()];
-                // TODO: iterate slice without converting to str and back to record bytes
-                let text = unsafe { std::str::from_utf8_unchecked(slice) };
 
                 let mut record_start = 0;
                 let mut offset = 0;
 
-                for line in text.lines() {
+                for line in slice.split(|&b| b == b'\n') {
                     let line_len = line.len() + 1; // include '\n'
 
                     if is_record_start(line) && offset != 0 {
@@ -114,11 +109,6 @@ pub fn output_results(
                     }
 
                     offset += line_len;
-                    // sometimes calculated offset is not at line end due to multibyte utf8 chars
-
-                    while (offset < slice.len()) && (&slice[offset - 1..offset] != b"\n") {
-                        offset += 1;
-                    }
                 }
 
                 // last record in chunk
@@ -230,15 +220,14 @@ fn aggragate_record(
 }
 
 #[inline]
-fn is_record_start(line: &str) -> bool {
-    let b = line.as_bytes();
-    b.len() >= 23
-        && b[4] == b'-'
-        && b[7] == b'-'
-        && b[10] == b' '
-        && b[13] == b':'
-        && b[16] == b':'
-        && (b[19] == b'.' || b[19] == b' ')
+fn is_record_start(record: &[u8]) -> bool {
+    record.len() >= 23
+        && record[4] == b'-'
+        && record[7] == b'-'
+        && record[10] == b' '
+        && record[13] == b':'
+        && record[16] == b':'
+        && (record[19] == b'.' || record[19] == b' ')
 }
 
 #[cfg(test)]
@@ -248,7 +237,7 @@ mod test {
 
     #[test]
     fn test_record_start() {
-        let line = "2025-05-21 11:01:20 UTC-682db26c.535-LOG:  disconnection: session time: 0:00:20.034 user=azuresu database=azure_maintenance host=127.0.0.1 port=55304";
+        let line = b"2025-05-21 11:01:20 UTC-682db26c.535-LOG:  disconnection: session time: 0:00:20.034 user=azuresu database=azure_maintenance host=127.0.0.1 port=55304";
         assert!(is_record_start(line));
     }
 }
