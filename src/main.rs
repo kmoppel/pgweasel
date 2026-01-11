@@ -29,6 +29,13 @@
 // Uncomment the following line to enable all clippy lints & pedantic mode
 // #![warn(clippy::all, clippy::pedantic)]
 
+// TODO: make sure no unwrap/expect/panic are not used in the code
+// #![deny(
+//     clippy::unwrap_used,
+    // clippy::expect_used,
+    // clippy::panic
+// )]
+
 use std::time::Duration;
 
 use humantime::parse_duration;
