@@ -18,7 +18,7 @@ pub trait Aggregator: Send + Sync {
         &mut self,
         record: &[u8],
         fmt: &Format,
-        severity: &Severity,
+        severity: Severity,
         log_time: DateTime<Local>,
     ) -> Result<()>;
     fn merge_box(&mut self, other: &dyn Aggregator);

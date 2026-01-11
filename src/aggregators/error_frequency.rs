@@ -23,7 +23,7 @@ impl Aggregator for ErrorFrequencyAggregator {
         &mut self,
         record: &[u8],
         fmt: &Format,
-        _severity: &Severity,
+        _severity: Severity,
         _log_time: DateTime<Local>,
     ) -> Result<()> {
         let message =
@@ -56,7 +56,7 @@ impl Aggregator for ErrorFrequencyAggregator {
 
         println!("Most frequent error messages:");
         for (msg, count) in entries {
-            println!("{:>6}  {}", count, msg);
+            println!("{count:>6}  {msg}");
         }
     }
 

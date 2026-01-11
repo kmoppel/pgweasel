@@ -16,7 +16,7 @@ use crate::Result;
 
 pub fn output_results(
     converted_args: ConvertedArgs,
-    min_severity: &Severity,
+    min_severity: Severity,
     aggregators: &mut Vec<Box<dyn Aggregator>>,
     filters: &Vec<Box<dyn Filter>>,
 ) -> Result<()> {
@@ -50,7 +50,7 @@ pub fn output_results(
         if let Some(mask) = &converted_args.mask {
             let mask_filter = Box::new(FilterContains::new(mask.clone()));
             filter_container.filters.push(mask_filter);
-        };
+        }
 
         while start < bytes.len() {
             let mut end = (start + chunk_size).min(bytes.len());
@@ -64,8 +64,7 @@ pub fn output_results(
                             let line_end = bytes[next..]
                                 .iter()
                                 .position(|&b| (b == b'\n') && (b == b'\r'))
-                                .map(|p| next + p)
-                                .unwrap_or(bytes.len());
+                                .map_or(bytes.len(), |p| next + p);
 
                             if is_record_start(&bytes[next..line_end]) {
                                 break;
@@ -119,7 +118,7 @@ pub fn output_results(
                         &mut local_aggregators,
                         converted_args.print_details,
                     )?;
-                };
+                }
                 Ok(local_aggregators)
             })
             .collect();
@@ -164,10 +163,10 @@ fn filter_record(
     // Next code is not written as filters to avoid multiple string parsing and degradation of performance
     let text = unsafe { std::str::from_utf8_unchecked(record) };
     let severity = filters.format.severity_from_string(text);
-    let level: i32 = (&severity).into();
+    let level: i32 = severity.into();
     if level < filters.min_severity {
         return Ok(());
-    };
+    }
 
     let mut parts = text.split_whitespace();
     let ts_str = format!(
@@ -195,7 +194,7 @@ fn filter_record(
         local_aggregators,
         record,
         &filters.format,
-        &severity,
+        severity,
         log_time_local,
     )?;
 
@@ -210,7 +209,7 @@ fn aggragate_record(
     local_aggregators: &mut Vec<Box<dyn Aggregator>>,
     record: &[u8],
     fmt: &Format,
-    severity: &Severity,
+    severity: Severity,
     log_time: DateTime<Local>,
 ) -> Result<()> {
     for aggregator in local_aggregators.iter_mut() {

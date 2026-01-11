@@ -27,7 +27,7 @@ impl Aggregator for TopSlowQueries {
         &mut self,
         record: &[u8],
         _fmt: &Format,
-        _severity: &Severity,
+        _severity: Severity,
         _log_time: DateTime<Local>,
     ) -> Result<()> {
         let Some(duration) = extract_duration(record) else {
@@ -44,7 +44,7 @@ impl Aggregator for TopSlowQueries {
         {
             self.heap.pop();
             self.heap.push(Reverse((duration, record.to_vec())));
-        };
+        }
         Ok(())
     }
 
@@ -72,7 +72,7 @@ impl Aggregator for TopSlowQueries {
 
         println!("Top {} slowest queries:", items.len());
         for Reverse((duration, record)) in items.into_iter().rev() {
-            println!("--- {:?} ---", duration);
+            println!("--- {duration:?} ---");
             println!("{}", unsafe { std::str::from_utf8_unchecked(&record) });
         }
     }

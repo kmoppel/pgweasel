@@ -18,11 +18,11 @@ impl ErrorHistogramAggregator {
         }
     }
 
-    fn bucket(&self, log_time: DateTime<Local>) -> i64 {
+    fn bucket(&self, log_time: DateTime<Local>) -> Result<i64> {
         let ts = log_time.timestamp();
-        let width = self.bucket_width.as_secs() as i64;
+        let width: i64 = self.bucket_width.as_secs().try_into().map_err(|_| crate::error::Error::TimestampBeforeEpoch { timestamp: log_time.to_rfc2822() })?;
 
-        (ts / width) * width
+        Ok((ts / width) * width)
     }
 }
 
@@ -31,10 +31,10 @@ impl Aggregator for ErrorHistogramAggregator {
         &mut self,
         _record: &[u8],
         _fmt: &Format,
-        _severity: &Severity,
+        _severity: Severity,
         log_time: DateTime<Local>,
     ) -> Result<()> {
-        let bucket = self.bucket(log_time);
+        let bucket = self.bucket(log_time)?;
         *self.buckets.entry(bucket).or_insert(0) += 1;
 
         Ok(())

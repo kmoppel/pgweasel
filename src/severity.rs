@@ -20,40 +20,40 @@ impl Severity {
     pub fn from_csv_string(str: &str) -> Self {
         if str.contains(",LOG,") {
             return Severity::Log;
-        };
+        }
         if str.contains(",ERROR,") {
             return Severity::Error;
-        };
+        }
         if str.contains(",INFO,") {
             return Severity::Info;
-        };
+        }
         if str.contains(",NOTICE,") {
             return Severity::Notice;
-        };
+        }
         if str.contains(",WARNING,") {
             return Severity::Warning;
-        };
+        }
         if str.contains(",DEBUG5,") {
             return Severity::Debug5;
-        };
+        }
         if str.contains(",DEBUG4,") {
             return Severity::Debug4;
-        };
+        }
         if str.contains(",DEBUG3,") {
             return Severity::Debug3;
-        };
+        }
         if str.contains(",DEBUG2,") {
             return Severity::Debug2;
-        };
+        }
         if str.contains(",DEBUG1,") {
             return Severity::Debug1;
-        };
+        }
         if str.contains(",FATAL,") {
             return Severity::Fatal;
-        };
+        }
         if str.contains(",PANIC,") {
             return Severity::Panic;
-        };
+        }
         Severity::Log
     }
 }
@@ -62,40 +62,40 @@ impl Severity {
     pub fn from_log_string(str: &str) -> Self {
         if str.contains("LOG:") {
             return Severity::Log;
-        };
+        }
         if str.contains("ERROR:") {
             return Severity::Error;
-        };
+        }
         if str.contains("INFO:") {
             return Severity::Info;
-        };
+        }
         if str.contains("NOTICE:") {
             return Severity::Notice;
-        };
+        }
         if str.contains("WARNING:") {
             return Severity::Warning;
-        };
+        }
         if str.contains("DEBUG5:") {
             return Severity::Debug5;
-        };
+        }
         if str.contains("DEBUG4:") {
             return Severity::Debug4;
-        };
+        }
         if str.contains("DEBUG3:") {
             return Severity::Debug3;
-        };
+        }
         if str.contains("DEBUG2:") {
             return Severity::Debug2;
-        };
+        }
         if str.contains("DEBUG1:") {
             return Severity::Debug1;
-        };
+        }
         if str.contains("FATAL:") {
             return Severity::Fatal;
-        };
+        }
         if str.contains("PANIC:") {
             return Severity::Panic;
-        };
+        }
         Severity::Log
     }
 }
@@ -158,21 +158,19 @@ impl std::str::FromStr for Severity {
     }
 }
 
-impl From<&Severity> for i32 {
-    fn from(val: &Severity) -> Self {
+impl From<Severity> for i32 {
+    fn from(val: Severity) -> Self {
         match val {
-            Severity::Debug5 => 0,
             Severity::Debug4 => 1,
             Severity::Debug3 => 2,
             Severity::Debug2 => 3,
             Severity::Debug1 => 4,
-            Severity::Log => 5,
-            Severity::Info => 5,
+            Severity::Log | Severity::Info => 5,
             Severity::Notice => 6,
             Severity::Warning => 7,
             Severity::Error => 8,
             Severity::Fatal => 9,
-            Severity::Panic => 0,
+            Severity::Debug5 | Severity::Panic => 0,
         }
     }
 }
@@ -187,7 +185,6 @@ impl From<String> for Severity {
             "DEBUG2" => Severity::Debug2,
             "DEBUG1" => Severity::Debug1,
             "LOG" => Severity::Log,
-            "INFO" => Severity::Info,
             "NOTICE" => Severity::Notice,
             "WARNING" => Severity::Warning,
             "ERROR" => Severity::Error,

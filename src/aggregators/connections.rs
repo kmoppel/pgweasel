@@ -40,7 +40,7 @@ impl Aggregator for ConnectionsAggregator {
         &mut self,
         record: &[u8],
         fmt: &Format,
-        severity: &Severity,
+        severity: Severity,
         log_time: DateTime<Local>,
     ) -> Result<()> {
         let message =
@@ -48,26 +48,26 @@ impl Aggregator for ConnectionsAggregator {
                 .ok_or(crate::Error::NotAbleToExtractMessage {
                     record: String::from_utf8(record.to_vec()).unwrap(),
                 })?;
-        if (severity == &Severity::Fatal)
+        if (severity == Severity::Fatal)
             && memchr::memmem::find(record, b"password authentication failed").is_some()
         {
             self.connection_failures += 1;
             return Ok(());
-        };
+        }
 
-        if severity != &Severity::Log {
+        if severity != Severity::Log {
             return Ok(());
         }
 
         if message.starts_with(b"connection received:") {
             self.total_connection_attempts += 1;
-            let host = fmt.host_from_bytes(record).unwrap_or(b"unknown");
+            let host = Format::host_from_bytes(record).unwrap_or(b"unknown");
             self.connections_by_host
                 .entry(String::from_utf8_lossy(host).to_string())
                 .and_modify(|count| *count += 1)
                 .or_insert(1);
 
-            let bucket_time = round_floor(log_time, self.bucket_interval);
+            let bucket_time = round_floor(log_time, self.bucket_interval)?;
             let bucket_time_str = bucket_time.to_string();
             self.connection_attempts_by_time_bucket
                 .entry(bucket_time_str)
@@ -81,24 +81,24 @@ impl Aggregator for ConnectionsAggregator {
                 self.total_authenticated_ssl += 1;
             }
 
-            let user = fmt.user_from_bytes(record).unwrap_or(b"unknown");
+            let user = Format::user_from_bytes(record).unwrap_or(b"unknown");
             self.connections_by_user
                 .entry(String::from_utf8_lossy(user).to_string())
                 .and_modify(|count| *count += 1)
                 .or_insert(1);
 
-            let db = fmt.db_from_bytes(record).unwrap_or(b"unknown");
+            let db = Format::db_from_bytes(record).unwrap_or(b"unknown");
             self.connections_by_database
                 .entry(String::from_utf8_lossy(db).to_string())
                 .and_modify(|count| *count += 1)
                 .or_insert(1);
 
-            let appname = fmt.appname_from_bytes(record).unwrap_or(b"unknown");
+            let appname = Format::appname_from_bytes(record).unwrap_or(b"unknown");
             self.connections_by_appname
                 .entry(String::from_utf8_lossy(appname).to_string())
                 .and_modify(|count| *count += 1)
                 .or_insert(1);
-        };
+        }
         Ok(())
     }
 
@@ -156,23 +156,23 @@ impl Aggregator for ConnectionsAggregator {
         println!("Total connection failures: {}", self.connection_failures);
         println!("Connections by host:");
         for (host, count) in &self.connections_by_host {
-            println!("  {:>6}  {}", count, host);
+            println!("  {count:>6}  {host}");
         }
         println!("Connections by database:");
         for (db, count) in &self.connections_by_database {
-            println!("  {:>6}  {}", count, db);
+            println!("  {count:>6}  {db}");
         }
         println!("Connections by user:");
         for (user, count) in &self.connections_by_user {
-            println!("  {:>6}  {}", count, user);
+            println!("  {count:>6}  {user}");
         }
         println!("Connections by application name:");
         for (appname, count) in &self.connections_by_appname {
-            println!("  {:>6}  {}", count, appname);
+            println!("  {count:>6}  {appname}");
         }
         println!("Connections by time bucket:");
         for (appname, count) in &self.connection_attempts_by_time_bucket {
-            println!("  {:>6}  {}", count, appname);
+            println!("  {count:>6}  {appname}");
         }
     }
 
@@ -185,27 +185,42 @@ impl Aggregator for ConnectionsAggregator {
     }
 }
 
-fn duration_to_nanos(d: Duration) -> i128 {
-    d.as_secs() as i128 * 1_000_000_000 + d.subsec_nanos() as i128
+fn local_datetime_to_u128(dt: DateTime<Local>) -> Result<u128> {
+    let ts = dt.timestamp();
+    ts.try_into()
+        .map_err(|_| crate::Error::TimestampBeforeEpoch {
+            timestamp: dt.to_string(),
+        })
 }
 
-fn datetime_to_nanos(dt: DateTime<Local>) -> i128 {
-    dt.timestamp() as i128 * 1_000_000_000 + dt.timestamp_subsec_nanos() as i128
+fn duration_to_nanos(d: Duration) -> u128 {
+    u128::from(d.as_secs()) * 1_000_000_000 + u128::from(d.subsec_nanos())
 }
 
-fn nanos_to_datetime(nanos: i128) -> DateTime<Local> {
+fn datetime_to_nanos(dt: DateTime<Local>) -> Result<u128> {
+    let ts = local_datetime_to_u128(dt)?;
+    Ok(ts as u128 * 1_000_000_000 + u128::from(dt.timestamp_subsec_nanos()))
+}
+
+fn nanos_to_datetime(nanos: u128) -> Result<DateTime<Local>> {
     let secs = nanos / 1_000_000_000;
     let nsecs = (nanos % 1_000_000_000) as u32;
 
-    Local
-        .timestamp_opt(secs as i64, nsecs)
+    Ok(Local
+        .timestamp_opt(
+            secs.try_into()
+                .map_err(|_| crate::Error::TimestampBeforeEpoch {
+                    timestamp: format!("nanos: {nanos}"),
+                })?,
+            nsecs,
+        )
         .single()
-        .expect("valid timestamp")
+        .expect("valid timestamp"))
 }
 
-pub fn round_floor(dt: DateTime<Local>, interval: Duration) -> DateTime<Local> {
+pub fn round_floor(dt: DateTime<Local>, interval: Duration) -> Result<DateTime<Local>> {
     let i = duration_to_nanos(interval);
-    let t = datetime_to_nanos(dt);
+    let t = datetime_to_nanos(dt)?;
 
     nanos_to_datetime(t - (t % i))
 }

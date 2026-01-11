@@ -13,8 +13,7 @@ pub fn message(record: &[u8]) -> Option<&[u8]> {
             let end = record[start..]
                 .iter()
                 .position(|&b| b == b'\n')
-                .map(|p| start + p)
-                .unwrap_or(record.len());
+                .map_or(record.len(), |p| start + p);
 
             return Some(&record[start..end]);
         }

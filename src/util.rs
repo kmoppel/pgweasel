@@ -12,8 +12,8 @@ pub enum TimeParseError {
 impl fmt::Display for TimeParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            TimeParseError::InvalidFormat(msg) => write!(f, "Invalid format: {}", msg),
-            TimeParseError::ParseError(msg) => write!(f, "Parse error: {}", msg),
+            TimeParseError::InvalidFormat(msg) => write!(f, "Invalid format: {msg}"),
+            TimeParseError::ParseError(msg) => write!(f, "Parse error: {msg}"),
         }
     }
 }
@@ -21,10 +21,10 @@ impl fmt::Display for TimeParseError {
 impl Error for TimeParseError {}
 
 /// Parses time interval input like "10min" or full timestamp strings in common formats,
-/// and returns a DateTime struct or an error.
+/// and returns a ``DateTime`` struct or an error.
 ///
 /// Supports:
-/// - Time intervals: "10min", "2h", "30s", "1d" (relative to reference_time)
+/// - Time intervals: "10min", "2h", "30s", "1d" (relative to ``reference_time``)
 /// - Special keywords: "today"
 /// - ISO timestamps: "2025-09-19 15:30:00", "2025-09-19T15:30:00Z"
 /// - Date only: "2025-09-19" (uses local timezone)
@@ -63,8 +63,7 @@ pub fn time_or_interval_string_to_time(
     }
 
     Err(TimeParseError::InvalidFormat(format!(
-        "Unsupported time delta / timestamp format: {}",
-        human_input
+        "Unsupported time delta / timestamp format: {human_input}",
     )))
 }
 
@@ -79,7 +78,7 @@ fn parse_time_interval(
     if let Some(captures) = duration_regex.captures(input) {
         let value: i64 = captures[1]
             .parse()
-            .map_err(|e| TimeParseError::ParseError(format!("Invalid interval value: {}", e)))?;
+            .map_err(|e| TimeParseError::ParseError(format!("Invalid interval value: {e}")))?;
         let unit = &captures[2];
 
         let duration = match unit {
@@ -92,8 +91,7 @@ fn parse_time_interval(
             "d" | "day" | "days" => chrono::Duration::hours(value * 24),
             _ => {
                 return Err(TimeParseError::InvalidFormat(format!(
-                    "Unknown unit: {}",
-                    unit
+                    "Unknown unit: {unit}"
                 )));
             }
         };
@@ -110,8 +108,7 @@ fn parse_time_interval(
     }
 
     Err(TimeParseError::InvalidFormat(format!(
-        "Not a valid time interval: {}",
-        input
+        "Not a valid time interval: {input}"
     )))
 }
 
@@ -167,8 +164,7 @@ fn parse_timestamp(
     }
 
     Err(TimeParseError::ParseError(format!(
-        "Unable to parse timestamp: {}",
-        input
+        "Unable to parse timestamp: {input}",
     )))
 }
 
@@ -185,14 +181,14 @@ pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, Strin
     ];
 
     // Try parsing with timezone first
-    for format in formats.iter() {
+    for format in &formats {
         if let Ok(dt) = DateTime::parse_from_str(input, format) {
             return Ok(dt.with_timezone(&Local));
         }
     }
 
     // Try parsing as naive datetime and convert to local
-    for format in formats.iter() {
+    for format in &formats {
         if let Ok(naive_dt) = NaiveDateTime::parse_from_str(input, format)
             && let Some(local_dt) = Local.from_local_datetime(&naive_dt).single()
         {
@@ -200,7 +196,7 @@ pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, Strin
         }
     }
 
-    Err(format!("Unable to parse timestamp: '{}'", input))
+    Err(format!("Unable to parse timestamp: '{input}'"))
 }
 
 #[allow(dead_code)]
@@ -325,18 +321,13 @@ mod tests {
             let (has_timestamp, extracted_time) = line_has_timestamp_prefix(test_case);
             assert!(
                 has_timestamp,
-                "Expected timestamp to be found in: {}",
-                test_case
+                "Expected timestamp to be found in: {test_case}",
             );
             assert!(
                 extracted_time.is_some(),
-                "Expected extracted time to be Some for: {}",
-                test_case
+                "Expected extracted time to be Some for: {test_case}"
             );
-            println!(
-                "✓ Found timestamp in: {} -> {:?}",
-                test_case, extracted_time
-            );
+            println!("✓ Found timestamp in: {test_case} -> {extracted_time:?}");
         }
 
         // Test lines that should NOT match
@@ -348,13 +339,12 @@ mod tests {
 
         for test_case in negative_test_cases {
             let (has_timestamp, extracted_time) = line_has_timestamp_prefix(test_case);
-            assert!(!has_timestamp, "Expected no timestamp in: {}", test_case);
+            assert!(!has_timestamp, "Expected no timestamp in: {test_case}");
             assert!(
                 extracted_time.is_none(),
-                "Expected extracted time to be None for: {}",
-                test_case
+                "Expected extracted time to be None for: {test_case}"
             );
-            println!("✓ Correctly identified no timestamp in: {}", test_case);
+            println!("✓ Correctly identified no timestamp in: {test_case}");
         }
     }
 

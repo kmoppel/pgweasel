@@ -46,7 +46,9 @@ impl ConvertedArgs {
             None
         };
 
-        let mask = val.get_one::<String>("mask").map(|s| s.to_owned());
+        let mask = val
+            .get_one::<String>("mask")
+            .map(std::borrow::ToOwned::to_owned);
 
         // Initialize logger based on verbose flag
         let mut verbose = false;
@@ -79,7 +81,7 @@ impl ConvertedArgs {
                 .into_iter()
                 .flatten()
                 .collect::<Vec<_>>();
-            let file_list_to_add = self.expand_paths_helper(paths)?;
+            let file_list_to_add = ConvertedArgs::expand_paths_helper(paths)?;
             self.file_list.extend(file_list_to_add);
             if let Some((_, sub_sub_matches)) = sub_matches.subcommand() {
                 let paths = sub_sub_matches
@@ -87,7 +89,7 @@ impl ConvertedArgs {
                     .into_iter()
                     .flatten()
                     .collect::<Vec<_>>();
-                let file_list_to_add = self.expand_paths_helper(paths)?;
+                let file_list_to_add = ConvertedArgs::expand_paths_helper(paths)?;
                 self.file_list.extend(file_list_to_add);
             }
         }
@@ -95,13 +97,13 @@ impl ConvertedArgs {
         Ok(self)
     }
 
-    fn expand_paths_helper(&self, path: Vec<&PathBuf>) -> Result<Vec<PathBuf>> {
+    fn expand_paths_helper(path: Vec<&PathBuf>) -> Result<Vec<PathBuf>> {
         let mut result: Vec<PathBuf> = vec![];
         for p in path {
             if p.is_file() {
-                result.push(p.to_path_buf());
+                result.push(p.clone());
             } else if p.is_dir() {
-                debug!("Expanding directory: {:?}", p);
+                debug!("Expanding directory: {}", p.display());
                 for entry in fs::read_dir(p)? {
                     let entry = entry?;
                     let path = entry.path();
@@ -127,7 +129,7 @@ impl ConvertedArgs {
                         file: File::open(path)?,
                         path: path.clone(),
                     };
-                    self.files.push(file_with_path)
+                    self.files.push(file_with_path);
                 }
                 None => {}
             }

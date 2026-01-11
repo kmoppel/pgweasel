@@ -15,6 +15,11 @@ pub enum Error {
         record: String,
     },
 
+    // -- Connections
+    TimestampBeforeEpoch {
+        timestamp: String,
+    },
+
     // -- ConvertArgs
     FileDoesNotExist {
         path: PathBuf,

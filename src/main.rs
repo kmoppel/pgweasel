@@ -1,13 +1,13 @@
 //! # pgweasel
 //!
-//! A simple CLI usage oriented PostgreSQL log parser, to complement pgBadger.
+//! A simple CLI usage oriented ``PostgreSQL`` log parser, to complement pgBadger.
 //!
 //! pgweasel tries to:
 //!  - be an order of magnitude faster than pgBadger
 //!  - way simpler, with less flags, operating rather via commands and sub-commands
 //!  - focus on CLI interactions only - no html / json
 //!  - more cloud-friendly - no deps, a single binary
-//!  - zero config - not dependent on Postgres log_line_prefix
+//!  - zero config - not dependent on Postgres ``log_line_prefix``
 //!  - be more user-friendly - handle relative time inputs, auto-detect log files, subcommand aliases
 //!
 //! # Features
@@ -15,7 +15,7 @@
 //!  - errors
 //!    - [x] list
 //!    - [x] top
-//!    - [ ] histogram
+//!    - [x] histogram
 //!  - [x] locks
 //!  - [ ] peaks
 //!  - [x] slow
@@ -25,6 +25,9 @@
 //!  - [ ] stats
 //!  - [x] system
 //!  - [ ] connections
+
+// Uncomment the following line to enable all clippy lints & pedantic mode
+// #![warn(clippy::all, clippy::pedantic)]
 
 use std::time::Duration;
 
@@ -72,7 +75,7 @@ fn main() -> Result<()> {
                 ("list", list_subcommand) => {
                     output_results(
                         converted_args,
-                        list_subcommand
+                        *list_subcommand
                             .get_one::<Severity>("level")
                             .unwrap_or(&Severity::Error),
                         &mut aggregators,
@@ -84,7 +87,7 @@ fn main() -> Result<()> {
                     converted_args.print_details = false;
                     output_results(
                         converted_args,
-                        top_subcommand
+                        *top_subcommand
                             .get_one::<Severity>("level")
                             .unwrap_or(&Severity::Error),
                         &mut aggregators,
@@ -105,10 +108,10 @@ fn main() -> Result<()> {
                             .get_one::<Severity>("level")
                             .unwrap_or(&Severity::Error)
                     );
-                    debug!("Histogram interval: {:?}", interval);
+                    debug!("Histogram interval: {interval:?}");
                     output_results(
                         converted_args,
-                        hist_subcommand
+                        *hist_subcommand
                             .get_one::<Severity>("level")
                             .unwrap_or(&Severity::Error),
                         &mut aggregators,
@@ -116,44 +119,41 @@ fn main() -> Result<()> {
                     )?;
                 }
                 (name, _) => {
-                    error!("Unsupported subcommand `{name}`")
+                    error!("Unsupported subcommand `{name}`");
                 }
             }
         }
         Some(("locks", _)) => {
             filters.push(Box::new(crate::filters::LockingFilter::new()));
-            output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
+            output_results(converted_args, Severity::Log, &mut aggregators, &filters)?;
         }
         Some(("system", _)) => {
             filters.push(Box::new(crate::filters::SystemFilter::new()));
-            output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
+            output_results(converted_args, Severity::Log, &mut aggregators, &filters)?;
         }
         Some(("connections", _)) => {
             aggregators.push(Box::new(ConnectionsAggregator::new()));
             converted_args.print_details = false;
-            output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
+            output_results(converted_args, Severity::Log, &mut aggregators, &filters)?;
         }
-        Some(("peaks", _)) => {
-            error!("Not implemented")
+        Some(("peaks" | "stats", _)) => {
+            error!("Not implemented");
         }
         Some(("slow", sub_matches)) => {
             if let Some(("top", _)) = sub_matches.subcommand() {
                 debug!("Using TopSlowQueryAggregator");
                 aggregators.push(Box::new(TopSlowQueries::new(10)));
                 converted_args.print_details = false;
-                output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
+                output_results(converted_args, Severity::Log, &mut aggregators, &filters)?;
             } else {
                 let mut treshold = Duration::from_secs(3);
                 if let Some(treshold_str) = sub_matches.get_one::<String>("TRESHOLD") {
                     treshold = parse_duration(treshold_str)?;
                 }
                 filters.push(Box::new(FilterSlow::new(treshold)));
-                debug!("Using FilterSlow with treshold {:?}", treshold);
-                output_results(converted_args, &Severity::Log, &mut aggregators, &filters)?;
+                debug!("Using FilterSlow with treshold {treshold:?}");
+                output_results(converted_args, Severity::Log, &mut aggregators, &filters)?;
             }
-        }
-        Some(("stats", _)) => {
-            error!("Not implemented")
         }
         _ => error!("command not found"),
     }

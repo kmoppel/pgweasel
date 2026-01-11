@@ -10,7 +10,10 @@ pub enum Format {
 
 impl Format {
     pub fn from_file_extension(file_name: &str) -> Self {
-        if file_name.ends_with(".csv") {
+        if std::path::Path::new(file_name)
+            .extension()
+            .is_some_and(|ext| ext.eq_ignore_ascii_case("csv"))
+        {
             Format::Csv
         } else {
             Format::Plain
@@ -31,17 +34,17 @@ impl Format {
         }
     }
 
-    pub fn host_from_bytes<'a>(&self, record: &'a [u8]) -> Option<&'a [u8]> {
+    pub fn host_from_bytes(record: &[u8]) -> Option<&[u8]> {
         extract_after_needle(record, b"host=")
     }
 
-    pub fn user_from_bytes<'a>(&self, record: &'a [u8]) -> Option<&'a [u8]> {
+    pub fn user_from_bytes(record: &[u8]) -> Option<&[u8]> {
         extract_after_needle(record, b"user=")
     }
-    pub fn db_from_bytes<'a>(&self, record: &'a [u8]) -> Option<&'a [u8]> {
+    pub fn db_from_bytes(record: &[u8]) -> Option<&[u8]> {
         extract_after_needle(record, b"database=")
     }
-    pub fn appname_from_bytes<'a>(&self, record: &'a [u8]) -> Option<&'a [u8]> {
+    pub fn appname_from_bytes(record: &[u8]) -> Option<&[u8]> {
         extract_after_needle(record, b"application_name=")
     }
 }
