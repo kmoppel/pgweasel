@@ -23,6 +23,7 @@ pub enum Error {
         input: String,
         source: crate::util::TimeParseError,
     },
+    FailedToExtractStemFromPath,
 
     // -- Parsers
     JsonNotYetImplemented,

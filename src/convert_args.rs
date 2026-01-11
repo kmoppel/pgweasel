@@ -141,7 +141,11 @@ fn extract_gz(src: &Path, temp_dir: &Path) -> Result<FileWithPath> {
     let file = fs::File::open(src)?;
     let mut decoder = GzDecoder::new(file);
 
-    let filename = src.file_stem().unwrap().to_string_lossy().to_string();
+    let filename = src
+        .file_stem()
+        .ok_or(Error::FailedToExtractStemFromPath)?
+        .to_string_lossy()
+        .to_string();
     let out_path = temp_dir.join(filename);
 
     let mut out_file = fs::File::create(&out_path)?;
