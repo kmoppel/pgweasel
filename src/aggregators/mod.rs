@@ -1,5 +1,6 @@
 mod connections;
 mod error_frequency;
+mod error_histogram;
 mod top_slow_query;
 
 use std::any::Any;
@@ -7,6 +8,7 @@ use std::any::Any;
 use chrono::{DateTime, Local};
 pub use connections::ConnectionsAggregator;
 pub use error_frequency::ErrorFrequencyAggregator;
+pub use error_histogram::ErrorHistogramAggregator;
 pub use top_slow_query::TopSlowQueries;
 
 use crate::{error::Result, format::Format, severity::Severity};

@@ -120,18 +120,18 @@ impl ValueEnum for Severity {
 
     fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
         Some(match self {
-            Severity::Debug5 => PossibleValue::new("DEBUG5").help(""),
-            Severity::Debug4 => PossibleValue::new("DEBUG4").help(""),
-            Severity::Debug3 => PossibleValue::new("DEBUG3").help(""),
-            Severity::Debug2 => PossibleValue::new("DEBUG2").help(""),
-            Severity::Debug1 => PossibleValue::new("DEBUG1").help(""),
-            Severity::Log => PossibleValue::new("LOG").help(""),
-            Severity::Info => PossibleValue::new("INFO").help(""),
-            Severity::Notice => PossibleValue::new("NOTICE").help(""),
-            Severity::Warning => PossibleValue::new("WARNING").help(""),
-            Severity::Error => PossibleValue::new("ERROR").help(""),
-            Severity::Fatal => PossibleValue::new("FATAL").help(""),
-            Severity::Panic => PossibleValue::new("PANIC").help(""),
+            Severity::Debug5 => PossibleValue::new("debug5").help(""),
+            Severity::Debug4 => PossibleValue::new("debug4").help(""),
+            Severity::Debug3 => PossibleValue::new("debug3").help(""),
+            Severity::Debug2 => PossibleValue::new("debug2").help(""),
+            Severity::Debug1 => PossibleValue::new("debug1").help(""),
+            Severity::Log => PossibleValue::new("log").help(""),
+            Severity::Info => PossibleValue::new("info").help(""),
+            Severity::Notice => PossibleValue::new("notice").help(""),
+            Severity::Warning => PossibleValue::new("warning").help(""),
+            Severity::Error => PossibleValue::new("error").help(""),
+            Severity::Fatal => PossibleValue::new("fatal").help(""),
+            Severity::Panic => PossibleValue::new("panic").help(""),
         })
     }
 }

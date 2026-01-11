@@ -55,9 +55,9 @@ Here is a list of currently implemented commands
 
 - [x] `pgweasel errors --begin 10m $LOG(s)` - Show entries from last 10min
 
-- [x] `pgweasel errors -l ERROR $LOG(s)` - Show ERROR+ entries
+- [x] `pgweasel errors -l error $LOG(s)` - Show ERROR+ entries
 
-- [x] `pgweasel error top top ./tests/files/debian_default2.log` - Show top LOG message count
+- [x] `pgweasel error top ./tests/files/debian_default2.log` - Show top LOG message count
 
 - [x] `pgweasel -t "2025-05-21 13:00:00" errors -l LOG testdata/csvlog_pg14.csv` - Show LOG entries with timestamp begining with '2025-05-21 13:00:00'
 
@@ -65,9 +65,9 @@ Here is a list of currently implemented commands
 
 - [x] `pgweasel errors --debug $LOG(s)` - Show LOG entries with debug info including execution time.
 
-- [ ] `pgweasel errors --histo $LOG` - Show a basic vertical histogram of error counts. Default --bucket=1h
+- [x] `pgweasel errors hist $LOG` - Show a basic vertical histogram of error counts. Default --bucket=1h
 
-- [ ] `pgweasel errors --histo -l debug5 $LOG` - Show a histogram for all events, not only errors
+- [x] `pgweasel errors hist -b 3m -l debug5 $LOG` - Show a histogram for all events, not only errors, using --bucket=3m
 
 ### locks
 
@@ -103,7 +103,7 @@ For grep I would recommend using grep cli - ripgrep
 
 ## Contributing
 
-All kinds of feedback and help (PR-s, co-maintainer) would be much appreciated - especially as I'm not a developer per se. Hopefully pgweasel will grow into a community project with rock solid quality.
+All kinds of feedback and help (PR-s, co-maintainer) would be much appreciated. Hopefully pgweasel will grow into a community project with rock solid quality.
 
 When creating MR, make sure `cargo test` and `cargo fmt --all -- --check` pass. 
 

@@ -32,7 +32,10 @@ use humantime::parse_duration;
 use log::{debug, error};
 
 use crate::{
-    aggregators::{Aggregator, ConnectionsAggregator, ErrorFrequencyAggregator, TopSlowQueries},
+    aggregators::{
+        Aggregator, ConnectionsAggregator, ErrorFrequencyAggregator, ErrorHistogramAggregator,
+        TopSlowQueries,
+    },
     convert_args::ConvertedArgs,
     filters::{Filter, FilterSlow},
     output_results::output_results,
@@ -82,6 +85,30 @@ fn main() -> Result<()> {
                     output_results(
                         converted_args,
                         top_subcommand
+                            .get_one::<Severity>("level")
+                            .unwrap_or(&Severity::Error),
+                        &mut aggregators,
+                        &filters,
+                    )?;
+                }
+                ("hist", hist_subcommand) => {
+                    // aggregators.push(Box::new(ErrorFrequencyAggregator::new()));
+                    converted_args.print_details = false;
+                    let mut interval = Duration::from_hours(1);
+                    if let Some(interval_str) = hist_subcommand.get_one::<String>("bucket") {
+                        interval = parse_duration(interval_str)?;
+                    }
+                    aggregators.push(Box::new(ErrorHistogramAggregator::new(interval)));
+                    debug!(
+                        "Histogram severity: {:?}",
+                        hist_subcommand
+                            .get_one::<Severity>("level")
+                            .unwrap_or(&Severity::Error)
+                    );
+                    debug!("Histogram interval: {:?}", interval);
+                    output_results(
+                        converted_args,
+                        hist_subcommand
                             .get_one::<Severity>("level")
                             .unwrap_or(&Severity::Error),
                         &mut aggregators,

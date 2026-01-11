@@ -125,6 +125,28 @@ fn simple_filter_with_top_subcommand() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[test]
+fn simple_filter_with_hist_subcommand() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args([
+        "err",
+        "hist",
+        "-b",
+        "1s",
+        "-l",
+        "debug5",
+        "./tests/files/debian_default2.log",
+    ])
+    .assert()
+    .success()
+    .stdout(predicates::str::contains(
+        "[2025-05-22 15:18:10] ##################################---------------- 11",
+    ));
+
+    Ok(())
+}
+
+#[test]
 fn non_existing_file() -> Result<(), Box<dyn std::error::Error>> {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
