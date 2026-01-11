@@ -199,19 +199,6 @@ pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, Strin
     Err(format!("Unable to parse timestamp: '{input}'"))
 }
 
-#[allow(dead_code)]
-pub fn line_has_timestamp_prefix(line: &str) -> (bool, Option<String>) {
-    // Check if the line starts with a timestamp pattern
-    let timestamp_regex = Regex::new(r"^(?<syslog>[A-Za-z]{3} [0-9]{1,2} [0-9:]{6,} .*?: \[[0-9\-]+\] )?(?P<time>[\d\-:\. ]{19,23} [A-Z0-9\-\+]{2,5}|[0-9\.]{14})").unwrap();
-
-    if let Some(captures) = timestamp_regex.captures(line) {
-        let time_match = captures.name("time").map(|m| m.as_str().to_string());
-        (true, time_match)
-    } else {
-        (false, None)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -304,48 +291,6 @@ mod tests {
 
         let result = time_or_interval_string_to_time("", None);
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_line_has_timestamp_prefix() {
-        // Test various PostgreSQL log line formats that should match
-        let test_cases = vec![
-            "2025-05-02 12:27:52.634 EEST [2380404]",
-            "2025-05-05 06:00:51 UTC:90.190.32.92(32890):postgres@postgres:[1315]:LOG:  statement: BEGIN;",
-            "May 30 11:03:43 i13400f postgres[693826]: [5-1] 2025-05-30 11:03:43.622 EEST [693826] LOG:  database system is ready to accept connections",
-            "2025-01-09 20:48:11.713 GMT LOG:  checkpoint starting: time",
-            "2022-02-19 14:47:24 +08 [66019]: [10-1] session=6210927b.101e3,user=postgres,db=ankara,app=PostgreSQL JDBC Driver,client=localhost | LOG:  duration: 0.073 ms",
-        ];
-
-        for test_case in test_cases {
-            let (has_timestamp, extracted_time) = line_has_timestamp_prefix(test_case);
-            assert!(
-                has_timestamp,
-                "Expected timestamp to be found in: {test_case}",
-            );
-            assert!(
-                extracted_time.is_some(),
-                "Expected extracted time to be Some for: {test_case}"
-            );
-            println!("✓ Found timestamp in: {test_case} -> {extracted_time:?}");
-        }
-
-        // Test lines that should NOT match
-        let negative_test_cases = vec![
-            "This is just a regular log line without timestamp",
-            "bla 2025-05-02 12:27:52.634 EEST [2380404]",
-            "    ON CONFLICT (id) DO UPDATE SET master_time = (now() at time zone 'utc');",
-        ];
-
-        for test_case in negative_test_cases {
-            let (has_timestamp, extracted_time) = line_has_timestamp_prefix(test_case);
-            assert!(!has_timestamp, "Expected no timestamp in: {test_case}");
-            assert!(
-                extracted_time.is_none(),
-                "Expected extracted time to be None for: {test_case}"
-            );
-            println!("✓ Correctly identified no timestamp in: {test_case}");
-        }
     }
 
     #[test]
