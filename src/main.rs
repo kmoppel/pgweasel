@@ -32,8 +32,8 @@
 // TODO: make sure no unwrap/expect/panic are not used in the code
 // #![deny(
 //     clippy::unwrap_used,
-    // clippy::expect_used,
-    // clippy::panic
+// clippy::expect_used,
+// clippy::panic
 // )]
 
 use std::time::Duration;
