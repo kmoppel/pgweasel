@@ -22,7 +22,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
-          toolchain: 1.92
 
       - name: Rustfmt
         run: cargo fmt --all -- --check
