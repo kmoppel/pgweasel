@@ -1,0 +1,97 @@
+2025-05-21 11:00:40.291 UTC [675]: [1-1] db=postgres,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 4.053 ms  statement: SELECT COALESCE(SUM(pg_stat_get_live_tuples(c.oid)), 0) AS n_live_tup, COALESCE(SUM(pg_stat_get_dead_tuples(c.oid)), 0) AS n_dead_tup, current_timestamp FROM pg_class c LEFT JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind = ANY (ARRAY['r'::"char", 't'::"char", 'm'::"char", 'p'::"char"]) AND n.nspname <> ALL (ARRAY['pg_catalog'::name, 'information_schema'::name, 'pg_toast'::name])
+2025-05-21 11:00:40.293 UTC [675]: [2-1] db=postgres,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 1.072 ms  statement: SELECT COALESCE(SUM(pg_stat_get_live_tuples(c.oid)), 0) AS n_live_tup, COALESCE(SUM(pg_stat_get_dead_tuples(c.oid)), 0) AS n_dead_tup, current_timestamp FROM pg_class c LEFT JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind = ANY (ARRAY['r'::"char", 't'::"char", 'm'::"char", 'p'::"char"]) AND n.nspname = 'pg_toast'::name
+2025-05-21 11:00:40.294 UTC [672]: [8-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 2.781 ms  statement: SELECT setting, current_timestamp FROM pg_catalog.pg_settings WHERE name = 'cloudsql.iam_authentication'
+2025-05-21 11:00:40.296 UTC [672]: [9-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 1.619 ms  statement: WITH oldest_frozen_transaction AS (
+       			SELECT pg_catalog.max(pg_catalog.age(datfrozenxid)) AS age,
+              		 pg_catalog.min(datfrozenxid::text::int8) AS xid64
+         		FROM pg_catalog.pg_database
+						WHERE datallowconn),
+     			current_transaction AS (
+       			SELECT pg_snapshot_xmax(pg_current_snapshot())::varchar(20)::int8 as xid64,
+									 (pg_snapshot_xmax(pg_current_snapshot())::varchar(20)::int8::bit(64) & x'ffffffff00000000')::int8 AS epoch
+         	)
+  				SELECT o.age/2146483647::float AS consumed_txid_ratio,
+        			   CASE WHEN (c.epoch::bit(64) | o.xid64::bit(64))::int8 > c.xid64
+             		 			THEN ((c.epoch-4294967296)::bit(64) | o.xid64::bit(64))::int8
+             					ELSE (c.epoch::bit(64) | o.xid64::bit(64))::int8 END AS oldest_frozen_xid64,
+	 							 current_timestamp,
+								 pg_snapshot_xmax(pg_current_snapshot())::varchar(20)::int8 AS max_transaction_id
+					FROM oldest_frozen_transaction o, current_transaction c
+2025-05-21 11:00:40.296 UTC [675]: [3-1] db=postgres,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 3.032 ms  statement: SELECT extname, current_timestamp FROM pg_catalog.pg_extension UNION SELECT plugin, current_timestamp FROM pg_catalog.pg_replication_slots WHERE slot_type = 'logical' AND database = current_database();
+2025-05-21 11:00:40.303 UTC [672]: [10-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 6.168 ms  statement: SELECT
+            (SELECT pg_catalog.max(pg_catalog.age(backend_xmin)) FROM pg_catalog.pg_stat_activity)     as oldest_running_xact,
+            (SELECT pg_catalog.max(pg_catalog.age(transaction))  FROM pg_catalog.pg_prepared_xacts)    as oldest_prepared_xact,
+            (SELECT pg_catalog.max(pg_catalog.age(xmin))         FROM pg_catalog.pg_replication_slots) as oldest_replication_slot,
+            (SELECT pg_catalog.max(pg_catalog.age(backend_xmin)) FROM pg_catalog.pg_stat_replication)  as oldest_replica_xact,
+            current_timestamp
+2025-05-21 11:00:40.304 UTC [672]: [11-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 1.306 ms  statement: SELECT COUNT(*), current_timestamp FROM pg_catalog.pg_stat_replication
+2025-05-21 11:00:40.307 UTC [672]: [12-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 1.096 ms  statement: SELECT COALESCE(NULLIF(application_name, ''), 'Unknown'), count(*) as num_backends, current_timestamp
+			FROM pg_catalog.pg_stat_activity
+			WHERE datname IS NOT NULL
+			AND backend_type = 'client backend'
+			AND application_name != 'cloudsqlagent'
+			AND usename != 'cloudsqladmin'
+			GROUP BY application_name ORDER BY num_backends DESC LIMIT 25
+2025-05-21 11:00:40.309 UTC [672]: [13-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 1.346 ms  statement: SELECT COUNT(*) as count, COALESCE(wait_event, 'CPU'), COALESCE(wait_event_type, 'CPU'), backend_type, current_timestamp
+		FROM pg_catalog.pg_stat_activity
+		WHERE state = 'idle in transaction' OR state = 'active'
+		GROUP BY wait_event, wait_event_type, backend_type
+2025-05-21 11:00:40.317 UTC [672]: [14-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 1.249 ms  statement: SELECT setting, current_timestamp FROM pg_catalog.pg_settings WHERE name = 'wal_segment_size'
+2025-05-21 11:00:40.325 UTC [672]: [15-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 1.187 ms  statement: SELECT setting, current_timestamp FROM pg_catalog.pg_settings WHERE name = 'cloudsql.enable_index_advisor'
+2025-05-21 11:00:40.331 UTC [672]: [16-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 5.020 ms  execute <unnamed>: SELECT d.datname, pg_catalog.pg_database_size(d.datname), current_timestamp FROM pg_catalog.pg_database d ORDER BY d.datname LIMIT $1
+2025-05-21 11:00:40.331 UTC [672]: [17-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 DETAIL:  Parameters: $1 = '50'
+2025-05-21 11:01:10.215 UTC [684]: [1-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 8.115 ms  statement: SELECT COALESCE(SUM(pg_stat_get_live_tuples(c.oid)), 0) AS n_live_tup, COALESCE(SUM(pg_stat_get_dead_tuples(c.oid)), 0) AS n_dead_tup, current_timestamp FROM pg_class c LEFT JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind = ANY (ARRAY['r'::"char", 't'::"char", 'm'::"char", 'p'::"char"]) AND n.nspname <> ALL (ARRAY['pg_catalog'::name, 'information_schema'::name, 'pg_toast'::name])
+2025-05-21 11:01:10.220 UTC [683]: [1-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 2.518 ms  statement: SELECT CAST(ROUND(EXTRACT(EPOCH FROM (current_timestamp - pg_catalog.pg_postmaster_start_time()))) AS BIGINT),
+		pg_catalog.pg_postmaster_start_time(), current_timestamp
+2025-05-21 11:01:10.234 UTC [684]: [2-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 1.104 ms  statement: SELECT COALESCE(SUM(pg_stat_get_live_tuples(c.oid)), 0) AS n_live_tup, COALESCE(SUM(pg_stat_get_dead_tuples(c.oid)), 0) AS n_dead_tup, current_timestamp FROM pg_class c LEFT JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.relkind = ANY (ARRAY['r'::"char", 't'::"char", 'm'::"char", 'p'::"char"]) AND n.nspname = 'pg_toast'::name
+2025-05-21 11:01:10.246 UTC [681]: [1-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 25.761 ms  statement: WITH RECURSIVE
+non_cloudsql_users AS (
+  SELECT * FROM pg_catalog.pg_user WHERE usename NOT LIKE 'cloudsql%'),
+iam_users AS (
+  SELECT m.member FROM pg_catalog.pg_auth_members m, pg_catalog.pg_roles r
+   WHERE m.roleid = r.oid AND r.rolname = 'cloudsqliamuser'
+  UNION ALL
+  SELECT m.member FROM iam_users
+    JOIN pg_catalog.pg_auth_members m ON m.roleid = iam_users.member),
+iam_svc_accts AS (
+  SELECT m.member FROM pg_catalog.pg_auth_members m, pg_catalog.pg_roles r
+   WHERE m.roleid = r.oid AND r.rolname = 'cloudsqliamserviceaccount'
+  UNION ALL
+  SELECT m.member FROM iam_svc_accts
+    JOIN pg_catalog.pg_auth_members m ON m.roleid = iam_svc_accts.member),
+iam_groups AS (
+  SELECT m.member FROM pg_catalog.pg_auth_members m, pg_catalog.pg_roles r
+    WHERE m.roleid = r.oid AND r.rolname = 'cloudsqliamgroup'
+  UNION ALL
+  SELECT m.member FROM iam_groups
+    JOIN pg_catalog.pg_auth_members m ON m.roleid = iam_groups.member
+    JOIN pg_catalog.pg_roles r ON m.roleid = r.oid
+  WHERE r.rolname = 'cloudsqliamgroup'),
+iam_group_users AS (
+  SELECT m.member FROM pg_catalog.pg_auth_members m, pg_catalog.pg_roles r
+    WHERE m.roleid = r.oid AND r.rolname = 'cloudsqliamgroupuser'
+  UNION ALL
+  SELECT m.member FROM iam_group_users
+    JOIN pg_catalog.pg_auth_members m ON m.roleid = iam_group_users.member),
+iam_group_svc_accts AS (
+  SELECT m.member FROM pg_catalog.pg_auth_members m, pg_catalog.pg_roles r
+    WHERE m.roleid = r.oid AND r.rolname = 'cloudsqliamgroupserviceaccount'
+  UNION ALL
+  SELECT m.member FROM iam_group_svc_accts
+    JOIN pg_catalog.pg_auth_members m ON m.roleid = iam_group_svc_accts.member),
+iam_roles AS (
+   SELECT EXISTS(SELECT 1 FROM iam_users WHERE member = usesysid) AS is_iam_user,
+          EXISTS(SELECT 1 FROM iam_svc_accts WHERE member = usesysid) AS is_svc_acct,
+          EXISTS(SELECT 1 FROM iam_groups WHERE member = usesysid) AS is_iam_group,
+          EXISTS(SELECT 1 FROM iam_group_users WHERE member = usesysid) AS is_iam_group_user,
+          EXISTS(SELECT 1 FROM iam_group_svc_accts WHERE member = usesysid) AS is_iam_group_svc_acct
+     FROM non_cloudsql_users)
+SELECT pg_catalog.SUM(is_iam_user::int),
+       pg_catalog.SUM(is_svc_acct::int),
+       pg_catalog.SUM(is_iam_group::int),
+       pg_catalog.SUM(is_iam_group_user::int),
+       pg_catalog.SUM(is_iam_group_svc_acct::int),
+       pg_catalog.SUM((NOT(is_iam_user OR is_svc_acct OR is_iam_group OR is_iam_group_user OR is_iam_group_svc_acct))::int),
+     current_timestamp
+  FROM iam_roles
+2025-05-21 11:01:10.247 UTC [684]: [3-1] db=cloudsqladmin,user=cloudsqladmin,host=127.0.0.1 LOG:  duration: 6.505 ms  statement: SELECT extname, current_timestamp FROM pg_catalog.pg_extension UNION SELECT plugin, current_timestamp FROM pg_catalog.pg_replication_slots WHERE slot_type = 'logical' AND database = current_database();

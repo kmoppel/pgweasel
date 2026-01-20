@@ -1,6 +1,8 @@
-# pgweasel
+# Rust rewrite of pgweasel
 
-A simple CLI usage oriented PostgreSQL log parser, to complement [pgBadger](https://github.com/darold/pgbadger).
+This is a fork of [pgweasel](https://github.com/kmoppel/pgweasel/) as rewrite in RUST. 
+
+A simple CLI usage oriented PostgreSQL log parser, to complement pgBadger.
 
 pgweasel tries to:
 
@@ -8,127 +10,106 @@ pgweasel tries to:
 * way simpler, with less flags, operating rather via commands and sub-commands
 * focus on CLI interactions only - no html / json
 * more cloud-friendly - no deps, a single binary
-* zero config - not dependent on Postgres `log_line_prefix`
+* zero config - not dependent on Postgres log_line_prefix
 * be more user-friendly - handle relative time inputs, auto-detect log files, subcommand aliases
 
-## Project status
+## Table of Contents
 
-BETA. Command / subcommands "API" might change.
+1. [Status](#status)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Contributing](#contributing)
+5. [License](#license)
 
-PS - A rewrite experiment to Rust is in progress in the [rust-rewrite](https://github.com/kmoppel/pgweasel/tree/rust-rewrite)
-branch. Mainly for heavy performance reasons of up to 2-3x.
+## Status
 
-# Operating modes
+This project is in BETA. Command / subcommands "API" might change.
 
-`pgweasel errors $LOGFILE(S)_OR_FOLDER` - Show WARN+ log entries "as is"
+MAC & Linux targts passes tests. Windows - needs testers.
 
-`pgweasel errors --from 10m $LOG` - Show WARN+ log entries from last 10min
+## Installation
 
-`pgweasel errors top $LOG` - Show the most frequent error messages with counts
+### Download latest binaries from GitHub
 
-`pgweasel errors --histo $LOG` - Show a basic vertical histogram of error counts. Default --bucket=1h
+You can download binaries from [GitHub Releases](https://github.com/gintsgints/pgweasel/releases/tag/latest).
 
-`pgweasel errors --histo -l debug5 $LOG` - Show a histogram for all events, not only errors
+### Install from source
 
-`pgweasel locks $LOG` - Only show locking (incl. deadlocks, recovery conflicts) entries
+Make sure, you have RUST compiler installed. Then:
 
-`pgweasel peaks $LOG` - Show the "busiest" time periods with most log events, using a 10min bucket by default
-
-`pgweasel slow 1s $LOG` - Show queries taking longer than give threshold
-
-`pgweasel slow top $LOG` - Show top 10 (by default) slowest queries
-
-`pgweasel slow stat $LOG` - Show avg slow log exec times per query type
-
-`pgweasel stats $LOG` - Summary of log events - counts / frequency of errors, connections, checkpoints, autovacuums
-
-`pgweasel system $LOG` - Show lifecycle / Postgres internal events, i.e. autovacuum, replication, extensions, config changes etc
-
-`pgweasel grep $REGEX $LOG` - Show full log entries of matching search fragments
-
-`pgweasel connections $LOG` - Show connections counts by total, db, user, application name. Assumes log_connections enabled
-
-
-# Quickstart
-
-```
-go install github.com/kmoppel/pgweasel@latest
-$HOME/go/bin/pgweasel -h
-
-OR
-
-git clone https://github.com/kmoppel/pgweasel.git
-
-cd pgweasel && go build -ldflags "-s -w"
-
-./pgweasel -h
-
-A simplistic PostgreSQL log parser for the console
-
-Usage:
-  pgweasel [command]
-
-Available Commands:
-  completion  Generate the autocompletion script for the specified shell
-  connections Show connections summary
-  errors      Shows WARNING and higher entries by default
-  grep        Show matching log entries only, e.g.: pgweasel grep 'Seq Scan.*tblX' mylogfile.log
-  help        Help about any command
-  locks       Only show locking related entries
-  peaks       Identify periods where most log entries are emitted, per severity level
-  slow        Show queries above user set threshold, e.g.: pgweasel slow 1s mylogfile.log
-  stats       Summary of log events
-  system      Show messages by Postgres internal processes
-
-Flags:
-      --csv                  Specify that input file or stdin is actually CSV regardless of file extension
-  -f, --filter stringArray   Add extra line match conditions (regex)
-      --from string          Log entries from $time, e.g.: -1h
-  -h, --help                 help for pgweasel
-  -1, --oneline              Compact multiline entries
-      --to string            Log entries up to $time
-  -v, --verbose              More chat
-
-Use "pgweasel [command] --help" for more information about a command.
+```sh
+git clone https://github.com/gintsgints/pgweasel.git
+cd pgweasel
+cargo build --release
+The built binary will be in target/release/pgweasel.
 ```
 
 
-# Contributing
+## Usage
 
-All kinds of feedback and help (PR-s, co-maintainer) would be much appreciated - especially as I'm not a
-developer per se. Hopefully pgweasel will grow into a community project with rock solid quality.
+Here is a list of currently implemented commands
 
-## Have sample log files ?
+### errors [ err | errs ]
 
-I've scraped the Postgres mailing archives for *.log attachements (in [testdata](https://github.com/kmoppel/pgweasel/tree/main/testdata) folder), but they
-are not much sadly...so if you have some real-life logs from busy or somehow "troublesome" instances, not
-containing secrets - please add one one via PR or proide some S3 etc link under issues. Thank you!
+- [x] `pgweasel errors $LOG(s)` - Show WARN+ (by default) log entries "as is"
 
-# Perf difference indication
+- [x] `pgweasel errors --begin 10m $LOG(s)` - Show entries from last 10min
 
-Let's say the goal here is the very common task of finding out the slowest query runtimes from logs
-(330M uncompressed, not large by any means)...which firstly is very unconvenient with pgbadger as it
-does a lot of things and doesn't have feature flags for all the common things. One can speed things
-up though with disabling some features / summaries.
+- [x] `pgweasel errors -l error $LOG(s)` - Show ERROR+ entries
 
-## pgbadger
+- [x] `pgweasel error top ./tests/files/debian_default2.log` - Show top LOG message count
 
-```
-time pgbadger testdata/pgbench_large.log.gz -j 2 --disable-error --disable-hourly --disable-type --disable-session --disable-connection --disable-lock --disable-temporary --disable-checkpoint --disable-autovacuum --no-progressbar
-...
-real	2m4.786s
-user	2m2.201s
-sys	  0m0.656s
-```
+- [x] `pgweasel -t "2025-05-21 13:00:00" errors -l LOG testdata/csvlog_pg14.csv` - Show LOG entries with timestamp begining with '2025-05-21 13:00:00'
 
-Note the added `--jobs=2` as pgweasel by default uses an additional thread as well
+- [x] `pgweasel -t "2025-05-21 13:00:00" errors -l LOG testdata/csvlog1.csv.gz` - Show LOG entries with timestamp begining with '2025-05-21 13:00:00'
 
-## pgweasel
+- [x] `pgweasel errors --debug $LOG(s)` - Show LOG entries with debug info including execution time.
 
-```
-time ./pgweasel slow top testdata/pgbench_large.log.gz
-...
-real	0m9.168s
-user	0m11.517s
-sys	  0m0.683s
-```
+- [x] `pgweasel errors hist $LOG` - Show a basic vertical histogram of error counts. Default --bucket=1h
+
+- [x] `pgweasel errors hist -b 3m -l debug5 $LOG` - Show a histogram for all events, not only errors, using --bucket=3m
+
+### locks
+
+- [x] `pgweasel locks ./tests/files/locking.log` Only show locking entries (incl. deadlocks, recovery conflicts)
+
+### peaks
+
+- [ ] `pgweasel peaks $LOG` Show the "busiest" time periods with most log events, using a 10min bucket by default
+
+### slow
+
+- [x] `pgweasel slow 1s ./testdata/csvlog_pg14.csv` - Show LOG entries that took longer than 1second.
+
+- [x] `pgweasel slow top ./testdata/cloudsql.log` - Show top 10 slowest queries.
+
+- [ ] `pgweasel slow stat $LOG` Show avg slow log exec times per query type
+
+### stats
+
+- [ ] `pgweasel stats $LOG` Summary of log events - counts / frequency of errors, connections, checkpoints, autovacuums
+
+### system
+
+- [x] `pgweasel system testdata/debian_default.log` Show lifecycle / Postgres internal events, i.e. autovacuum, replication, extensions, config changes etc
+
+### connections
+
+- [x] `pgweasel connections ./tests/files/azure_connections.log` Show connections counts by total, db, user, application name. Assumes log_connections enabled
+
+### grep
+
+For grep I would recommend using grep cli - ripgrep
+
+## Contributing
+
+All kinds of feedback and help (PR-s, co-maintainer) would be much appreciated. Hopefully pgweasel will grow into a community project with rock solid quality.
+
+When creating MR, make sure `cargo test` and `cargo fmt --all -- --check` pass. 
+
+Have sample log files ?
+I've scraped the Postgres mailing archives for *.log attachements (in testdata folder), but they are not much sadly...so if you have some real-life logs from busy or somehow "troublesome" instances, not containing secrets - please add one one via PR or proide some S3 etc link under issues. Thank you!
+
+## License
+
+pgweasel is free software distributed under the [Apache Licence](./LICENSE).
