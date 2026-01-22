@@ -90,7 +90,8 @@ fn main() -> Result<()> {
                     )?;
                 }
                 ("top", top_subcommand) => {
-                    aggregators.push(Box::new(ErrorFrequencyAggregator::new()));
+                    let limit = *top_subcommand.get_one::<usize>("max").unwrap_or(&20);
+                    aggregators.push(Box::new(ErrorFrequencyAggregator::new(limit)));
                     converted_args.print_details = false;
                     output_results(
                         converted_args,

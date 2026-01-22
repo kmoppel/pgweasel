@@ -8,12 +8,14 @@ use crate::{aggregators::Aggregator, error::Result, format::Format, severity::Se
 pub struct ErrorFrequencyAggregator {
     // TODO: Check ablity to store u8 arrays directly to avoid UTF-8 conversion overhead
     counts: HashMap<String, u64>,
+    limit: usize,
 }
 
 impl ErrorFrequencyAggregator {
-    pub fn new() -> Self {
+    pub fn new(limit: usize) -> Self {
         Self {
             counts: HashMap::new(),
+            limit,
         }
     }
 }
@@ -34,6 +36,8 @@ impl Aggregator for ErrorFrequencyAggregator {
         let message = String::from_utf8_lossy(message).to_string();
 
         *self.counts.entry(message).or_insert(0) += 1;
+        //// This code is executed in threads, so we cannot apply here the top-N logic directly
+        //// Instead, we will do it in the merge_box method
         Ok(())
     }
 
@@ -45,6 +49,18 @@ impl Aggregator for ErrorFrequencyAggregator {
 
         for (msg, count) in &other.counts {
             *self.counts.entry(msg.clone()).or_insert(0) += count;
+        }
+
+        /* Enforce top-N limit */
+        while self.counts.len() > self.limit {
+            if let Some((least_key, _)) = self
+                .counts
+                .iter()
+                .min_by_key(|(_, count)| *count)
+                .map(|(k, v)| (k.clone(), *v))
+            {
+                self.counts.remove(&least_key);
+            }
         }
     }
 
