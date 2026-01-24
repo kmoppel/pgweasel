@@ -1,0 +1,5 @@
+2025-08-27 01:24:18.975 EEST [3863217] LOG:  starting PostgreSQL 16.10 (Ubuntu 16.10-1.pgdg24.04+1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, 64-bit
+2025-08-27 01:24:18.975 EEST [3863217] LOG:  listening on IPv4 address "127.0.0.1", port 54316
+2025-08-27 01:24:18.978 EEST [3863217] LOG:  listening on Unix socket "/tmp/.s.PGSQL.54316"
+2025-08-27 01:24:18.982 EEST [3863221] LOG:  database system was shut down at 2025-08-27 01:23:49 EEST
+2025-08-27 01:24:18.987 EEST [3863217] LOG:  database system is ready to accept connections
