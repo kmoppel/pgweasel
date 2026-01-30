@@ -30,7 +30,7 @@ impl SystemFilter {
             b"database system is shutting down",
             b"startup process",
             b"shut down",
-            b"listening",
+            b"listening on ",
             // Configuration changes
             b"reloading configuration",
             b"configuration file",
