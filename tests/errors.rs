@@ -1,5 +1,6 @@
 use assert_cmd::cargo;
 use assert_cmd::prelude::*;
+use predicates::prelude::PredicateBooleanExt;
 use std::io::Write;
 use std::process::Command;
 use tempfile::Builder;
@@ -120,6 +121,50 @@ fn simple_filter_with_top_subcommand() -> Result<(), Box<dyn std::error::Error>>
         .stdout(predicates::str::contains(
             "new row for relation \"pgbench_accounts\" violates check constraint \"posbal\"",
         ));
+
+    Ok(())
+}
+
+#[test]
+fn simple_filter_with_top_max_subcommand() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args([
+        "err",
+        "top",
+        "--max",
+        "2",
+        "./tests/files/debian_default2.log",
+    ])
+    .assert()
+    .success()
+    .stdout(
+        predicates::str::contains("canceling statement due to user request")
+            .not()
+            .or(
+                predicates::str::contains("terminating connection due to administrator command")
+                    .not(),
+            ),
+    );
+
+    Ok(())
+}
+
+#[test]
+fn simple_filter_with_top_max_subcommand_contains_same_max()
+-> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args([
+        "err",
+        "top",
+        "--max",
+        "2",
+        "./tests/files/debian_default2.log",
+    ])
+    .assert()
+    .success()
+    .stdout(predicates::str::contains("8  new row for relation"));
 
     Ok(())
 }
