@@ -24,11 +24,13 @@ impl SystemFilter {
             b"walsender",
             b"archiver",
             // Startup / shutdown
+            b"starting PostgreSQL",
             b"database system is starting",
             b"database system is ready",
             b"database system is shutting down",
             b"startup process",
-            b"shutdown",
+            b"shut down",
+            b"listening on ",
             // Configuration changes
             b"reloading configuration",
             b"configuration file",
@@ -71,6 +73,7 @@ mod test {
             (b"Database system is starting up", true),
             (b"Reloading configuration file", true),
             (b"Creating extension pg_stat_statements", true),
+            (b"listening on IPv4 address \"127.0.0.1\", port 54316", true),
             (b"This is a normal log message", false),
             (b"User logged in successfully", false),
         ];
