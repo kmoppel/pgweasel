@@ -49,7 +49,8 @@ impl Aggregator for ConnectionsAggregator {
                     record: String::from_utf8(record.to_vec()).unwrap(),
                 })?;
         if (severity == Severity::Fatal)
-            && memchr::memmem::find(record, b"password authentication failed").is_some()
+            && (memchr::memmem::find(record, b"password authentication failed").is_some()
+                || memchr::memmem::find(record, b"is not permitted to log in").is_some())
         {
             self.connection_failures += 1;
             return Ok(());
