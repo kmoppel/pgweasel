@@ -181,7 +181,7 @@ impl Aggregator for ConnectionsAggregator {
         }
         println!("Connections by time bucket:");
         let mut entries: Vec<_> = self.connection_attempts_by_time_bucket.iter().collect();
-        entries.sort_by(|a, b| a.0.cmp(b.0));
+        entries.sort_by(|a, b| b.1.cmp(a.1));
         for (bucket, count) in entries {
             println!("  {count:>6}  {bucket}");
         }

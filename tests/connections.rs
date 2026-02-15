@@ -28,6 +28,7 @@ fn connections_output_sorted_by_count() -> Result<(), Box<dyn std::error::Error>
         "Connections by database:",
         "Connections by user:",
         "Connections by application name:",
+        "Connections by time bucket:",
     ];
 
     for section in count_sorted_sections {
