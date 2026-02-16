@@ -156,24 +156,34 @@ impl Aggregator for ConnectionsAggregator {
         );
         println!("Total connection failures: {}", self.connection_failures);
         println!("Connections by host:");
-        for (host, count) in &self.connections_by_host {
+        let mut entries: Vec<_> = self.connections_by_host.iter().collect();
+        entries.sort_by(|a, b| b.1.cmp(a.1));
+        for (host, count) in entries {
             println!("  {count:>6}  {host}");
         }
         println!("Connections by database:");
-        for (db, count) in &self.connections_by_database {
+        let mut entries: Vec<_> = self.connections_by_database.iter().collect();
+        entries.sort_by(|a, b| b.1.cmp(a.1));
+        for (db, count) in entries {
             println!("  {count:>6}  {db}");
         }
         println!("Connections by user:");
-        for (user, count) in &self.connections_by_user {
+        let mut entries: Vec<_> = self.connections_by_user.iter().collect();
+        entries.sort_by(|a, b| b.1.cmp(a.1));
+        for (user, count) in entries {
             println!("  {count:>6}  {user}");
         }
         println!("Connections by application name:");
-        for (appname, count) in &self.connections_by_appname {
+        let mut entries: Vec<_> = self.connections_by_appname.iter().collect();
+        entries.sort_by(|a, b| b.1.cmp(a.1));
+        for (appname, count) in entries {
             println!("  {count:>6}  {appname}");
         }
         println!("Connections by time bucket:");
-        for (appname, count) in &self.connection_attempts_by_time_bucket {
-            println!("  {count:>6}  {appname}");
+        let mut entries: Vec<_> = self.connection_attempts_by_time_bucket.iter().collect();
+        entries.sort_by(|a, b| b.1.cmp(a.1));
+        for (bucket, count) in entries {
+            println!("  {count:>6}  {bucket}");
         }
     }
 
