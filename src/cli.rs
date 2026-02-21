@@ -94,6 +94,12 @@ pub fn cli() -> Command {
                 .args_conflicts_with_subcommands(true)
                 .args(filelist_args())
         )
+        .subcommand(
+            Command::new("grep")
+                .about("Show log lines containing the given search term")
+                .arg(arg!(<TERM>).help("Search term to look for in log lines"))
+                .args(filelist_args())
+        )
 }
 
 fn level_args() -> Vec<Arg> {
