@@ -25,3 +25,39 @@ fn grep_is_case_insensitive() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[test]
+fn grep_after_context() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args([
+        "-A",
+        "1",
+        "grep",
+        "dadasd",
+        "./tests/files/debian_default.log",
+    ])
+    .assert()
+    .success()
+    .stdout(predicates::str::contains("terminating background worker"));
+
+    Ok(())
+}
+
+#[test]
+fn grep_before_context() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args([
+        "-B",
+        "1",
+        "grep",
+        "dadasd",
+        "./tests/files/debian_default.log",
+    ])
+    .assert()
+    .success()
+    .stdout(predicates::str::contains("syntax error"));
+
+    Ok(())
+}

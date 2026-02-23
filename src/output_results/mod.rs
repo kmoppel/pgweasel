@@ -81,6 +81,45 @@ pub fn output_results(
 
         debug!("File did read in: {:?}", timing.elapsed());
 
+        if converted_args.before_context > 0 || converted_args.after_context > 0 {
+            let before_n = converted_args.before_context;
+            let after_n = converted_args.after_context;
+            let records = collect_records(bytes);
+            let mut before_buf: std::collections::VecDeque<&[u8]> =
+                std::collections::VecDeque::new();
+            let mut after_remaining: usize = 0;
+
+            for record in records {
+                if let Some((severity, log_time)) = record_passes(record, &filter_container) {
+                    for prev in &before_buf {
+                        print!("{}", String::from_utf8_lossy(prev));
+                    }
+                    before_buf.clear();
+                    print!("{}", String::from_utf8_lossy(record));
+                    aggragate_record(
+                        aggregators,
+                        record,
+                        &filter_container.format,
+                        severity,
+                        log_time,
+                    )?;
+                    after_remaining = after_n;
+                } else if after_remaining > 0 {
+                    print!("{}", String::from_utf8_lossy(record));
+                    after_remaining -= 1;
+                } else {
+                    before_buf.push_back(record);
+                    while before_buf.len() > before_n {
+                        before_buf.pop_front();
+                    }
+                }
+            }
+            for agg in &mut *aggregators {
+                agg.print();
+            }
+            continue;
+        }
+
         let partials: Result<Vec<Vec<Box<dyn Aggregator>>>> = ranges
             .par_iter()
             .map(|range| -> Result<Vec<Box<dyn Aggregator>>> {
@@ -216,6 +255,56 @@ fn aggragate_record(
         aggregator.update(record, fmt, severity, log_time)?;
     }
     Ok(())
+}
+
+fn collect_records(bytes: &[u8]) -> Vec<&[u8]> {
+    let mut records = Vec::new();
+    let mut record_start = 0usize;
+    let mut offset = 0usize;
+
+    for line in bytes.split(|&b| b == b'\n') {
+        let line_len = line.len() + 1;
+        if is_record_start(line) && offset != 0 {
+            records.push(&bytes[record_start..offset]);
+            record_start = offset;
+        }
+        offset += line_len;
+    }
+    if record_start < bytes.len() {
+        records.push(&bytes[record_start..]);
+    }
+    records
+}
+
+fn record_passes<'a>(
+    record: &[u8],
+    filter_container: &FilterContainer<'a>,
+) -> Option<(Severity, DateTime<Local>)> {
+    for filter in &filter_container.filters {
+        if !filter.matches(record, &filter_container.format) {
+            return None;
+        }
+    }
+    let text = unsafe { std::str::from_utf8_unchecked(record) };
+    let severity = filter_container.format.severity_from_string(text);
+    if i32::from(severity) < filter_container.min_severity {
+        return None;
+    }
+    let mut parts = text.split_whitespace();
+    let ts_str = format!("{} {} {}", parts.next()?, parts.next()?, parts.next()?);
+    let log_time = parse_timestamp_from_string(ts_str.as_str()).ok()?;
+    if filter_container.begin.is_some_and(|b| log_time < b) {
+        return None;
+    }
+    if filter_container.end.is_some_and(|e| log_time > e) {
+        return None;
+    }
+    for custom_filter in filter_container.custom_filters {
+        if !custom_filter.matches(record, &filter_container.format) {
+            return None;
+        }
+    }
+    Some((severity, log_time))
 }
 
 #[inline]

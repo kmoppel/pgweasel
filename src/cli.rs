@@ -12,6 +12,24 @@ pub fn cli() -> Command {
         .arg(arg!(--mask <MASK>).short('m').help("Postgres log timestamp mask (e.g. \"2025-05-21 12:57\" - will show all events at 12:57)"))
         .arg(arg!(--begin <BEGIN>).short('b'))
         .arg(arg!(--end <END>).short('e'))
+        .arg(
+            arg!(--context <NUM>)
+                .short('C')
+                .help("Show NUM records before and after each match")
+                .value_parser(value_parser!(usize)),
+        )
+        .arg(
+            arg!(--"before-context" <NUM>)
+                .short('B')
+                .help("Show NUM records before each match")
+                .value_parser(value_parser!(usize)),
+        )
+        .arg(
+            arg!(--"after-context" <NUM>)
+                .short('A')
+                .help("Show NUM records after each match")
+                .value_parser(value_parser!(usize)),
+        )
         .subcommand_required(true)
         .subcommand(
             Command::new("errors")
