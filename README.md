@@ -49,6 +49,19 @@ The built binary will be in target/release/pgweasel.
 
 Here is a list of currently implemented commands
 
+### Global options
+
+These flags work with any subcommand:
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--begin` | `-b` | Show entries from a given time or relative interval (e.g. `10m`, `2025-05-21 12:00:00`) |
+| `--end` | `-e` | Show entries up to a given time |
+| `--mask` | `-m` | Timestamp prefix mask — show all events matching the prefix |
+| `--context` | `-C` | Show NUM records before **and** after each matching record |
+| `--before-context` | `-B` | Show NUM records before each matching record |
+| `--after-context` | `-A` | Show NUM records after each matching record |
+
 ### errors [ err | errs ]
 
 - [x] `pgweasel errors $LOG(s)` - Show WARN+ (by default) log entries "as is"
@@ -95,11 +108,17 @@ Here is a list of currently implemented commands
 
 ### connections
 
-- [x] `pgweasel connections ./tests/files/azure_connections.log` Show connections counts by total, db, user, application name. Assumes log_connections enabled
+- [x] `pgweasel connections ./tests/files/azure_connections.log` Show connections counts by total, db, user, application name. Assumes log_connections enabled. Output is sorted by count descending.
 
 ### grep
 
-For grep I would recommend using grep cli - ripgrep
+- [x] `pgweasel grep "deadlock" $LOG(s)` Show log records containing the search term (case-insensitive)
+
+- [x] `pgweasel -A 2 grep "deadlock" $LOG(s)` Show matching records plus 2 records after each match
+
+- [x] `pgweasel -B 1 grep "FATAL" $LOG(s)` Show matching records plus 1 record before each match
+
+- [x] `pgweasel -C 2 grep "checkpoint" $LOG(s)` Show matching records plus 2 records on both sides
 
 ## Contributing
 

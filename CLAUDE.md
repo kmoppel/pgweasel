@@ -15,6 +15,7 @@ cargo fmt --all -- --check # Check formatting
 ```
 
 Each change should check tests and formatting, and if necessary fix.
+Also each change should write app tests using new functionality.
 
 ## Commiting changes
 
