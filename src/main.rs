@@ -148,7 +148,9 @@ fn main() -> Result<()> {
             let term = sub_matches
                 .get_one::<String>("TERM")
                 .expect("TERM is required");
-            filters.push(Box::new(crate::filters::FilterContains::new(term.clone())));
+            filters.push(Box::new(crate::filters::FilterContainsCi::new(
+                term.clone(),
+            )));
             output_results(converted_args, Severity::Log, &mut aggregators, &filters)?;
         }
         Some(("peaks" | "stats", _)) => {

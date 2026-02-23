@@ -13,3 +13,15 @@ fn grep_finds_matching_lines() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[test]
+fn grep_is_case_insensitive() -> Result<(), Box<dyn std::error::Error>> {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    cmd.args(["grep", "DADASD", "./tests/files/debian_default.log"])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("dasda"));
+
+    Ok(())
+}
