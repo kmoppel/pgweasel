@@ -177,7 +177,7 @@ pub fn output_results(
         }
         if converted_args.print_details {
             // Stable sort keeps records with equal timestamps in file order.
-            printed.sort_by(|a, b| a.0.cmp(&b.0));
+            printed.sort_by_key(|entry| entry.0);
             for (_, text) in printed {
                 println!("{text}");
             }
