@@ -10,7 +10,7 @@ pgweasel is a fast CLI PostgreSQL log parser written in Rust (edition 2024, MSRV
 cargo build            # Build
 cargo test             # Run all tests (unit + integration)
 cargo test --test connections  # Run a single integration test file
-cargo clippy           # Lint
+cargo clippy --all-targets -- -W clippy::pedantic  # Lint (always run in pedantic mode)
 cargo fmt --all -- --check # Check formatting
 ```
 
