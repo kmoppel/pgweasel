@@ -3,19 +3,17 @@ use assert_cmd::prelude::*; // Add methods on commands
 use std::process::Command; // Run programs
 
 #[test]
-fn base_help_with_options() -> Result<(), Box<dyn std::error::Error>> {
+fn base_help_with_options() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.arg("--help")
         .assert()
         .success()
         .stdout(predicates::str::contains("pgweasel [OPTIONS] <COMMAND>"));
-
-    Ok(())
 }
 
 #[test]
-fn errors_command_help() -> Result<(), Box<dyn std::error::Error>> {
+fn errors_command_help() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["errors", "--help"])
@@ -24,12 +22,10 @@ fn errors_command_help() -> Result<(), Box<dyn std::error::Error>> {
         .stdout(predicates::str::contains(
             "pgweasel errors [OPTIONS] <PATH>...",
         ));
-
-    Ok(())
 }
 
 #[test]
-fn errors_command_with_sub_command_help() -> Result<(), Box<dyn std::error::Error>> {
+fn errors_command_with_sub_command_help() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["errors", "list", "--help"])
@@ -38,30 +34,24 @@ fn errors_command_with_sub_command_help() -> Result<(), Box<dyn std::error::Erro
         .stdout(predicates::str::contains(
             "pgweasel errors list [OPTIONS] <PATH>...",
         ));
-
-    Ok(())
 }
 
 #[test]
-fn slow_command_help_contains_treshold() -> Result<(), Box<dyn std::error::Error>> {
+fn slow_command_help_contains_treshold() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["slow", "--help"])
         .assert()
         .success()
         .stdout(predicates::str::contains("slow <TRESHOLD>"));
-
-    Ok(())
 }
 
 #[test]
-fn slow_command_help_contains_subcommand_top() -> Result<(), Box<dyn std::error::Error>> {
+fn slow_command_help_contains_subcommand_top() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["slow", "--help"])
         .assert()
         .success()
         .stdout(predicates::str::contains("top"));
-
-    Ok(())
 }
