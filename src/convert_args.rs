@@ -29,6 +29,8 @@ pub struct ConvertedArgs {
     pub mask: Option<String>,
     pub verbose: bool,
     pub print_details: bool,
+    pub before_context: usize,
+    pub after_context: usize,
 }
 
 impl ConvertedArgs {
@@ -49,6 +51,16 @@ impl ConvertedArgs {
         let mask = val
             .get_one::<String>("mask")
             .map(std::borrow::ToOwned::to_owned);
+
+        let context = val.get_one::<usize>("context").copied().unwrap_or(0);
+        let before_context = val
+            .get_one::<usize>("before-context")
+            .copied()
+            .unwrap_or(context);
+        let after_context = val
+            .get_one::<usize>("after-context")
+            .copied()
+            .unwrap_or(context);
 
         // Initialize logger based on verbose flag
         let mut verbose = false;
@@ -71,6 +83,8 @@ impl ConvertedArgs {
             matches: val,
             verbose,
             print_details: true,
+            before_context,
+            after_context,
         })
     }
 
