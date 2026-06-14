@@ -1,2 +1,6 @@
 .idea/
 target/
+.DS_Store
+dhat-heap.json
+profile.json
+profile.json.gz
