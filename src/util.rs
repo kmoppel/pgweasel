@@ -177,15 +177,86 @@ fn parse_timestamp(
 pub fn parse_timestamp_prefix(text: &str) -> Result<DateTime<Local>, String> {
     let mut tokens = text.split_whitespace();
     let first = tokens.next().ok_or("Missing timestamp first part")?;
-    tokens.next().ok_or("Missing timestamp second part")?;
+    let second = tokens.next().ok_or("Missing timestamp second part")?;
     let third = tokens.next().ok_or("Missing timestamp third part")?;
 
+    // Fast path: the Postgres prefix is a rigid `YYYY-MM-DD HH:MM:SS[.fff]`
+    // followed by a timezone abbreviation. Parse the date/time bytes directly
+    // instead of letting chrono re-parse the format pattern for every record.
+    // The timezone token is intentionally ignored and the value is interpreted
+    // as local time, matching `parse_timestamp_from_string`.
+    if let Some(naive) = parse_pg_naive_datetime(first, second)
+        && let Some(local) = Local.from_local_datetime(&naive).single()
+    {
+        return Ok(local);
+    }
+
+    // Fall back to the general (slower) parser for non-standard formats.
     // `first` and `third` are sub-slices of `text`, so their pointers fall
     // within `text`'s allocation; the offsets bound the timestamp span.
     let base = text.as_ptr() as usize;
     let start = first.as_ptr() as usize - base;
     let end = third.as_ptr() as usize - base + third.len();
     parse_timestamp_from_string(&text[start..end])
+}
+
+/// Parses the rigid Postgres date/time tokens without invoking chrono's
+/// format-pattern parser. `date` must be `YYYY-MM-DD` and `time` must be
+/// `HH:MM:SS` optionally followed by `.` and up to nine fractional-second
+/// digits. Returns `None` for anything that does not match exactly, leaving
+/// the caller to fall back to a more permissive parser.
+fn parse_pg_naive_datetime(date: &str, time: &str) -> Option<NaiveDateTime> {
+    let d = date.as_bytes();
+    if d.len() != 10 || d[4] != b'-' || d[7] != b'-' {
+        return None;
+    }
+    let year = parse_ascii_u32(&d[0..4])?;
+    let month = parse_ascii_u32(&d[5..7])?;
+    let day = parse_ascii_u32(&d[8..10])?;
+
+    let t = time.as_bytes();
+    if t.len() < 8 || t[2] != b':' || t[5] != b':' {
+        return None;
+    }
+    let hour = parse_ascii_u32(&t[0..2])?;
+    let minute = parse_ascii_u32(&t[3..5])?;
+    let second = parse_ascii_u32(&t[6..8])?;
+
+    let nanos = if t.len() > 8 {
+        if t[8] != b'.' {
+            return None;
+        }
+        let frac = &t[9..];
+        if frac.is_empty() || frac.len() > 9 {
+            return None;
+        }
+        let mut value = parse_ascii_u32(frac)?;
+        // Scale the fractional part up to nanoseconds (e.g. `.870` -> 870_000_000).
+        for _ in 0..(9 - frac.len()) {
+            value *= 10;
+        }
+        value
+    } else {
+        0
+    };
+
+    let date = NaiveDate::from_ymd_opt(i32::try_from(year).ok()?, month, day)?;
+    date.and_hms_nano_opt(hour, minute, second, nanos)
+}
+
+/// Parses an ASCII byte slice of decimal digits into a `u32`, rejecting any
+/// non-digit byte. The slices passed here are short (at most nine digits) so
+/// overflow is not a concern.
+#[inline]
+fn parse_ascii_u32(bytes: &[u8]) -> Option<u32> {
+    let mut acc: u32 = 0;
+    for &b in bytes {
+        if !b.is_ascii_digit() {
+            return None;
+        }
+        acc = acc * 10 + u32::from(b - b'0');
+    }
+    Some(acc)
 }
 
 pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, String> {
@@ -238,6 +309,42 @@ mod tests {
     fn test_parse_timestamp_prefix_missing_parts() {
         assert!(parse_timestamp_prefix("2025-08-24 00:05:48.870").is_err());
         assert!(parse_timestamp_prefix("").is_err());
+    }
+
+    #[test]
+    fn test_parse_timestamp_prefix_without_millis() {
+        // The fast path must also handle `HH:MM:SS` without a fractional part
+        // and agree with the general parser.
+        let line = "2025-08-24 00:05:48 CEST [123] LOG:  ready";
+        let prefix = parse_timestamp_prefix(line).unwrap();
+        let expected = parse_timestamp_from_string("2025-08-24 00:05:48 CEST").unwrap();
+        assert_eq!(prefix, expected);
+    }
+
+    #[test]
+    fn test_parse_pg_naive_datetime_fast_path() {
+        use chrono::Timelike;
+
+        let naive = parse_pg_naive_datetime("2025-08-24", "00:05:48.870").unwrap();
+        assert_eq!(naive.year(), 2025);
+        assert_eq!(naive.month(), 8);
+        assert_eq!(naive.day(), 24);
+        assert_eq!(naive.hour(), 0);
+        assert_eq!(naive.minute(), 5);
+        assert_eq!(naive.second(), 48);
+        assert_eq!(naive.nanosecond(), 870_000_000);
+
+        // No fractional seconds.
+        let naive = parse_pg_naive_datetime("2025-12-31", "23:59:59").unwrap();
+        assert_eq!(naive.nanosecond(), 0);
+        assert_eq!(naive.hour(), 23);
+
+        // Malformed inputs return None so the caller can fall back.
+        assert!(parse_pg_naive_datetime("2025/08/24", "00:05:48").is_none());
+        assert!(parse_pg_naive_datetime("2025-08-24", "00-05-48").is_none());
+        assert!(parse_pg_naive_datetime("2025-08-24", "00:05:48.").is_none());
+        assert!(parse_pg_naive_datetime("2025-08-24", "0a:05:48").is_none());
+        assert!(parse_pg_naive_datetime("2025-13-24", "00:05:48").is_none());
     }
 
     #[test]
