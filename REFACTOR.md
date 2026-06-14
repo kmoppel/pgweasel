@@ -34,13 +34,19 @@ Totals: 43 warnings across 8 lints (27 in tests, 16 in `src/`).
 
 ### Numeric casts — `src/aggregators/error_histogram.rs:67-69` (6)
 Use checked/`try_into` conversions or document why the cast is safe (then `#[allow]`).
-- [ ] `cast_possible_truncation` / `cast_sign_loss` — `f64` → `usize` (line 67)
-- [ ] `cast_precision_loss` ×2 — `i64` → `f64` (line 67)
-- [ ] `cast_precision_loss` ×2 — `usize` → `f64` (lines 67, 69)
+- [x] `cast_possible_truncation` / `cast_sign_loss` — `f64` → `usize` (line 67)
+- [x] `cast_precision_loss` ×2 — `i64` → `f64` (line 67)
+- [x] `cast_precision_loss` ×2 — `usize` → `f64` (lines 67, 69)
+
+Resolved by storing bucket counts as `usize` and computing the bar width
+with integer rounding instead of floats.
 
 ### Numeric casts — `src/duration.rs:47-48` (4)
-- [ ] `cast_possible_truncation` / `cast_sign_loss` — `f64` → `u64` (line 47)
-- [ ] `cast_possible_truncation` / `cast_sign_loss` — `f64` → `u64` (line 48)
+- [x] `cast_possible_truncation` / `cast_sign_loss` — `f64` → `u64` (line 47)
+- [x] `cast_possible_truncation` / `cast_sign_loss` — `f64` → `u64` (line 48)
+
+Resolved by using `Duration::from_secs_f64` for the `ns`/`us` units, matching
+the existing `ms`/`s`/`min` branches.
 
 ### Other
 - [ ] `needless_pass_by_value` — `src/filters/filter_contains_ci.rs:9` — `new(substring: String)` should take `&str`

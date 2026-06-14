@@ -44,8 +44,8 @@ fn parse_duration_bytes(value: &str, unit: &[u8]) -> Option<Duration> {
     let v: f64 = value.parse().ok()?;
 
     match unit {
-        b"ns" => Some(Duration::from_nanos(v as u64)),
-        b"us" => Some(Duration::from_micros(v as u64)),
+        b"ns" => Some(Duration::from_secs_f64(v / 1_000_000_000.0)),
+        b"us" => Some(Duration::from_secs_f64(v / 1_000_000.0)),
         b"ms" => Some(Duration::from_secs_f64(v / 1_000.0)),
         b"s" => Some(Duration::from_secs_f64(v)),
         b"m" | b"min" | b"minutes" => Some(Duration::from_secs_f64(v * 60.0)),
@@ -62,6 +62,26 @@ mod test {
         let log = b"Big text and duration: 121.997 ms more text";
 
         assert_eq!(extract_duration(log), Some(Duration::from_micros(121_997)));
+    }
+
+    #[test]
+    fn duration_units_parse_to_exact_durations() {
+        assert_eq!(
+            extract_duration(b"duration: 500 ns"),
+            Some(Duration::from_nanos(500))
+        );
+        assert_eq!(
+            extract_duration(b"duration: 250 us"),
+            Some(Duration::from_micros(250))
+        );
+        assert_eq!(
+            extract_duration(b"duration: 3.5 s"),
+            Some(Duration::from_secs_f64(3.5))
+        );
+        assert_eq!(
+            extract_duration(b"duration: 2 min"),
+            Some(Duration::from_secs(120))
+        );
     }
 
     #[test]
