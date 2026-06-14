@@ -168,6 +168,26 @@ fn parse_timestamp(
     )))
 }
 
+/// Parses the timestamp at the start of a log record without allocating.
+///
+/// The timestamp occupies the first three whitespace-separated tokens
+/// (date, time, timezone), e.g. `2025-08-24 00:05:48.870 CEST`. Rather than
+/// re-joining those tokens into a fresh `String` for every record, we slice the
+/// contiguous span of the original text covering them and parse that directly.
+pub fn parse_timestamp_prefix(text: &str) -> Result<DateTime<Local>, String> {
+    let mut tokens = text.split_whitespace();
+    let first = tokens.next().ok_or("Missing timestamp first part")?;
+    tokens.next().ok_or("Missing timestamp second part")?;
+    let third = tokens.next().ok_or("Missing timestamp third part")?;
+
+    // `first` and `third` are sub-slices of `text`, so their pointers fall
+    // within `text`'s allocation; the offsets bound the timestamp span.
+    let base = text.as_ptr() as usize;
+    let start = first.as_ptr() as usize - base;
+    let end = third.as_ptr() as usize - base + third.len();
+    parse_timestamp_from_string(&text[start..end])
+}
+
 pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, String> {
     let input = input.trim();
 
@@ -203,6 +223,22 @@ pub fn parse_timestamp_from_string(input: &str) -> Result<DateTime<Local>, Strin
 mod tests {
     use super::*;
     use chrono::{Datelike, Local, TimeZone};
+
+    #[test]
+    fn test_parse_timestamp_prefix_matches_full_line() {
+        // Full log line: the prefix parse must yield the same instant as parsing
+        // just the timestamp tokens, ignoring the trailing log message.
+        let line = "2025-08-24 00:05:48.870 CEST [123] LOG:  database system is ready";
+        let prefix = parse_timestamp_prefix(line).unwrap();
+        let expected = parse_timestamp_from_string("2025-08-24 00:05:48.870 CEST").unwrap();
+        assert_eq!(prefix, expected);
+    }
+
+    #[test]
+    fn test_parse_timestamp_prefix_missing_parts() {
+        assert!(parse_timestamp_prefix("2025-08-24 00:05:48.870").is_err());
+        assert!(parse_timestamp_prefix("").is_err());
+    }
 
     #[test]
     fn test_today() {

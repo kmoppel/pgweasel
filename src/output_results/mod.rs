@@ -9,7 +9,7 @@ use crate::aggregators::Aggregator;
 use crate::convert_args::ConvertedArgs;
 use crate::filters::{Filter, FilterContains};
 use crate::format::Format;
-use crate::util::parse_timestamp_from_string;
+use crate::util::parse_timestamp_prefix;
 use rayon::prelude::*;
 
 use crate::Result;
@@ -207,15 +207,7 @@ fn filter_record(
         return Ok(());
     }
 
-    let mut parts = text.split_whitespace();
-    let ts_str = format!(
-        "{} {} {}",
-        parts.next().ok_or("Missing timestamp first part")?,
-        parts.next().ok_or("Missing timestamp second part")?,
-        parts.next().ok_or("Missing timestamp third part")?
-    );
-
-    let log_time_local = parse_timestamp_from_string(ts_str.as_str())?;
+    let log_time_local = parse_timestamp_prefix(text)?;
     if filters.begin.is_some_and(|b| log_time_local < b) {
         return Ok(());
     }
@@ -290,9 +282,7 @@ fn record_passes<'a>(
     if i32::from(severity) < filter_container.min_severity {
         return None;
     }
-    let mut parts = text.split_whitespace();
-    let ts_str = format!("{} {} {}", parts.next()?, parts.next()?, parts.next()?);
-    let log_time = parse_timestamp_from_string(ts_str.as_str()).ok()?;
+    let log_time = parse_timestamp_prefix(text).ok()?;
     if filter_container.begin.is_some_and(|b| log_time < b) {
         return None;
     }

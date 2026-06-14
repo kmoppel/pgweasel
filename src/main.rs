@@ -65,7 +65,14 @@ mod util;
 
 pub use self::error::{Error, Result};
 
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
 fn main() -> Result<()> {
+    #[cfg(feature = "dhat-heap")]
+    let _profiler = dhat::Profiler::new_heap();
+
     let cli = cli::cli();
     let matches = cli.clone().get_matches();
 
