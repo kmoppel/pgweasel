@@ -9,9 +9,11 @@ Benchmark 1: ./target/release/pgweasel slow top ../log_examples/pgbench_large.lo
   Time (mean ± σ):     462.9 ms ±  16.9 ms    [User: 3991.5 ms, System: 40.8 ms]
   Range (min … max):   449.6 ms … 496.3 ms    10 runs
 
+2026-06-14T14:11:15Z DEBUG pgweasel::output_results] Finished aggregating in: 475.911125ms
+
 - [ ] Benchmark
 
-2026-06-14T13:59:52Z DEBUG pgweasel::output_results] Finished aggregating in: 617.285042ms
+2026-06-14T14:12:55Z DEBUG pgweasel::output_results] Finished aggregating in: 436.87ms
 
 - [ ] Isolate
 - [ ] Optimize
