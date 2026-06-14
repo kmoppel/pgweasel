@@ -58,4 +58,4 @@ Use checked/`try_into` conversions or document why the cast is safe (then `#[all
 - [ ] `tests/errors.rs:9, 21, 33, 67, 86, 103, 115, 129, 154, 173, 195`
 
 ### `uninlined_format_args` (1)
-- [ ] `tests/errors.rs:53` — inline the variable into the `format!` string
+- [x] `tests/errors.rs:53` — inline the variable into the `format!` string

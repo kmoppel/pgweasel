@@ -50,7 +50,7 @@ fn simple_error_filter_with_begin_min() -> Result<(), Box<dyn std::error::Error>
     let content = format!("{now_str} ERROR:  error message example\n");
 
     let mut tmp = Builder::new().suffix(".log").tempfile()?;
-    write!(tmp, "{}", content)?;
+    write!(tmp, "{content}")?;
     tmp.flush()?;
 
     cmd.args(["-b", "10m", "err", tmp.path().to_str().unwrap()])
