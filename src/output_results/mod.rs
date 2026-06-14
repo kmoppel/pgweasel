@@ -310,9 +310,9 @@ fn collect_records(bytes: &[u8]) -> Vec<&[u8]> {
     records
 }
 
-fn record_passes<'a>(
+fn record_passes(
     record: &[u8],
-    filter_container: &FilterContainer<'a>,
+    filter_container: &FilterContainer<'_>,
 ) -> Option<(Severity, DateTime<Local>)> {
     for filter in &filter_container.filters {
         if !filter.matches(record, &filter_container.format) {

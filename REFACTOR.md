@@ -25,6 +25,9 @@ cargo clippy --all-targets -- -W clippy::pedantic
 
 Totals: 43 warnings across 8 lints (27 in tests, 16 in `src/`).
 
+**All clear** — `cargo clippy --all-targets -- -W clippy::pedantic` now reports
+zero warnings.
+
 ## Source code
 
 ### `too_many_lines` (3) — split into smaller functions
@@ -49,8 +52,8 @@ Resolved by using `Duration::from_secs_f64` for the `ns`/`us` units, matching
 the existing `ms`/`s`/`min` branches.
 
 ### Other
-- [ ] `needless_pass_by_value` — `src/filters/filter_contains_ci.rs:9` — `new(substring: String)` should take `&str`
-- [ ] `elidable_lifetime_names` — `src/output_results/mod.rs:279` — elide `'a` on `record_passes` (`&FilterContainer<'_>`)
+- [x] `needless_pass_by_value` — `src/filters/filter_contains_ci.rs:9` — `new(substring: String)` should take `&str`
+- [x] `elidable_lifetime_names` — `src/output_results/mod.rs:279` — elide `'a` on `record_passes` (`&FilterContainer<'_>`)
 
 ## Tests
 
