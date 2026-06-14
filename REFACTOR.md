@@ -28,9 +28,9 @@ Totals: 43 warnings across 8 lints (27 in tests, 16 in `src/`).
 ## Source code
 
 ### `too_many_lines` (3) — split into smaller functions
-- [ ] `src/cli.rs:7` — 113/100 lines
-- [ ] `src/main.rs:68` — `main()` 105/100 lines
-- [ ] `src/output_results/mod.rs:17` — `output_results()` 130/100 lines
+- [x] `src/cli.rs:7` — extracted `errors_command()`
+- [x] `src/main.rs:68` — extracted `handle_errors_command()`
+- [x] `src/output_results/mod.rs:17` — extracted `compute_ranges()`, `process_with_context()`, `process_parallel()`
 
 ### Numeric casts — `src/aggregators/error_histogram.rs:67-69` (6)
 Use checked/`try_into` conversions or document why the cast is safe (then `#[allow]`).
@@ -49,13 +49,13 @@ Use checked/`try_into` conversions or document why the cast is safe (then `#[all
 ## Tests
 
 ### `unnecessary_wraps` (27) — drop `-> Result<(), Box<dyn Error>>` from tests that never use `?`
-- [ ] `tests/grep.rs:6, 18, 30, 48`
-- [ ] `tests/locks.rs:6`
-- [ ] `tests/system.rs:7`
-- [ ] `tests/connections.rs:6`
-- [ ] `tests/help.rs:6, 18, 32, 46, 58`
-- [ ] `tests/slow.rs:7, 19, 31, 43`
-- [ ] `tests/errors.rs:9, 21, 33, 67, 86, 103, 115, 129, 154, 173, 195`
+- [x] `tests/grep.rs:6, 18, 30, 48`
+- [x] `tests/locks.rs:6`
+- [x] `tests/system.rs:7`
+- [x] `tests/connections.rs:6`
+- [x] `tests/help.rs:6, 18, 32, 46, 58`
+- [x] `tests/slow.rs:7, 19, 31, 43`
+- [x] `tests/errors.rs:9, 21, 33, 67, 86, 103, 115, 129, 154, 173, 195`
 
 ### `uninlined_format_args` (1)
 - [x] `tests/errors.rs:53` — inline the variable into the `format!` string

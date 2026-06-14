@@ -31,38 +31,7 @@ pub fn cli() -> Command {
                 .value_parser(value_parser!(usize)),
         )
         .subcommand_required(true)
-        .subcommand(
-            Command::new("errors")
-                .about("Show or summarize error messages")
-                .alias("error")
-                .alias("err")
-                .args_conflicts_with_subcommands(true)
-                .args(level_args())
-                .args(filelist_args())
-                .subcommand(Command::new("list")
-                    .about("Default subcommand of error. Show error messages")
-                    .args(level_args())
-                    .args(filelist_args()))
-                .subcommand(Command::new("top")
-                    .about("Shows top most frequent error messages")
-                    .args(level_args())
-                    .arg(arg!(--max <MAX>)
-                        .short('m')
-                        .help("Max number of top errors to show (default 20)")
-                        .value_parser(value_parser!(usize))
-                        .default_value("20"))
-                    .args(filelist_args()))
-                .subcommand(Command::new("hist")
-                    .about("Show histogram of error occurrences over time")
-                    .alias("histogram")
-                    .args(level_args())
-                    .arg(arg!(--bucket <INTERVAL>)
-                        .short('b')
-                        .help("Interval for histogram buckets, e.g. 10s, 1m, 1h. Defaults to 1h")
-                        .value_parser(value_parser!(String))
-                        .default_value("1h"))
-                    .args(filelist_args()))
-        )
+        .subcommand(errors_command())
         .subcommand(
             Command::new("locks")
                 .alias("loc")
@@ -117,6 +86,49 @@ pub fn cli() -> Command {
                 .about("Show log lines containing the given search term")
                 .arg(arg!(<TERM>).help("Search term to look for in log lines"))
                 .args(filelist_args())
+        )
+}
+
+fn errors_command() -> Command {
+    Command::new("errors")
+        .about("Show or summarize error messages")
+        .alias("error")
+        .alias("err")
+        .args_conflicts_with_subcommands(true)
+        .args(level_args())
+        .args(filelist_args())
+        .subcommand(
+            Command::new("list")
+                .about("Default subcommand of error. Show error messages")
+                .args(level_args())
+                .args(filelist_args()),
+        )
+        .subcommand(
+            Command::new("top")
+                .about("Shows top most frequent error messages")
+                .args(level_args())
+                .arg(
+                    arg!(--max <MAX>)
+                        .short('m')
+                        .help("Max number of top errors to show (default 20)")
+                        .value_parser(value_parser!(usize))
+                        .default_value("20"),
+                )
+                .args(filelist_args()),
+        )
+        .subcommand(
+            Command::new("hist")
+                .about("Show histogram of error occurrences over time")
+                .alias("histogram")
+                .args(level_args())
+                .arg(
+                    arg!(--bucket <INTERVAL>)
+                        .short('b')
+                        .help("Interval for histogram buckets, e.g. 10s, 1m, 1h. Defaults to 1h")
+                        .value_parser(value_parser!(String))
+                        .default_value("1h"),
+                )
+                .args(filelist_args()),
         )
 }
 

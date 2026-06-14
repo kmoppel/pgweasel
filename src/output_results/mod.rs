@@ -41,139 +41,181 @@ pub fn output_results(
         let mmap = unsafe { MmapOptions::new().map(&file_with_path.file)? };
         let bytes: &[u8] = &mmap;
 
-        let num_threads = rayon::current_num_threads();
-        let chunk_size = bytes.len() / num_threads;
-
-        let mut ranges = Vec::new();
-        let mut start = 0;
-
         if let Some(mask) = &converted_args.mask {
             let mask_filter = Box::new(FilterContains::new(mask.clone()));
             filter_container.filters.push(mask_filter);
         }
 
-        while start < bytes.len() {
-            let mut end = (start + chunk_size).min(bytes.len());
-
-            // Move end forward until a timestamp-starting line
-            if end < bytes.len() {
-                while end < bytes.len() {
-                    if bytes[end] == b'\n' {
-                        let next = end + 1;
-                        if next < bytes.len() {
-                            let line_end = bytes[next..]
-                                .iter()
-                                .position(|&b| (b == b'\n') && (b == b'\r'))
-                                .map_or(bytes.len(), |p| next + p);
-
-                            if is_record_start(&bytes[next..line_end]) {
-                                break;
-                            }
-                        }
-                    }
-                    end += 1;
-                }
-            }
-
-            ranges.push(start..end);
-            start = end + 1;
-        }
-
         debug!("File did read in: {:?}", timing.elapsed());
 
         if converted_args.before_context > 0 || converted_args.after_context > 0 {
-            let before_n = converted_args.before_context;
-            let after_n = converted_args.after_context;
-            let records = collect_records(bytes);
-            let mut before_buf: std::collections::VecDeque<&[u8]> =
-                std::collections::VecDeque::new();
-            let mut after_remaining: usize = 0;
-
-            for record in records {
-                if let Some((severity, log_time)) = record_passes(record, &filter_container) {
-                    for prev in &before_buf {
-                        print!("{}", String::from_utf8_lossy(prev));
-                    }
-                    before_buf.clear();
-                    print!("{}", String::from_utf8_lossy(record));
-                    aggragate_record(
-                        aggregators,
-                        record,
-                        &filter_container.format,
-                        severity,
-                        log_time,
-                    )?;
-                    after_remaining = after_n;
-                } else if after_remaining > 0 {
-                    print!("{}", String::from_utf8_lossy(record));
-                    after_remaining -= 1;
-                } else {
-                    before_buf.push_back(record);
-                    while before_buf.len() > before_n {
-                        before_buf.pop_front();
-                    }
-                }
-            }
-            for agg in &mut *aggregators {
-                agg.print();
-            }
+            process_with_context(
+                bytes,
+                &filter_container,
+                aggregators,
+                converted_args.before_context,
+                converted_args.after_context,
+            )?;
             continue;
         }
 
-        let partials: Result<Vec<Vec<Box<dyn Aggregator>>>> = ranges
-            .par_iter()
-            .map(|range| -> Result<Vec<Box<dyn Aggregator>>> {
-                let mut local_aggregators: Vec<Box<dyn Aggregator>> =
-                    aggregators.iter().map(|a| a.boxed_clone()).collect();
+        process_parallel(
+            bytes,
+            &filter_container,
+            aggregators,
+            converted_args.print_details,
+            timing,
+        )?;
+    }
+    Ok(())
+}
 
-                let slice = &bytes[range.clone()];
+/// Splits the file into per-thread byte ranges, snapping each chunk boundary
+/// forward to the start of the next log record so records are never split.
+fn compute_ranges(bytes: &[u8]) -> Vec<std::ops::Range<usize>> {
+    let num_threads = rayon::current_num_threads();
+    let chunk_size = bytes.len() / num_threads;
 
-                let mut record_start = 0;
-                let mut offset = 0;
+    let mut ranges = Vec::new();
+    let mut start = 0;
 
-                for line in slice.split(|&b| b == b'\n') {
-                    let line_len = line.len() + 1; // include '\n'
+    while start < bytes.len() {
+        let mut end = (start + chunk_size).min(bytes.len());
 
-                    if is_record_start(line) && offset != 0 {
-                        let record = &slice[record_start..offset];
-                        // debug!("Processing record: {:?} start {} offset {} line_len {}", std::str::from_utf8(record), record_start, offset, line_len);
-                        filter_record(
-                            record,
-                            &filter_container,
-                            &mut local_aggregators,
-                            converted_args.print_details,
-                        )?;
-                        record_start = offset;
+        // Move end forward until a timestamp-starting line
+        if end < bytes.len() {
+            while end < bytes.len() {
+                if bytes[end] == b'\n' {
+                    let next = end + 1;
+                    if next < bytes.len() {
+                        let line_end = bytes[next..]
+                            .iter()
+                            .position(|&b| (b == b'\n') && (b == b'\r'))
+                            .map_or(bytes.len(), |p| next + p);
+
+                        if is_record_start(&bytes[next..line_end]) {
+                            break;
+                        }
                     }
-
-                    offset += line_len;
                 }
-
-                // last record in chunk
-                if record_start < slice.len() {
-                    filter_record(
-                        &slice[record_start..slice.len()],
-                        &filter_container,
-                        &mut local_aggregators,
-                        converted_args.print_details,
-                    )?;
-                }
-                Ok(local_aggregators)
-            })
-            .collect();
-
-        debug!("Finished output in: {:?}", timing.elapsed());
-        let partials = partials?;
-        for partial in partials {
-            for (i, aggregator) in partial.into_iter().enumerate() {
-                aggregators[i].merge_box(aggregator.as_ref());
+                end += 1;
             }
         }
-        for agg in &mut *aggregators {
-            agg.print();
-        }
-        debug!("Finished aggregating in: {:?}", timing.elapsed());
+
+        ranges.push(start..end);
+        start = end + 1;
     }
+
+    ranges
+}
+
+/// Single-threaded path used when `-A`/`-B`/`-C` context lines are requested:
+/// prints each matching record together with the surrounding context lines.
+fn process_with_context(
+    bytes: &[u8],
+    filter_container: &FilterContainer,
+    aggregators: &mut Vec<Box<dyn Aggregator>>,
+    before_n: usize,
+    after_n: usize,
+) -> Result<()> {
+    let records = collect_records(bytes);
+    let mut before_buf: std::collections::VecDeque<&[u8]> = std::collections::VecDeque::new();
+    let mut after_remaining: usize = 0;
+
+    for record in records {
+        if let Some((severity, log_time)) = record_passes(record, filter_container) {
+            for prev in &before_buf {
+                print!("{}", String::from_utf8_lossy(prev));
+            }
+            before_buf.clear();
+            print!("{}", String::from_utf8_lossy(record));
+            aggragate_record(
+                aggregators,
+                record,
+                &filter_container.format,
+                severity,
+                log_time,
+            )?;
+            after_remaining = after_n;
+        } else if after_remaining > 0 {
+            print!("{}", String::from_utf8_lossy(record));
+            after_remaining -= 1;
+        } else {
+            before_buf.push_back(record);
+            while before_buf.len() > before_n {
+                before_buf.pop_front();
+            }
+        }
+    }
+    for agg in &mut *aggregators {
+        agg.print();
+    }
+    Ok(())
+}
+
+/// Default path: processes each byte range in parallel with a per-range clone
+/// of the aggregators, then merges the partial results back into `aggregators`.
+fn process_parallel(
+    bytes: &[u8],
+    filter_container: &FilterContainer,
+    aggregators: &mut Vec<Box<dyn Aggregator>>,
+    print_details: bool,
+    timing: Instant,
+) -> Result<()> {
+    let ranges = compute_ranges(bytes);
+
+    let partials: Result<Vec<Vec<Box<dyn Aggregator>>>> = ranges
+        .par_iter()
+        .map(|range| -> Result<Vec<Box<dyn Aggregator>>> {
+            let mut local_aggregators: Vec<Box<dyn Aggregator>> =
+                aggregators.iter().map(|a| a.boxed_clone()).collect();
+
+            let slice = &bytes[range.clone()];
+
+            let mut record_start = 0;
+            let mut offset = 0;
+
+            for line in slice.split(|&b| b == b'\n') {
+                let line_len = line.len() + 1; // include '\n'
+
+                if is_record_start(line) && offset != 0 {
+                    let record = &slice[record_start..offset];
+                    filter_record(
+                        record,
+                        filter_container,
+                        &mut local_aggregators,
+                        print_details,
+                    )?;
+                    record_start = offset;
+                }
+
+                offset += line_len;
+            }
+
+            // last record in chunk
+            if record_start < slice.len() {
+                filter_record(
+                    &slice[record_start..slice.len()],
+                    filter_container,
+                    &mut local_aggregators,
+                    print_details,
+                )?;
+            }
+            Ok(local_aggregators)
+        })
+        .collect();
+
+    debug!("Finished output in: {:?}", timing.elapsed());
+    let partials = partials?;
+    for partial in partials {
+        for (i, aggregator) in partial.into_iter().enumerate() {
+            aggregators[i].merge_box(aggregator.as_ref());
+        }
+    }
+    for agg in &mut *aggregators {
+        agg.print();
+    }
+    debug!("Finished aggregating in: {:?}", timing.elapsed());
     Ok(())
 }
 
