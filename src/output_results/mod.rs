@@ -120,11 +120,13 @@ pub fn output_results(
             continue;
         }
 
-        let partials: Result<Vec<Vec<Box<dyn Aggregator>>>> = ranges
+        type Partial = (Vec<Box<dyn Aggregator>>, Vec<(DateTime<Local>, String)>);
+        let partials: Result<Vec<Partial>> = ranges
             .par_iter()
-            .map(|range| -> Result<Vec<Box<dyn Aggregator>>> {
+            .map(|range| -> Result<Partial> {
                 let mut local_aggregators: Vec<Box<dyn Aggregator>> =
                     aggregators.iter().map(|a| a.boxed_clone()).collect();
+                let mut printed: Vec<(DateTime<Local>, String)> = Vec::new();
 
                 let slice = &bytes[range.clone()];
 
@@ -142,6 +144,7 @@ pub fn output_results(
                             &filter_container,
                             &mut local_aggregators,
                             converted_args.print_details,
+                            &mut printed,
                         )?;
                         record_start = offset;
                     }
@@ -156,17 +159,27 @@ pub fn output_results(
                         &filter_container,
                         &mut local_aggregators,
                         converted_args.print_details,
+                        &mut printed,
                     )?;
                 }
-                Ok(local_aggregators)
+                Ok((local_aggregators, printed))
             })
             .collect();
 
         debug!("Finished output in: {:?}", timing.elapsed());
         let partials = partials?;
-        for partial in partials {
-            for (i, aggregator) in partial.into_iter().enumerate() {
+        let mut printed: Vec<(DateTime<Local>, String)> = Vec::new();
+        for (partial_aggregators, partial_printed) in partials {
+            for (i, aggregator) in partial_aggregators.into_iter().enumerate() {
                 aggregators[i].merge_box(aggregator.as_ref());
+            }
+            printed.extend(partial_printed);
+        }
+        if converted_args.print_details {
+            // Stable sort keeps records with equal timestamps in file order.
+            printed.sort_by_key(|entry| entry.0);
+            for (_, text) in printed {
+                println!("{text}");
             }
         }
         for agg in &mut *aggregators {
@@ -192,6 +205,7 @@ fn filter_record(
     filters: &FilterContainer,
     local_aggregators: &mut Vec<Box<dyn Aggregator>>,
     print: bool,
+    printed: &mut Vec<(DateTime<Local>, String)>,
 ) -> Result<()> {
     for filter in &filters.filters {
         if !filter.matches(record, &filters.format) {
@@ -238,7 +252,7 @@ fn filter_record(
     )?;
 
     if print {
-        println!("{text}");
+        printed.push((log_time_local, text.to_string()));
     }
     Ok(())
 }
