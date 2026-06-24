@@ -171,6 +171,42 @@ fn simple_filter_with_hist_subcommand() {
 }
 
 #[test]
+fn error_output_sorted_by_timestamp() {
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    // The records in debian_default2.log are deliberately out of order in the
+    // file, so a correct sort must reorder them by leading timestamp.
+    let output = cmd
+        .args(["err", "./tests/files/debian_default2.log"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let stdout = String::from_utf8(output).unwrap();
+
+    // Collect the leading "YYYY-MM-DD HH:MM:SS.mmm" timestamp of every record.
+    let timestamps: Vec<&str> = stdout
+        .lines()
+        .filter(|line| line.len() >= 23 && line.as_bytes()[4] == b'-')
+        .map(|line| &line[..23])
+        .collect();
+
+    assert!(
+        timestamps.len() > 1,
+        "expected multiple error records, got {}",
+        timestamps.len()
+    );
+
+    let mut sorted = timestamps.clone();
+    sorted.sort_unstable();
+    assert_eq!(
+        timestamps, sorted,
+        "error output was not sorted by timestamp"
+    );
+}
+
+#[test]
 fn non_existing_file() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
