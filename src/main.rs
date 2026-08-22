@@ -65,7 +65,14 @@ mod util;
 
 pub use self::error::{Error, Result};
 
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
 fn main() -> Result<()> {
+    #[cfg(feature = "dhat-heap")]
+    let _profiler = dhat::Profiler::new_heap();
+
     let cli = cli::cli();
     let matches = cli.clone().get_matches();
 
@@ -77,59 +84,7 @@ fn main() -> Result<()> {
 
     match matches.subcommand() {
         Some(("errors", sub_matches)) => {
-            let error_command = sub_matches.subcommand().unwrap_or(("list", sub_matches));
-            match error_command {
-                ("list", list_subcommand) => {
-                    output_results(
-                        converted_args,
-                        *list_subcommand
-                            .get_one::<Severity>("level")
-                            .unwrap_or(&Severity::Error),
-                        &mut aggregators,
-                        &filters,
-                    )?;
-                }
-                ("top", top_subcommand) => {
-                    let limit = *top_subcommand.get_one::<usize>("max").unwrap_or(&20);
-                    aggregators.push(Box::new(ErrorFrequencyAggregator::new(limit)));
-                    converted_args.print_details = false;
-                    output_results(
-                        converted_args,
-                        *top_subcommand
-                            .get_one::<Severity>("level")
-                            .unwrap_or(&Severity::Error),
-                        &mut aggregators,
-                        &filters,
-                    )?;
-                }
-                ("hist", hist_subcommand) => {
-                    // aggregators.push(Box::new(ErrorFrequencyAggregator::new()));
-                    converted_args.print_details = false;
-                    let mut interval = Duration::from_hours(1);
-                    if let Some(interval_str) = hist_subcommand.get_one::<String>("bucket") {
-                        interval = parse_duration(interval_str)?;
-                    }
-                    aggregators.push(Box::new(ErrorHistogramAggregator::new(interval)));
-                    debug!(
-                        "Histogram severity: {:?}",
-                        hist_subcommand
-                            .get_one::<Severity>("level")
-                            .unwrap_or(&Severity::Error)
-                    );
-                    debug!("Histogram interval: {interval:?}");
-                    output_results(
-                        converted_args,
-                        *hist_subcommand
-                            .get_one::<Severity>("level")
-                            .unwrap_or(&Severity::Error),
-                        &mut aggregators,
-                        &filters,
-                    )?;
-                }
-                (name, _) => {
-                    error!("Unsupported subcommand `{name}`");
-                }
-            }
+            handle_errors_command(sub_matches, converted_args, &mut aggregators, &filters)?;
         }
         Some(("locks", _)) => {
             filters.push(Box::new(crate::filters::LockingFilter::new()));
@@ -148,9 +103,7 @@ fn main() -> Result<()> {
             let term = sub_matches
                 .get_one::<String>("TERM")
                 .expect("TERM is required");
-            filters.push(Box::new(crate::filters::FilterContainsCi::new(
-                term.clone(),
-            )));
+            filters.push(Box::new(crate::filters::FilterContainsCi::new(term)));
             output_results(converted_args, Severity::Log, &mut aggregators, &filters)?;
         }
         Some(("peaks" | "stats", _)) => {
@@ -175,5 +128,66 @@ fn main() -> Result<()> {
         _ => error!("command not found"),
     }
 
+    Ok(())
+}
+
+fn handle_errors_command(
+    sub_matches: &clap::ArgMatches,
+    mut converted_args: ConvertedArgs,
+    aggregators: &mut Vec<Box<dyn Aggregator>>,
+    filters: &Vec<Box<dyn Filter>>,
+) -> Result<()> {
+    let error_command = sub_matches.subcommand().unwrap_or(("list", sub_matches));
+    match error_command {
+        ("list", list_subcommand) => {
+            output_results(
+                converted_args,
+                *list_subcommand
+                    .get_one::<Severity>("level")
+                    .unwrap_or(&Severity::Error),
+                aggregators,
+                filters,
+            )?;
+        }
+        ("top", top_subcommand) => {
+            let limit = *top_subcommand.get_one::<usize>("max").unwrap_or(&20);
+            aggregators.push(Box::new(ErrorFrequencyAggregator::new(limit)));
+            converted_args.print_details = false;
+            output_results(
+                converted_args,
+                *top_subcommand
+                    .get_one::<Severity>("level")
+                    .unwrap_or(&Severity::Error),
+                aggregators,
+                filters,
+            )?;
+        }
+        ("hist", hist_subcommand) => {
+            converted_args.print_details = false;
+            let mut interval = Duration::from_hours(1);
+            if let Some(interval_str) = hist_subcommand.get_one::<String>("bucket") {
+                interval = parse_duration(interval_str)?;
+            }
+            aggregators.push(Box::new(ErrorHistogramAggregator::new(interval)));
+            debug!(
+                "Histogram severity: {:?}",
+                hist_subcommand
+                    .get_one::<Severity>("level")
+                    .unwrap_or(&Severity::Error)
+            );
+            debug!("Histogram interval: {interval:?}");
+            output_results(
+                converted_args,
+                *hist_subcommand
+                    .get_one::<Severity>("level")
+                    .unwrap_or(&Severity::Error),
+                aggregators,
+                filters,
+            )?;
+        }
+        (name, _) => {
+            error!("Unsupported subcommand `{name}`");
+        }
+    }
     Ok(())
 }

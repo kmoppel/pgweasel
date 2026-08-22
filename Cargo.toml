@@ -5,25 +5,32 @@ edition = "2024"
 rust-version = "1.92"
 
 [dependencies]
-clap = { version = "4.5.53", features = ["derive"] }
-chrono = { version = "0.4", features = ["serde"] }
-regex = "1.12.2"
-once_cell = "1.21.3"
-log = "0.4.29"
-env_logger = "0.11"
-flate2 = "1.1.5"
+clap = { version = "4.6.1", features = ["derive"] }
+chrono = { version = "0.4.45", features = ["serde"] }
+regex = "1.12.4"
+once_cell = "1.21.4"
+log = "0.4.32"
+env_logger = "0.11.10"
+flate2 = "1.1.9"
 csv = "1.4.0"
 serde = { version = "1.0.228", features = ["derive"] }
-tempfile = "3.23.0"
-zip = "7.0.0"
+tempfile = "3.27.0"
+zip = "8.6.0"
 derive_more = { version = "2.1.1", features = ["from"] }
-memchr = "2.7.6"
-memmap2 = "0.9.9"
-rayon = "1.11.0"
+memchr = "2.8.2"
+memmap2 = "0.9.10"
+rayon = "1.12.0"
 humantime = "2.3.0"
 aho-corasick = { version = "1.1.4", default-features = false }
+dhat = "0.3.3"
+
+[features]
+dhat-heap = []
 
 [dev-dependencies]
-assert_cmd = "2"
-predicates = "3"
+assert_cmd = "2.2.2"
+predicates = "3.1.4"
 tempfile = "3"
+
+[profile.release]
+debug = true

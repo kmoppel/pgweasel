@@ -6,7 +6,7 @@ pub struct FilterContainsCi {
 }
 
 impl FilterContainsCi {
-    pub fn new(substring: String) -> Self {
+    pub fn new(substring: &str) -> Self {
         FilterContainsCi {
             substring_lower: substring.to_lowercase(),
         }

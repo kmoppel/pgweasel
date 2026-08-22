@@ -7,7 +7,7 @@ use crate::{aggregators::Aggregator, error::Result, format::Format, severity::Se
 #[derive(Clone, Default)]
 pub struct ErrorHistogramAggregator {
     bucket_width: Duration,
-    buckets: BTreeMap<i64, i64>,
+    buckets: BTreeMap<i64, usize>,
 }
 
 impl ErrorHistogramAggregator {
@@ -64,10 +64,9 @@ impl Aggregator for ErrorHistogramAggregator {
         }
 
         for (&bucket, &count) in &self.buckets {
-            let filled = ((count as f64 / max_count as f64) * BAR_WIDTH as f64)
-                .round()
-                .clamp(0.0, BAR_WIDTH as f64) as usize;
-
+            // Integer rounding of `count / max_count * BAR_WIDTH`. Since
+            // `count <= max_count`, `filled` is always within `[0, BAR_WIDTH]`.
+            let filled = (count * BAR_WIDTH + max_count / 2) / max_count;
             let empty = BAR_WIDTH - filled;
 
             let time = Local.timestamp_opt(bucket, 0).single();

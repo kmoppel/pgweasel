@@ -6,39 +6,33 @@ use std::process::Command;
 use tempfile::Builder;
 
 #[test]
-fn simple_error_filter() -> Result<(), Box<dyn std::error::Error>> {
+fn simple_error_filter() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["err", "./tests/files/csvlog1.csv"])
         .assert()
         .success()
         .stdout(predicates::str::contains("2025-05-08 12:24:37.731 EEST"));
-
-    Ok(())
 }
 
 #[test]
-fn simple_error_filter_for_log() -> Result<(), Box<dyn std::error::Error>> {
+fn simple_error_filter_for_log() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["err", "./tests/files/debian_default2.log"])
         .assert()
         .success()
         .stdout(predicates::str::contains("2025-05-22 15:15:09.392"));
-
-    Ok(())
 }
 
 #[test]
-fn error_multiline_csv() -> Result<(), Box<dyn std::error::Error>> {
+fn error_multiline_csv() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["err", "./tests/files/multiple_lines.csv"])
         .assert()
         .success()
         .stdout(predicates::str::contains("2025-12-15 12:41:20.659"));
-
-    Ok(())
 }
 
 #[test]
@@ -50,7 +44,7 @@ fn simple_error_filter_with_begin_min() -> Result<(), Box<dyn std::error::Error>
     let content = format!("{now_str} ERROR:  error message example\n");
 
     let mut tmp = Builder::new().suffix(".log").tempfile()?;
-    write!(tmp, "{}", content)?;
+    write!(tmp, "{content}")?;
     tmp.flush()?;
 
     cmd.args(["-b", "10m", "err", tmp.path().to_str().unwrap()])
@@ -64,7 +58,7 @@ fn simple_error_filter_with_begin_min() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[test]
-fn simple_error_filter_with_begin_end() -> Result<(), Box<dyn std::error::Error>> {
+fn simple_error_filter_with_begin_end() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args([
@@ -78,12 +72,10 @@ fn simple_error_filter_with_begin_end() -> Result<(), Box<dyn std::error::Error>
     .assert()
     .success()
     .stdout(predicates::str::contains("2025-05-08 12:24:37.731 EEST"));
-
-    Ok(())
 }
 
 #[test]
-fn simple_error_filter_with_mask() -> Result<(), Box<dyn std::error::Error>> {
+fn simple_error_filter_with_mask() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args([
@@ -95,24 +87,20 @@ fn simple_error_filter_with_mask() -> Result<(), Box<dyn std::error::Error>> {
     .assert()
     .success()
     .stdout(predicates::str::contains("2025-05-08 12:24:37.731 EEST"));
-
-    Ok(())
 }
 
 #[test]
-fn simple_filter_with_list_subcommand() -> Result<(), Box<dyn std::error::Error>> {
+fn simple_filter_with_list_subcommand() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["err", "list", "./tests/files/csvlog1.csv"])
         .assert()
         .success()
         .stdout(predicates::str::contains("2025-05-08 12:24:37.731 EEST"));
-
-    Ok(())
 }
 
 #[test]
-fn simple_filter_with_top_subcommand() -> Result<(), Box<dyn std::error::Error>> {
+fn simple_filter_with_top_subcommand() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["err", "top", "./tests/files/debian_default2.log"])
@@ -121,12 +109,10 @@ fn simple_filter_with_top_subcommand() -> Result<(), Box<dyn std::error::Error>>
         .stdout(predicates::str::contains(
             "new row for relation \"pgbench_accounts\" violates check constraint \"posbal\"",
         ));
-
-    Ok(())
 }
 
 #[test]
-fn simple_filter_with_top_max_subcommand() -> Result<(), Box<dyn std::error::Error>> {
+fn simple_filter_with_top_max_subcommand() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args([
@@ -146,13 +132,10 @@ fn simple_filter_with_top_max_subcommand() -> Result<(), Box<dyn std::error::Err
                     .not(),
             ),
     );
-
-    Ok(())
 }
 
 #[test]
-fn simple_filter_with_top_max_subcommand_contains_same_max()
--> Result<(), Box<dyn std::error::Error>> {
+fn simple_filter_with_top_max_subcommand_contains_same_max() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args([
@@ -165,12 +148,10 @@ fn simple_filter_with_top_max_subcommand_contains_same_max()
     .assert()
     .success()
     .stdout(predicates::str::contains("8  new row for relation"));
-
-    Ok(())
 }
 
 #[test]
-fn simple_filter_with_hist_subcommand() -> Result<(), Box<dyn std::error::Error>> {
+fn simple_filter_with_hist_subcommand() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args([
@@ -187,12 +168,10 @@ fn simple_filter_with_hist_subcommand() -> Result<(), Box<dyn std::error::Error>
     .stdout(predicates::str::contains(
         "[2025-05-22 15:18:10] ##################################---------------- 11",
     ));
-
-    Ok(())
 }
 
 #[test]
-fn error_output_sorted_by_timestamp() -> Result<(), Box<dyn std::error::Error>> {
+fn error_output_sorted_by_timestamp() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     // The records in debian_default2.log are deliberately out of order in the
@@ -204,7 +183,7 @@ fn error_output_sorted_by_timestamp() -> Result<(), Box<dyn std::error::Error>> 
         .get_output()
         .stdout
         .clone();
-    let stdout = String::from_utf8(output)?;
+    let stdout = String::from_utf8(output).unwrap();
 
     // Collect the leading "YYYY-MM-DD HH:MM:SS.mmm" timestamp of every record.
     let timestamps: Vec<&str> = stdout
@@ -220,23 +199,19 @@ fn error_output_sorted_by_timestamp() -> Result<(), Box<dyn std::error::Error>> 
     );
 
     let mut sorted = timestamps.clone();
-    sorted.sort();
+    sorted.sort_unstable();
     assert_eq!(
         timestamps, sorted,
         "error output was not sorted by timestamp"
     );
-
-    Ok(())
 }
 
 #[test]
-fn non_existing_file() -> Result<(), Box<dyn std::error::Error>> {
+fn non_existing_file() {
     let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
 
     cmd.args(["err", "list", "./tests/files/csvlog1.csv_non_existing"])
         .assert()
         .failure()
         .stderr(predicates::str::contains("FileDoesNotExist"));
-
-    Ok(())
 }

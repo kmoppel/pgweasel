@@ -42,8 +42,12 @@ impl Aggregator for TopSlowQueries {
         if let Some(Reverse((min, _))) = self.heap.peek()
             && duration > *min
         {
-            self.heap.pop();
-            self.heap.push(Reverse((duration, record.to_vec())));
+            // Reuse the evicted entry's buffer instead of freeing it and
+            // allocating a fresh Vec for every faster query we encounter.
+            let Reverse((_, mut buf)) = self.heap.pop().expect("peek implies non-empty");
+            buf.clear();
+            buf.extend_from_slice(record);
+            self.heap.push(Reverse((duration, buf)));
         }
         Ok(())
     }
