@@ -170,7 +170,8 @@ impl From<Severity> for i32 {
             Severity::Warning => 7,
             Severity::Error => 8,
             Severity::Fatal => 9,
-            Severity::Debug5 | Severity::Panic => 0,
+            Severity::Panic => 10,
+            Severity::Debug5 => 0,
         }
     }
 }
@@ -216,5 +217,47 @@ mod tests {
             "\"2025-05-08 12:24:37.731 EEST\",\"krl\",\"postgres\",166063,\"127.0.0.1:33584\",681c7855.288af,1,\"INSERT\",2025-05-08 12:24:37 EEST,3/2,770,ERROR,23503,\"insert or update on table \"pgbench_accounts\" violates foreign key constraint \"pgbench_accounts_bid_fkey\"\",\"Key (bid)=(0) is not present in table \"pgbench_branches\".\",,,,,\"insert into pgbench_accounts select 0, 0, 0\",,,\"psql\",\"client backend\",,0\"",
         );
         assert_eq!(Severity::Error, sev1);
+    }
+
+    #[test]
+    fn severity_ordering_matches_postgres() {
+        // Postgres severity order, lowest to highest:
+        // DEBUG5 < DEBUG4 < DEBUG3 < DEBUG2 < DEBUG1 < LOG < INFO < NOTICE
+        // < WARNING < ERROR < FATAL < PANIC
+        let levels = [
+            (Severity::Debug5, 0),
+            (Severity::Debug4, 1),
+            (Severity::Debug3, 2),
+            (Severity::Debug2, 3),
+            (Severity::Debug1, 4),
+            (Severity::Log, 5),
+            (Severity::Info, 5),
+            (Severity::Notice, 6),
+            (Severity::Warning, 7),
+            (Severity::Error, 8),
+            (Severity::Fatal, 9),
+            (Severity::Panic, 10),
+        ];
+
+        for (severity, expected) in levels {
+            assert_eq!(i32::from(severity), expected, "{severity:?}");
+        }
+
+        // PANIC is the most severe level: it must rank above every other level,
+        // otherwise `err` (min severity Error) filters out PANIC lines.
+        for other in [
+            Severity::Debug5,
+            Severity::Debug1,
+            Severity::Log,
+            Severity::Notice,
+            Severity::Warning,
+            Severity::Error,
+            Severity::Fatal,
+        ] {
+            assert!(
+                i32::from(Severity::Panic) > i32::from(other),
+                "Panic must rank above {other:?}"
+            );
+        }
     }
 }

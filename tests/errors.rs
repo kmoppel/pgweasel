@@ -215,3 +215,30 @@ fn non_existing_file() {
         .failure()
         .stderr(predicates::str::contains("FileDoesNotExist"));
 }
+
+#[test]
+fn panic_severity_included_in_error_output() -> Result<(), Box<dyn std::error::Error>> {
+    // Regression test: PANIC is the most severe level in Postgres, but it was
+    // ranked lower than DEBUG5, so `err` (min severity Error) silently dropped
+    // every PANIC line.
+    let mut cmd = Command::new(cargo::cargo_bin!("pgweasel"));
+
+    let content = "2025-05-08 12:24:37.731 EEST [12345]:  5.18.4,pgweasel@localhost ERROR:  duplicate key value violates unique constraint \"pgbench_accounts_pkey\"\n2025-05-08 12:24:38.100 EEST [12345]:  5.18.4,pgweasel@localhost PANIC:  could not write to file \"base/16384/16385\"\n2025-05-08 12:24:39.100 EEST [12345]:  5.18.4,pgweasel@localhost FATAL:  terminating connection of process 12345\n";
+
+    let mut tmp = Builder::new().suffix(".log").tempfile()?;
+    write!(tmp, "{content}")?;
+    tmp.flush()?;
+
+    cmd.args(["err", tmp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicates::str::contains("PANIC:  could not write to file"))
+        .stdout(predicates::str::contains(
+            "ERROR:  duplicate key value violates",
+        ))
+        .stdout(predicates::str::contains(
+            "FATAL:  terminating connection of process",
+        ));
+
+    Ok(())
+}
